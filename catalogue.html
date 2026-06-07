@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrintMyMemory - Product Catalogue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0e1a;
+      color: #f8fafc;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .catalogue {
+      width: 1200px;
+      max-width: 100%;
+      background: linear-gradient(180deg, #111827 0%, #0a0e1a 100%);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      border: 1px solid #1e293b;
+    }
+    
+    /* Header */
+    .header {
+      padding: 48px 60px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: #f97316;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-icon svg { width: 24px; height: 24px; }
+    .logo-text h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .logo-text p {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+    .tagline {
+      font-size: 18px;
+      color: #94a3b8;
+      font-weight: 400;
+      position: relative;
+      z-index: 1;
+    }
+    .tagline strong { color: #f97316; font-weight: 600; }
+    
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #1e293b, transparent);
+      margin: 0 60px;
+    }
+    
+    /* Products Grid */
+    .products {
+      padding: 48px 60px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .product-card {
+      background: #1a1f2e;
+      border: 1px solid #1e293b;
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .product-card:hover {
+      border-color: rgba(249,115,22,0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(249,115,22,0.06);
+    }
+    .product-image {
+      aspect-ratio: 4/3;
+      background: #0f1420;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-image .placeholder {
+      color: #334155;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .product-image .placeholder-icon {
+      width: 48px;
+      height: 48px;
+      border: 2px dashed #334155;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .product-info {
+      padding: 20px 24px 24px;
+    }
+    .product-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .product-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .product-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .product-price {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f97316;
+    }
+    .product-btn {
+      background: #f97316;
+      color: white;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    
+    /* Bottom Section */
+    .bottom {
+      padding: 40px 60px 48px;
+      text-align: center;
+      background: linear-gradient(180deg, transparent, rgba(249,115,22,0.03));
+      position: relative;
+    }
+    .bottom::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #f97316, transparent);
+    }
+    .cta-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 12px;
+    }
+    .cta-sub {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+    .contact-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .contact-item svg {
+      width: 16px;
+      height: 16px;
+      color: #f97316;
+    }
+    
+    /* Branding watermark */
+    .watermark {
+      position: absolute;
+      bottom: 20px;
+      right: 30px;
+      opacity: 0.08;
+      font-size: 120px;
+      font-weight: 900;
+      color: #f97316;
+      pointer-events: none;
+      letter-spacing: -4px;
+    }
+    
+    @media print {
+      body { background: white; padding: 0; }
+      .catalogue { box-shadow: none; border: 1px solid #ddd; }
+    }
+    @media (max-width: 900px) {
+      .products { grid-template-columns: repeat(2, 1fr); padding: 32px 30px; }
+      .header, .bottom { padding: 32px 30px; }
+      .divider { margin: 0 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="catalogue">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>PrintMyMemory</h1>
+          <p>3D Printed. Forever Yours.</p>
+        </div>
+      </div>
+      <p class="tagline">Turn Your Memories Into <strong>Personalized 3D Gifts</strong></p>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <!-- Products -->
+    <div class="products">
+      <!-- Product 1 -->
+      <div class="product-card">
+        <div class="product-image">
+          <img src="public/images/model1.jpeg" alt="3D Face Miniatures">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">3D Face Miniatures</h3>
+          <p class="product-desc">Transform your loved one's photo into a detailed, hand-painted 3D miniature bust.</p>
+          <div class="product-footer">
+            <span class="product-price">₹2,499</span>
+            <span class="product-btn">Shop Now</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 2 -->
+      <div class="product-card">
+        <div class="product-image">
+          <img src="public/images/globe_front.jpeg" alt="Lithophane Lamps">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">Lithophane Lamps</h3>
+          <p class="product-desc">Your photos illuminate beautifully when lit from behind. A magical night lamp.</p>
+          <div class="product-footer">
+            <span class="product-price">₹1,999</span>
+            <span class="product-btn">Shop Now</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 3 -->
+      <div class="product-card">
+        <div class="product-image">
+          <img src="public/images/globe_back.jpeg" alt="Personalized Name Plates">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">Personalized Name Plates</h3>
+          <p class="product-desc">Elegant 3D printed name plates for your desk, door, or as a unique gift.</p>
+          <div class="product-footer">
+            <span class="product-price">₹999</span>
+            <span class="product-btn">Shop Now</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 4 -->
+      <div class="product-card">
+        <div class="product-image">
+          <img src="public/images/model1_raw.jpeg" alt="Custom Keychains">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">Custom Keychains</h3>
+          <p class="product-desc">Carry your memories everywhere with personalized 3D printed photo keychains.</p>
+          <div class="product-footer">
+            <span class="product-price">₹499</span>
+            <span class="product-btn">Shop Now</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 5 -->
+      <div class="product-card">
+        <div class="product-image">
+          <img src="public/images/model1_raw_generated.jpeg" alt="Couple Gifts">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">Couple Gifts</h3>
+          <p class="product-desc">Heart-shaped lithophane lamps and couple busts for anniversaries & special days.</p>
+          <div class="product-footer">
+            <span class="product-price">₹3,499</span>
+            <span class="product-btn">Shop Now</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 6 -->
+      <div class="product-card">
+        <div class="product-image">
+          <img src="public/images/globe_front.jpeg" alt="Corporate Gifts">
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">Corporate Gifts</h3>
+          <p class="product-desc">Premium bulk 3D printed gifts for employees, clients & corporate events.</p>
+          <div class="product-footer">
+            <span class="product-price">₹4,999</span>
+            <span class="product-btn">Shop Now</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bottom CTA -->
+    <div class="bottom">
+      <h2 class="cta-text">Start Creating Your Custom 3D Gift Today</h2>
+      <p class="cta-sub">Upload a photo and let our experts craft something magical</p>
+      <div class="contact-row">
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          +91 98765 43210
+        </div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          hello@printmymemory.in
+        </div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Mumbai, Maharashtra, India
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
