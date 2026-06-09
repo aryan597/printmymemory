@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User, MessageCircle, LogOut, Package, Heart, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +12,6 @@ const navLinks = [
   { name: 'Gallery', path: '/gallery' },
   { name: 'Community', path: '/community' },
   { name: 'About', path: '/about' },
-  { name: 'Contact', path: '/contact' },
 ];
 
 export default function Navbar() {
@@ -22,9 +21,10 @@ export default function Navbar() {
   const location = useLocation();
   const { user, isAuthenticated, signOut } = useContext(AuthContext);
   const { cartCount } = useContext(CartContext);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -33,6 +33,24 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
     setShowUserMenu(false);
   }, [location]);
+
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setShowUserMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showUserMenu]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -43,7 +61,7 @@ export default function Navbar() {
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-bg-primary/90 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-border-subtle'
+          ? 'bg-bg-primary/85 backdrop-blur-xl shadow-lg shadow-black/10 border-b border-border-subtle/60'
           : 'bg-bg-primary'
       }`}
     >
@@ -59,8 +77,8 @@ export default function Navbar() {
               </svg>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-text-primary font-bold text-[15px] leading-tight tracking-tight">PrintMyMemory</h1>
-              <p className="text-text-muted text-[10px] leading-none tracking-wide">Crafted by us. Gifted by you.</p>
+              <h1 className="text-text-primary font-bold text-[15px] leading-tight tracking-tight">Gifted with Love</h1>
+              <p className="text-text-muted text-[10px] leading-none tracking-wide">Boutique 3D Prints</p>
             </div>
           </Link>
 
@@ -70,13 +88,20 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 to={link.path}
-                className={`px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${
+                className={`relative px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${
                   location.pathname === link.path
-                    ? 'text-accent bg-accent/10'
+                    ? 'text-accent'
                     : 'text-text-secondary hover:text-text-primary hover:bg-bg-card'
                 }`}
               >
                 {link.name}
+                {location.pathname === link.path && (
+                  <motion.div
+                    layoutId="navbar-indicator"
+                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent rounded-full"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
               </Link>
             ))}
           </div>
@@ -84,38 +109,41 @@ export default function Navbar() {
           {/* Right Icons */}
           <div className="flex items-center gap-1">
             <a
-              href="https://wa.me/919876543210"
+              href="https://wa.me/917463812249"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-1.5 text-text-secondary hover:text-whatsapp transition-colors px-3 py-2"
+              className="hidden md:flex items-center gap-1.5 text-text-secondary hover:text-whatsapp transition-colors px-3 py-2 text-[13px] font-medium"
             >
-              <MessageCircle size={17} />
-              <span className="text-[13px] font-medium">WhatsApp</span>
+              <MessageCircle size={16} />
+              <span>Chat</span>
             </a>
 
             {/* Cart */}
             <Link
               to="/cart"
               className="relative p-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors"
+              aria-label="Shopping cart"
             >
               <ShoppingCart size={20} />
               {cartCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                  className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
                 >
-                  {cartCount > 9 ? '9+' : cartCount}
+                  {cartCount > 99 ? '99+' : cartCount}
                 </motion.span>
               )}
             </Link>
 
             {/* User */}
             {isAuthenticated ? (
-              <div className="relative ml-1">
+              <div className="relative ml-1" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-1.5 p-1.5 pr-2.5 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors"
+                  aria-expanded={showUserMenu}
+                  aria-haspopup="true"
                 >
                   <div className="w-7 h-7 bg-accent/20 rounded-full flex items-center justify-center">
                     <span className="text-accent text-xs font-bold">
@@ -158,15 +186,17 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="ml-1 p-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors"
+                className="ml-1 px-3 py-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors text-sm font-medium"
+                aria-label="Sign in"
               >
-                <User size={20} />
+                Sign In
               </Link>
             )}
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors ml-1"
+              aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -181,7 +211,7 @@ export default function Navbar() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="lg:hidden bg-bg-secondary border-t border-border-subtle overflow-hidden"
+            className="lg:hidden bg-bg-secondary/95 backdrop-blur-xl border-t border-border-subtle overflow-hidden"
           >
             <div className="px-4 py-3 space-y-0.5">
               {navLinks.map((link) => (
@@ -197,6 +227,9 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+              <Link to="/contact" className="block px-4 py-3 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors">
+                Contact
+              </Link>
               {isAuthenticated && (
                 <>
                   <Link to="/profile" className="block px-4 py-3 rounded-lg text-sm text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors">

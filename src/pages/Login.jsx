@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Phone, ArrowRight, Loader2, AlertCircle, Info } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { getAuthSetupGuide } from '../lib/authDiagnostics';
 import toast from 'react-hot-toast';
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '' });
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+  const { signIn, signUp, signInWithGoogle, authError } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -19,6 +21,7 @@ export default function Login() {
       if (isSignUp) {
         await signUp(form.email, form.password, form.fullName, form.phone);
         toast.success('Account created! Please check your email to verify.');
+        setIsSignUp(false);
       } else {
         await signIn(form.email, form.password);
         toast.success('Welcome back!');
@@ -52,9 +55,43 @@ export default function Login() {
               {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h1>
             <p className="text-text-secondary text-sm">
-              {isSignUp ? 'Join PrintMyMemory today' : 'Sign in to your account'}
+              {isSignUp ? 'Join Gifted with Love today' : 'Sign in to your account'}
             </p>
           </div>
+
+          {/* Auth Error Banner */}
+          {authError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2"
+            >
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium">Authentication Error</p>
+                <p className="text-red-300/80 text-xs mt-0.5">{authError}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Setup Guide Toggle */}
+          <button
+            onClick={() => setShowSetupGuide(!showSetupGuide)}
+            className="w-full mb-4 p-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-accent/20 transition-colors"
+          >
+            <Info size={14} />
+            {showSetupGuide ? 'Hide Setup Guide' : 'Having trouble logging in? Click here'}
+          </button>
+
+          {showSetupGuide && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-4 p-4 rounded-lg bg-bg-secondary border border-border-subtle text-text-secondary text-xs leading-relaxed whitespace-pre-wrap"
+            >
+              {getAuthSetupGuide()}
+            </motion.div>
+          )}
 
           {/* Google Sign In */}
           <button
@@ -120,7 +157,7 @@ export default function Login() {
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className="w-full bg-bg-primary border border-border-subtle rounded-xl pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
-                    placeholder="+91 98765 43210"
+                    placeholder="+91-7463812249"
                   />
                 </div>
               </div>

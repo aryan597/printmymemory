@@ -7,10 +7,37 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.env
+.env.local
 node_modules
 dist
 dist-ssr
 *.local
+
+# Notes & assets
+notes.pdf
+notes_images/
+catalogue.html
+image_prompts.md
+
+# Root-level image duplicates (public/images/ is the source of truth)
+/model1.jpeg
+/model1_raw.jpeg
+/model1_raw_generated.jpeg
+/globe_back.jpeg
+/globe_front.jpeg
+/reference.jpeg
+
+# SQL migration / fix scripts
+fix_role_enum*.sql
+supabase_enum_migration.sql
+supabase_migration_v2.sql
+
+# Setup guides & notes
+SUPABASE_SETUP_GUIDE.md
+
+# Admin branch folder (kept on admin branch only)
+/admin/
 
 # Editor directories and files
 .vscode/*

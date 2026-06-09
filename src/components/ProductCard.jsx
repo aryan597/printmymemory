@@ -17,6 +17,7 @@ export default function ProductCard({ product, index }) {
           src={product.image}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => { e.target.onerror = null; e.target.src = '/images/products/model1.jpeg'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-bg-card/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>

@@ -1,14 +1,10 @@
-# PrintMyMemory
+# Gifted with Love
 
 > **Crafted by us. Gifted by you.**
 
-Turn your precious memories into beautiful, personalized 3D printed gifts. From photo to physical masterpiece — we handle the entire journey.
+A boutique 3D printing studio turning your digital memories into tangible art. Custom lithophane lamps, painted miniatures, and personalized gifts — printed on demand in Bangalore, shipped pan-India.
 
-![PrintMyMemory](public/images/globe_front.jpeg)
-
-## Live Demo
-
-[https://printmymemory.vercel.app](https://printmymemory.vercel.app) *(deploy yours below)*
+[**giftedwithlove.in**](https://giftedwithlove.in)
 
 ---
 
@@ -16,12 +12,12 @@ Turn your precious memories into beautiful, personalized 3D printed gifts. From 
 
 | Product | Description | Starting Price |
 |---------|-------------|----------------|
-| **3D Face Miniatures** | Hand-painted 3D bust of your loved one | ₹2,499 |
-| **Lithophane Lamps** | Photos that illuminate when lit | ₹1,999 |
-| **Personalized Name Plates** | Elegant desk/door name plates | ₹999 |
+| **3D Face Miniatures** | Hand-painted 3D bust from your photo | ₹2,499 |
+| **Lithophane Lamps** | Photos that illuminate when backlit | ₹1,999 |
+| **Personalized Bookmarks** | Custom photo & text bookmarks | ₹299 |
 | **Custom Keychains** | Carry memories everywhere | ₹499 |
-| **Couple Gifts** | Heart-shaped lamps & couple busts | ₹3,499 |
-| **Corporate Gifts** | Premium bulk 3D printed gifts | ₹4,999 |
+| **Couple Gifts** | Heart-shaped lamps & pair busts | ₹3,499 |
+| **Corporate Gifts** | Premium bulk 3D printed items | Custom quote |
 
 ---
 
@@ -29,7 +25,7 @@ Turn your precious memories into beautiful, personalized 3D printed gifts. From 
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 18 + Vite |
+| **Frontend** | React 19 + Vite |
 | **Styling** | Tailwind CSS 3 |
 | **Animations** | Framer Motion |
 | **Icons** | Lucide React |
@@ -43,13 +39,12 @@ Turn your precious memories into beautiful, personalized 3D printed gifts. From 
 ## Features
 
 - **Authentication** — Email/password + Google OAuth via Supabase Auth
-- **Shopping Cart** — Add/remove items, quantity controls, persists across sessions
-- **Razorpay Checkout** — Secure payment flow with order tracking
-- **Order History** — View all past orders with status tracking
-- **User Profiles** — Editable profile with address, phone, etc.
-- **Community** — Share your 3D printed creations with others
-- **Responsive Design** — Mobile-first, works on all screen sizes
-- **Dark Theme** — Premium dark UI with orange accents
+- **Shopping Cart** — Guest & authenticated cart with Supabase sync
+- **Razorpay Checkout** — Secure UPI, card & wallet payments
+- **Order Tracking** — Real-time status updates with photo upload & design approval
+- **User Profiles** — Editable addresses, order history, saved preferences
+- **Community** — Share your 3D printed creations
+- **Responsive Design** — Mobile-first dark theme with orange accents
 
 ---
 
@@ -58,43 +53,33 @@ Turn your precious memories into beautiful, personalized 3D printed gifts. From 
 ### Prerequisites
 
 - Node.js 18+
-- A Supabase project ([create one free](https://supabase.com))
-- A Razorpay account ([create one](https://razorpay.com)) *(test mode works for demos)*
+- A Supabase project ([create free](https://supabase.com))
+- A Razorpay account ([create here](https://razorpay.com)) — test mode works for development
 
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/printmymemory.git
-cd printmymemory
+git clone https://github.com/YOUR_USERNAME/giftedwithlove.git
+cd giftedwithlove
 npm install
 ```
 
 ### 2. Environment Variables
 
-Create a `.env` file in the root:
+Create `.env` in the root (see `.env.example` for all variables):
 
 ```env
-# Supabase (get from your project dashboard)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-
-# Razorpay (test keys work for development)
 VITE_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
 ```
 
-### 3. Set Up Database
+### 3. Database Setup
 
 1. Go to your Supabase project → SQL Editor
-2. Copy the contents of [`supabase_schema.sql`](supabase_schema.sql)
-3. Run the SQL to create all tables, policies, and seed data
+2. Run [`supabase_schema.sql`](supabase_schema.sql) to create tables, RLS policies, and seed data
 
-### 4. Enable Auth Providers (optional)
-
-In Supabase Dashboard → Authentication → Providers:
-- Enable **Google** OAuth (add your Google Client ID/Secret)
-- Or use email/password which works out of the box
-
-### 5. Run Locally
+### 4. Run Locally
 
 ```bash
 npm run dev
@@ -102,7 +87,7 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173)
 
-### 6. Build for Production
+### 5. Build for Production
 
 ```bash
 npm run build
@@ -112,128 +97,93 @@ npm run build
 
 ## Deploy to Vercel
 
+This repo uses a **two-branch, two-project** setup on Vercel:
+
+| Project | Branch | Root Directory | URL |
+|---------|--------|---------------|-----|
+| Storefront | `main` | `/` | `giftedwithlove.vercel.app` |
+| Admin CRM | `admin` | `/admin` | `admin-giftedwithlove.vercel.app` |
+
+### Storefront
+
 ```bash
 npm i -g vercel
 vercel --prod
 ```
 
-Make sure to add your environment variables in the Vercel dashboard:
-- Project Settings → Environment Variables
+- Connect to the `main` branch
+- Framework preset: **Vite**
+- Root Directory: `/`
+- Add env vars in Vercel dashboard → Project Settings → Environment Variables
+
+### Admin Dashboard
+
+Create a **second Vercel project** for the admin panel:
+
+1. Import the same GitHub repo
+2. Connect to the **`admin`** branch
+3. Framework preset: **Vite**
+4. Root Directory: **`/admin`** (Vercel will find `admin/package.json` here)
+5. Add the same environment variables
+
+The admin branch contains everything on `main` **plus** the `admin/` folder.
 
 ---
 
 ## Project Structure
 
 ```
-printmymemory/
+giftedwithlove/
 ├── public/
-│   └── images/              # Product photos
+│   └── images/products/       # Product photos
 ├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── Navbar.jsx
-│   │   ├── HeroSection.jsx
-│   │   ├── Footer.jsx
-│   │   └── ...
-│   ├── contexts/            # React Context providers
-│   │   ├── AuthContext.jsx  # Supabase auth
-│   │   └── CartContext.jsx  # Shopping cart
-│   ├── hooks/               # Custom hooks
-│   ├── lib/                 # Utilities
-│   │   ├── supabaseClient.js
-│   │   └── razorpay.js
-│   ├── pages/               # Route pages
-│   │   ├── Home.jsx
-│   │   ├── Shop.jsx
-│   │   ├── Login.jsx
-│   │   ├── Cart.jsx
-│   │   ├── Orders.jsx
-│   │   ├── Profile.jsx
-│   │   ├── Community.jsx
-│   │   └── ...
-│   ├── App.jsx              # Routes
-│   └── main.jsx             # Entry point
-├── supabase_schema.sql      # Database setup
+│   ├── components/            # Reusable UI components
+│   ├── contexts/              # Auth & Cart providers
+│   ├── hooks/                 # Custom hooks
+│   ├── lib/                   # Supabase client, Razorpay, utilities
+│   ├── pages/                 # Route pages
+│   ├── App.jsx                # Routes
+│   └── main.jsx               # Entry point
+├── supabase_schema.sql        # Database setup
 ├── tailwind.config.js
-└── vercel.json              # SPA routing
+└── vercel.json                # SPA routing
 ```
 
 ---
 
-## Supabase Schema
-
-The database includes:
+## Database Schema
 
 | Table | Purpose |
 |-------|---------|
 | `profiles` | User profiles (auto-created on signup) |
-| `products` | Product catalog |
-| `cart_items` | User shopping carts |
-| `orders` | Order records |
+| `products` | Product catalog with categories |
+| `cart_items` | Shopping cart with custom image support |
+| `orders` | Order records with status tracking |
 | `order_items` | Line items per order |
+| `order_history` | Audit log of status changes |
 | `reviews` | Product reviews |
 | `community_posts` | Community sharing |
+| `contact_submissions` | Customer enquiries |
 
-All tables have **Row Level Security (RLS)** enabled so users can only access their own data.
+All tables have **Row Level Security (RLS)** enabled.
 
 ---
 
 ## Payment Flow
 
-1. User adds items to cart
-2. Clicks "Proceed to Checkout"
-3. Razorpay checkout modal opens
-4. User completes payment
-5. Order is saved to Supabase with payment ID
-6. Cart is cleared
-7. User sees order confirmation + order history
+1. User adds items to cart → proceeds to checkout
+2. Razorpay checkout modal opens
+3. User completes payment (UPI / Card / Wallet)
+4. Order is saved to Supabase with payment ID
+5. Cart is cleared → order confirmation shown
 
-> **Note:** For production, create a Supabase Edge Function to verify Razorpay signatures server-side.
-
----
-
-## Environment Variables Reference
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_SUPABASE_URL` | Yes | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Yes | Your Supabase anon/public key |
-| `VITE_RAZORPAY_KEY_ID` | Yes | Razorpay test/live key ID |
-
----
-
-## Screenshots
-
-| Home | Shop | Cart |
-|------|------|------|
-| Hero with 3D products | Product grid with filters | Full checkout flow |
-
-| Login | Profile | Community |
-|-------|---------|-----------|
-| Google + email auth | Editable user profile | Share creations |
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit: `git commit -m 'Add amazing feature'`
-4. Push: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+> For production, verify Razorpay signatures via a Supabase Edge Function.
 
 ---
 
 ## License
 
-MIT — feel free to use this for your own projects!
-
----
-
-## Contact
-
-- WhatsApp: [+91 98765 43210](https://wa.me/919876543210)
-- Email: hello@printmymemory.in
-- Location: Mumbai, Maharashtra, India
+MIT — feel free to use this for your own projects.
 
 ---
 

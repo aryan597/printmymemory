@@ -1,143 +1,124 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, PenTool, Printer, Truck, Star, ArrowRight, ShoppingBag, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { ArrowRight, ShoppingBag, ChevronLeft, ChevronRight, Sparkles, Zap, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const steps = [
-  { icon: Upload, label: 'Upload Photo' },
-  { icon: PenTool, label: 'We Design' },
-  { icon: Printer, label: 'We Print' },
-  { icon: Truck, label: 'We Deliver' },
-];
-
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
-};
-
 const productImages = [
-  { src: '/images/globe_front.jpeg', alt: 'Lithophane Lamp', label: 'Lithophane Lamp' },
-  { src: '/images/model1_raw.jpeg', alt: '3D Printed Bust', label: '3D Face Miniature' },
-  { src: '/images/model1.jpeg', alt: 'Painted Miniature', label: 'Hand-Painted Finish' },
-  { src: '/images/model1_raw_generated.jpeg', alt: 'AI Preview', label: 'AI Preview' },
+  { src: '/images/products/globe_front.jpeg', alt: 'Moon Lamp Lithophane', label: 'Moon Lamp Lithophane' },
+  { src: '/images/products/model1_raw.jpeg', alt: '3D Printed Bust', label: '3D Face Miniature' },
+  { src: '/images/products/model1.jpeg', alt: 'Painted Miniature', label: 'Hand-Painted Finish' },
+  { src: '/images/products/model1_raw_generated.jpeg', alt: 'AI Preview', label: 'AI Design Preview' },
 ];
 
 export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % productImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % productImages.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + productImages.length) % productImages.length);
 
   return (
-    <section className="relative overflow-hidden py-10 sm:py-14 lg:py-20">
-      {/* Background glow */}
-      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-[300px] h-[300px] bg-accent/3 rounded-full blur-[100px] pointer-events-none" />
+    <section className="relative overflow-hidden pt-8 pb-10 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-20">
+      {/* Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent" />
+      <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-accent/[0.03] rounded-full blur-[150px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left Content */}
-          <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            <motion.div variants={itemVariants}>
-              <span className="inline-block bg-accent/10 text-accent text-[11px] sm:text-xs font-semibold tracking-wider px-3 py-1.5 rounded-full mb-5 border border-accent/20">
-                PERSONALIZED 3D PRINTED GIFTS
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+          >
+            {/* Tag */}
+            <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-full px-3.5 py-1.5 mb-6">
+              <Sparkles size={12} className="text-accent" />
+              <span className="text-accent text-[11px] font-semibold tracking-wide">
+                BOUTIQUE 3D PRINTING STUDIO
               </span>
-            </motion.div>
+            </div>
 
-            <motion.h1 variants={itemVariants} className="text-3xl sm:text-4xl lg:text-[48px] xl:text-[56px] font-extrabold text-text-primary leading-[1.05] mb-5">
-              Turn Your Memories Into{' '}
-              <span className="text-accent relative">
-                Unique 3D Gifts
-                <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none">
-                  <path d="M2 6C50 2 150 2 198 6" stroke="#f97316" strokeWidth="3" strokeLinecap="round" opacity="0.4"/>
-                </svg>
-              </span>
-            </motion.h1>
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-extrabold text-text-primary leading-[1.08] mb-5">
+              Your Photos,{' '}
+              <span className="text-accent">Sculpted</span>
+              <br />
+              Into Reality
+            </h1>
 
-            <motion.p variants={itemVariants} className="text-text-secondary text-sm sm:text-base leading-relaxed mb-7 max-w-lg">
-              We transform your precious moments into beautiful 3D printed keepsakes that last forever.
-              <span className="hidden sm:inline"> From photo to physical masterpiece in just a few clicks.</span>
-            </motion.p>
+            {/* Subheadline */}
+            <p className="text-text-secondary text-base sm:text-lg leading-relaxed mb-6 max-w-lg">
+              A two-person studio in Bangalore & Bhubaneswar turning your digital memories into tangible, 
+              high-quality 3D art pieces — printed on a Bambu Lab printer with love.
+            </p>
 
-            {/* Process Steps */}
-            <motion.div variants={itemVariants} className="flex items-center gap-1.5 sm:gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-              {steps.map((step, index) => (
-                <div key={step.label} className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-bg-card border border-border-subtle flex items-center justify-center">
-                      <step.icon size={16} className="text-accent" />
-                    </div>
-                    <span className="text-[10px] text-text-muted whitespace-nowrap">{step.label}</span>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className="w-4 sm:w-6 h-px bg-border-hover mb-4" />
-                  )}
-                </div>
-              ))}
-            </motion.div>
+            {/* Offer Bar */}
+            <div className="flex flex-wrap items-center gap-3 mb-8">
+              <div className="inline-flex items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5">
+                <Zap size={12} className="text-accent" />
+                <span className="text-accent text-xs font-semibold">WELCOME10 — 10% OFF</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 bg-pink-400/10 border border-pink-400/20 rounded-lg px-3 py-1.5">
+                <Gift size={12} className="text-pink-400" />
+                <span className="text-pink-400 text-xs font-semibold">Free Premium Packaging (First 50)</span>
+              </div>
+            </div>
 
             {/* CTAs */}
-            <motion.div variants={itemVariants} className="flex flex-wrap gap-3 mb-8">
+            <div className="flex flex-wrap gap-3 mb-10">
               <Link
                 to="/customize"
-                className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-5 sm:px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5"
               >
                 Start Customizing
                 <ArrowRight size={16} />
               </Link>
               <Link
                 to="/shop"
-                className="inline-flex items-center gap-2 bg-bg-card hover:bg-bg-elevated text-text-primary border border-border-subtle hover:border-border-hover px-5 sm:px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300"
+                className="inline-flex items-center gap-2 bg-bg-card hover:bg-bg-elevated text-text-primary border border-border-subtle hover:border-border-hover px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300"
               >
-                View Products
+                Browse Collection
                 <ShoppingBag size={16} />
               </Link>
-            </motion.div>
+            </div>
 
-            {/* Trust */}
-            <motion.div variants={itemVariants} className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {['PS', 'RM', 'AD', 'NK'].map((initials) => (
-                  <div
-                    key={initials}
-                    className="w-7 h-7 rounded-full bg-bg-card border-2 border-bg-primary flex items-center justify-center text-[9px] font-bold text-text-secondary"
-                  >
-                    {initials}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-text-primary text-xs sm:text-sm font-medium">Trusted by 5000+ happy customers</p>
-                <div className="flex items-center gap-1">
-                  <span className="text-text-primary font-bold text-xs sm:text-sm">4.9</span>
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} size={10} className="text-accent fill-accent" />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            {/* Trust Line */}
+            <div className="flex items-center gap-4 text-text-muted text-xs">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Made in India
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Pan-India Shipping
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                100% Upfront — No COD
+              </span>
+            </div>
           </motion.div>
 
           {/* Right - Image Carousel */}
           <motion.div
-            initial={{ opacity: 0, x: 40 }}
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
             className="relative"
           >
             <div className="relative">
               {/* Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-accent/8 rounded-full blur-[80px]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
 
               {/* Main Image */}
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border-subtle shadow-2xl shadow-black/40">
+              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border-subtle/60 shadow-2xl shadow-black/50">
                 {productImages.map((img, index) => (
                   <motion.img
                     key={img.src}
@@ -147,12 +128,12 @@ export default function HeroSection() {
                     initial={false}
                     animate={{
                       opacity: index === currentSlide ? 1 : 0,
-                      scale: index === currentSlide ? 1 : 1.05,
+                      scale: index === currentSlide ? 1 : 1.08,
                     }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.7, ease: 'easeInOut' }}
                   />
                 ))}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-bg-primary/90 to-transparent p-4">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-bg-primary/95 via-bg-primary/40 to-transparent p-5">
                   <p className="text-text-primary font-semibold text-sm">{productImages[currentSlide].label}</p>
                 </div>
               </div>
@@ -160,60 +141,60 @@ export default function HeroSection() {
               {/* Navigation */}
               <button
                 onClick={prevSlide}
-                className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-bg-primary/80 backdrop-blur-sm border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-bg-primary/90 backdrop-blur-sm border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-lg"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-bg-primary/80 backdrop-blur-sm border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-bg-primary/90 backdrop-blur-sm border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-lg"
               >
                 <ChevronRight size={16} />
               </button>
 
               {/* Dots */}
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5">
+              <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 flex gap-2">
                 {productImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentSlide ? 'bg-accent w-5' : 'bg-border-subtle'
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentSlide ? 'bg-accent w-6' : 'bg-border-subtle w-1.5'
                     }`}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Floating cards */}
+            {/* Floating info cards */}
             <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -bottom-4 -left-4 sm:-left-8 bg-bg-card border border-border-subtle rounded-xl p-3 shadow-xl shadow-black/30"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute -bottom-3 -left-4 sm:-left-10 bg-bg-card border border-border-subtle rounded-xl p-3 shadow-xl shadow-black/30"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-success/20 rounded-lg flex items-center justify-center">
-                  <Star size={14} className="text-success fill-success" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-accent/15 rounded-lg flex items-center justify-center">
+                  <span className="text-accent text-xs font-bold">FDM</span>
                 </div>
                 <div>
-                  <p className="text-text-primary text-xs font-bold">4.9 Rating</p>
-                  <p className="text-text-muted text-[10px]">5000+ reviews</p>
+                  <p className="text-text-primary text-xs font-bold">Bambu Lab</p>
+                  <p className="text-text-muted text-[10px]">Premium PLA Prints</p>
                 </div>
               </div>
             </motion.div>
 
             <motion.div
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-              className="absolute -top-3 -right-3 sm:-right-6 bg-bg-card border border-border-subtle rounded-xl p-3 shadow-xl shadow-black/30"
+              animate={{ y: [0, 5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              className="absolute -top-4 -right-4 sm:-right-8 bg-bg-card border border-border-subtle rounded-xl p-3 shadow-xl shadow-black/30"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
-                  <Printer size={14} className="text-accent" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-emerald-400/15 rounded-lg flex items-center justify-center">
+                  <span className="text-emerald-400 text-xs font-bold">5-7</span>
                 </div>
                 <div>
-                  <p className="text-text-primary text-xs font-bold">Premium 3D</p>
-                  <p className="text-text-muted text-[10px]">High quality prints</p>
+                  <p className="text-text-primary text-xs font-bold">Days Dispatch</p>
+                  <p className="text-text-muted text-[10px]">Custom-crafted per order</p>
                 </div>
               </div>
             </motion.div>

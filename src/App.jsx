@@ -16,8 +16,13 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
 import Profile from './pages/Profile';
 import Community from './pages/Community';
+import ShippingPolicy from './pages/ShippingPolicy';
+import ReturnRefund from './pages/ReturnRefund';
+import FAQ from './pages/FAQ';
+import BulkOrders from './pages/BulkOrders';
 
 function App() {
   return (
@@ -38,8 +43,13 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/:id" element={<OrderDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/return-refund" element={<ReturnRefund />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/bulk-orders" element={<BulkOrders />} />
             </Routes>
           </div>
           <Footer />

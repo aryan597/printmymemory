@@ -1,18 +1,71 @@
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2 } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, CreditCard, Banknote, MapPin, Home, Briefcase, PlusCircle } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
-import { openRazorpayCheckout, createOrder } from '../lib/razorpay';
+import { openRazorpayCheckout } from '../lib/razorpay';
 import { supabase, TABLES } from '../lib/supabaseClient';
+import { sendOrderConfirmationEmail, getWhatsAppOrderLink } from '../lib/notifications';
 import toast from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Cart() {
   const { cartItems, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, profile } = useAuth();
   const navigate = useNavigate();
   const [checkingOut, setCheckingOut] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' | 'cod'
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [addressesLoading, setAddressesLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) loadAddresses();
+  }, [user?.id]);
+
+  const loadAddresses = async () => {
+    setAddressesLoading(true);
+    try {
+      const { data } = await supabase
+        .from(TABLES.ADDRESSES)
+        .select('*')
+        .eq('user_id', user.id)
+        .order('is_default', { ascending: false });
+      setAddresses(data || []);
+      const defaultAddr = data?.find(a => a.is_default);
+      if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+      else if (data?.[0]) setSelectedAddressId(data[0].id);
+    } catch (_) { /* ignore */ }
+    finally { setAddressesLoading(false); }
+  };
+
+  const getSelectedAddress = () => addresses.find(a => a.id === selectedAddressId);
+
+  const buildShippingAddress = () => {
+    const addr = getSelectedAddress();
+    if (addr) {
+      return {
+        full_name: addr.full_name || profile?.full_name || '',
+        phone: addr.phone || profile?.phone || '',
+        email: user?.email || '',
+        address_line1: addr.address_line1,
+        address_line2: addr.address_line2 || '',
+        city: addr.city || '',
+        state: addr.state || '',
+        postcode: addr.postcode || '',
+        label: addr.label || 'Home',
+      };
+    }
+    return {
+      full_name: profile?.full_name || user?.user_metadata?.full_name || '',
+      email: user?.email || '',
+      phone: profile?.phone || user?.user_metadata?.phone || '',
+      address_line1: '',
+      city: '',
+      state: '',
+      postcode: '',
+    };
+  };
 
   const handleCheckout = async () => {
     if (!isAuthenticated) {
@@ -25,49 +78,166 @@ export default function Cart() {
       return;
     }
 
+    if (!getSelectedAddress()) {
+      toast.error('Please add a delivery address in your profile');
+      navigate('/profile');
+      return;
+    }
+
     setCheckingOut(true);
+    let orderId = null;
+
     try {
-      const orderDetails = await createOrder(cartTotal, cartItems, user);
-      
+      // Step 1: Create order in Supabase first
+      const { data: orderData, error: orderError } = await supabase
+        .from(TABLES.ORDERS)
+        .insert({
+          user_id: user.id,
+          total_amount: cartTotal,
+          status: 'order_placed',
+          payment_method: paymentMethod,
+          shipping_address: buildShippingAddress(),
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+      orderId = orderData.id;
+
+      // Step 2: Create order items
+      const orderItems = cartItems.map(item => ({
+        order_id: orderId,
+        product_id: item.product_id || item.product?.id || item.id,
+        quantity: item.quantity,
+        price: item.product?.price || item.price || 0,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from(TABLES.ORDER_ITEMS)
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Prepare shared data
+      const hasCustomised = cartItems.some(
+        item => item.product?.product_type === 'customised' || item.product_type === 'customised'
+      );
+      const customerEmail = user?.email || '';
+      const customerName = profile?.full_name || user?.user_metadata?.full_name || '';
+
+      // Step 3: COD — skip Razorpay
+      if (paymentMethod === 'cod') {
+        // Send confirmation email
+        await sendOrderConfirmationEmail({
+          to_email: customerEmail,
+          to_name: customerName,
+          order_id: orderId,
+          total_amount: cartTotal,
+          payment_method: 'cod',
+          items: cartItems,
+          delivery: buildShippingAddress(),
+        });
+
+        await clearCart();
+        toast.success('Order placed! Pay ₹' + cartTotal + ' on delivery.');
+
+        // Redirect customised orders to WhatsApp
+        if (hasCustomised) {
+          const waLink = getWhatsAppOrderLink({
+            order_id: orderId,
+            customer_name: customerName,
+            product_name: cartItems.find(i => i.product?.product_type === 'customised' || i.product_type === 'customised')?.product?.name,
+          });
+          window.open(waLink, '_blank');
+        }
+
+        navigate('/orders');
+        return;
+      }
+
+      // Step 3: Online — Open Razorpay checkout
       await openRazorpayCheckout(
-        orderDetails,
-        user,
-        async (response) => {
-          // Payment success - save order to Supabase
-          const { data: orderData, error: orderError } = await supabase
-            .from(TABLES.ORDERS)
-            .insert({
-              user_id: user.id,
-              total_amount: cartTotal,
-              status: 'paid',
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              shipping_address: user?.user_metadata || {},
-            })
-            .select()
-            .single();
-
-          if (orderError) throw orderError;
-
-          // Save order items
-          const orderItems = cartItems.map(item => ({
-            order_id: orderData.id,
-            product_id: item.product_id || item.product?.id,
-            quantity: item.quantity,
-            price: item.product?.price || item.price || 0,
-          }));
-
-          await supabase.from(TABLES.ORDER_ITEMS).insert(orderItems);
-          await clearCart();
-          toast.success('Order placed successfully!');
-          navigate('/orders');
+        {
+          amount: cartTotal,
+          name: profile?.full_name || user?.user_metadata?.full_name || '',
+          email: user?.email || '',
+          phone: profile?.phone || user?.user_metadata?.phone || '',
+          orderName: hasCustomised ? 'Customised 3D Printed Gift' : '3D Printed Gift',
         },
-        (error) => {
-          toast.error(error.message || 'Payment failed');
+        // On success
+        async (response) => {
+          try {
+            const { error: updateError } = await supabase
+              .from(TABLES.ORDERS)
+              .update({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature || null,
+                razorpay_order_id: response.razorpay_order_id || null,
+                status: 'order_placed',
+                paid_at: new Date().toISOString(),
+              })
+              .eq('id', orderId);
+
+            if (updateError) throw updateError;
+
+            await clearCart();
+            toast.success('Payment successful! Order placed.');
+
+            // Send confirmation email
+            await sendOrderConfirmationEmail({
+              to_email: customerEmail,
+              to_name: customerName,
+              order_id: orderId,
+              total_amount: cartTotal,
+              payment_method: 'online',
+              items: cartItems,
+              delivery: buildShippingAddress(),
+            });
+
+            // Redirect customised orders to WhatsApp
+            if (hasCustomised) {
+              const waLink = getWhatsAppOrderLink({
+                order_id: orderId,
+                customer_name: customerName,
+                product_name: cartItems.find(i => i.product?.type === 'customised' || i.type === 'customised')?.product?.name,
+              });
+              window.open(waLink, '_blank');
+            }
+
+            navigate('/orders');
+          } catch (err) {
+            console.error('Post-payment update failed:', err);
+            toast.error('Payment received but order update failed. Contact support.');
+          }
+        },
+        // On error / cancel
+        async (error) => {
+          // Mark order as cancelled
+          try {
+            await supabase
+              .from(TABLES.ORDERS)
+              .update({ status: 'cancelled' })
+              .eq('id', orderId);
+          } catch (_) { /* ignore */ }
+
+          if (error.message !== 'Payment cancelled') {
+            toast.error(error.message || 'Payment failed');
+          } else {
+            toast('Payment cancelled', { icon: 'ℹ️' });
+          }
         }
       );
     } catch (error) {
-      toast.error(error.message);
+      console.error('Checkout error:', error);
+      toast.error(error.message || 'Checkout failed');
+
+      // Clean up orphaned order if created
+      if (orderId) {
+        try {
+          await supabase.from(TABLES.ORDER_ITEMS).delete().eq('order_id', orderId);
+          await supabase.from(TABLES.ORDERS).delete().eq('id', orderId);
+        } catch (_) { /* ignore */ }
+      }
     } finally {
       setCheckingOut(false);
     }
@@ -124,7 +294,7 @@ export default function Cart() {
                 >
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-bg-secondary shrink-0">
                     <img
-                      src={product.image || '/images/model1.jpeg'}
+                      src={product.image || '/images/products/model1.jpeg'}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
@@ -187,17 +357,116 @@ export default function Cart() {
                 <span className="text-accent font-bold text-xl">₹{cartTotal}</span>
               </div>
             </div>
+
+            {/* Delivery Address */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-text-secondary text-xs font-medium uppercase tracking-wider">Deliver To</p>
+                <Link to="/profile" className="text-accent text-xs hover:underline">Manage</Link>
+              </div>
+              {addressesLoading ? (
+                <div className="flex items-center gap-2 text-text-muted text-sm py-3">
+                  <Loader2 size={14} className="animate-spin" /> Loading addresses...
+                </div>
+              ) : addresses.length === 0 ? (
+                <div className="bg-bg-secondary border border-border-subtle rounded-xl p-4 text-center">
+                  <MapPin size={20} className="text-text-muted mx-auto mb-2" />
+                  <p className="text-text-secondary text-sm">No delivery address saved</p>
+                  <Link to="/profile" className="text-accent text-xs hover:underline inline-flex items-center gap-1 mt-1">
+                    <PlusCircle size={12} /> Add address
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {addresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    const Icon = addr.label === 'Home' ? Home : addr.label === 'Work' ? Briefcase : MapPin;
+                    return (
+                      <button
+                        key={addr.id}
+                        onClick={() => setSelectedAddressId(addr.id)}
+                        className={`w-full flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
+                          isSelected
+                            ? 'border-accent bg-accent/10'
+                            : 'border-border-subtle bg-bg-secondary hover:border-border-default'
+                        }`}
+                      >
+                        <Icon size={14} className={`mt-0.5 shrink-0 ${isSelected ? 'text-accent' : 'text-text-muted'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-medium ${isSelected ? 'text-accent' : 'text-text-primary'}`}>
+                            {addr.label}{addr.is_default && <span className="text-text-muted font-normal ml-1">· Default</span>}
+                          </p>
+                          <p className="text-text-secondary text-xs mt-0.5 truncate">
+                            {addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ''}
+                          </p>
+                          <p className="text-text-muted text-[10px]">
+                            {addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postcode}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <div className="w-4 h-4 rounded-full bg-accent flex items-center justify-center shrink-0 mt-0.5">
+                            <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Payment Method Selector */}
+            <div className="space-y-2 mb-4">
+              <p className="text-text-secondary text-xs font-medium uppercase tracking-wider">Payment Method</p>
+              <button
+                onClick={() => setPaymentMethod('online')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
+                  paymentMethod === 'online'
+                    ? 'border-accent bg-accent/10 text-text-primary'
+                    : 'border-border-subtle bg-bg-secondary text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                <CreditCard size={18} className={paymentMethod === 'online' ? 'text-accent' : 'text-text-muted'} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Pay Online</p>
+                  <p className="text-xs text-text-muted">Razorpay — Cards, UPI, Netbanking</p>
+                </div>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'online' ? 'border-accent' : 'border-text-muted'}`}>
+                  {paymentMethod === 'online' && <div className="w-2 h-2 rounded-full bg-accent" />}
+                </div>
+              </button>
+              <button
+                onClick={() => setPaymentMethod('cod')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
+                  paymentMethod === 'cod'
+                    ? 'border-accent bg-accent/10 text-text-primary'
+                    : 'border-border-subtle bg-bg-secondary text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                <Banknote size={18} className={paymentMethod === 'cod' ? 'text-accent' : 'text-text-muted'} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Cash on Delivery</p>
+                  <p className="text-xs text-text-muted">Pay ₹{cartTotal} when your order arrives</p>
+                </div>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cod' ? 'border-accent' : 'border-text-muted'}`}>
+                  {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-accent" />}
+                </div>
+              </button>
+            </div>
+
             <button
               onClick={handleCheckout}
               disabled={checkingOut}
               className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
             >
               {checkingOut ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
-              Proceed to Checkout
+              {paymentMethod === 'cod' ? 'Place COD Order' : 'Pay with Razorpay'}
             </button>
-            <p className="text-text-muted text-xs text-center mt-3">
-              Secured by Razorpay. Cash on delivery also available.
-            </p>
+            {paymentMethod === 'online' && (
+              <p className="text-text-muted text-xs text-center mt-3">
+                Secured by Razorpay. Your payment info is never stored.
+              </p>
+            )}
           </motion.div>
         </div>
       </div>

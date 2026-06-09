@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, Image, Box, Truck, Check, ChevronRight, Loader2, ShoppingCart } from 'lucide-react';
 import { useContext } from 'react';
 import { CartContext } from '../contexts/CartContext';
 import { useAuth } from '../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
+import { supabase, TABLES } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 
 const steps = [
@@ -14,11 +15,7 @@ const steps = [
   { id: 4, title: 'Get Delivered', icon: Truck, desc: 'Receive your custom 3D print at home' },
 ];
 
-const products = [
-  { id: 1, name: '3D Face Miniature', price: 2499, image: '/images/model1.jpeg', category: 'Personalized' },
-  { id: 2, name: 'Lithophane Lamp', price: 1999, image: '/images/globe_front.jpeg', category: 'Lamps' },
-  { id: 3, name: 'Name Plate', price: 999, image: '/images/globe_back.jpeg', category: 'Home Decor' },
-];
+const MAX_FILE_SIZE_MB = 10;
 
 export default function Customize() {
   const [step, setStep] = useState(1);
@@ -26,18 +23,52 @@ export default function Customize() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadPreview, setUploadPreview] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const { addToCart } = useContext(CartContext);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Load customised products from DB
+  useEffect(() => {
+    let cancelled = false;
+    async function loadProducts() {
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.PRODUCTS)
+          .select('*, category:categories(name)')
+          .eq('is_active', true)
+          .eq('product_type', 'customised')
+          .order('created_at', { ascending: false });
+        if (!cancelled) {
+          if (error) throw error;
+          setProducts(data || []);
+        }
+      } catch (err) {
+        console.error('Failed to load customised products:', err);
+      } finally {
+        if (!cancelled) setProductsLoading(false);
+      }
+    }
+    loadProducts();
+    return () => { cancelled = true; };
+  }, []);
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setUploadPreview(reader.result);
-      reader.readAsDataURL(file);
-      setUploadedImage(file);
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`);
+      return;
     }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (JPG, PNG).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => setUploadPreview(reader.result);
+    reader.readAsDataURL(file);
+    setUploadedImage(file);
   };
 
   const handleAddToCart = async () => {
@@ -47,7 +78,12 @@ export default function Customize() {
     }
     setAdding(true);
     try {
-      await addToCart({ ...selectedProduct, image: uploadPreview || selectedProduct.image });
+      // Pass the uploaded photo as custom_image so it's preserved for authenticated users
+      await addToCart(
+        { ...selectedProduct, image: uploadPreview || selectedProduct.image },
+        1,
+        uploadPreview || null
+      );
       toast.success('Added to cart! Proceed to checkout.');
       navigate('/cart');
     } catch (err) {
@@ -56,6 +92,8 @@ export default function Customize() {
       setAdding(false);
     }
   };
+
+  const displayProducts = products.length > 0 ? products : [];
 
   return (
     <main className="py-10 sm:py-14">
@@ -98,6 +136,7 @@ export default function Customize() {
                   <div className="flex flex-col items-center">
                     <img src={uploadPreview} alt="Preview" className="w-40 h-40 object-cover rounded-xl mb-4 border border-border-subtle" />
                     <button
+                      type="button"
                       onClick={() => { setUploadPreview(null); setUploadedImage(null); }}
                       className="text-text-secondary hover:text-accent text-sm transition-colors"
                     >
@@ -110,13 +149,14 @@ export default function Customize() {
                       <Upload size={24} className="text-accent" />
                     </div>
                     <p className="text-text-primary font-medium text-sm mb-1">Click to upload photo</p>
-                    <p className="text-text-muted text-xs">JPG, PNG up to 10MB</p>
+                    <p className="text-text-muted text-xs">JPG, PNG up to {MAX_FILE_SIZE_MB}MB</p>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   </label>
                 )}
               </div>
               <div className="mt-6 flex justify-end">
                 <button
+                  type="button"
                   onClick={() => setStep(2)}
                   disabled={!uploadPreview}
                   className="bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2"
@@ -133,33 +173,52 @@ export default function Customize() {
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
             <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8">
               <h2 className="text-lg font-bold text-text-primary mb-4">2. Choose Your Product</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {products.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => setSelectedProduct(product)}
-                    className={`border rounded-xl p-3 text-left transition-all ${
-                      selectedProduct?.id === product.id
-                        ? 'border-accent bg-accent/5 shadow-lg shadow-accent/10'
-                        : 'border-border-subtle hover:border-border-hover bg-bg-secondary'
-                    }`}
-                  >
-                    <div className="aspect-square rounded-lg overflow-hidden mb-3">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    </div>
-                    <h3 className="text-text-primary font-semibold text-sm">{product.name}</h3>
-                    <p className="text-accent font-bold">₹{product.price}</p>
-                  </button>
-                ))}
-              </div>
+              {productsLoading ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 size={24} className="animate-spin text-accent" />
+                </div>
+              ) : displayProducts.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-text-muted text-sm">No customised products available right now.</p>
+                  <Link to="/shop" className="text-accent text-sm hover:underline mt-2 inline-block">Browse our shop</Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {displayProducts.map((product) => (
+                    <button
+                      type="button"
+                      key={product.id}
+                      onClick={() => setSelectedProduct(product)}
+                      className={`border rounded-xl p-3 text-left transition-all ${
+                        selectedProduct?.id === product.id
+                          ? 'border-accent bg-accent/5 shadow-lg shadow-accent/10'
+                          : 'border-border-subtle hover:border-border-hover bg-bg-secondary'
+                      }`}
+                    >
+                      <div className="aspect-square rounded-lg overflow-hidden mb-3">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.target.src = '/images/products/model1.jpeg'; }}
+                        />
+                      </div>
+                      <h3 className="text-text-primary font-semibold text-sm">{product.name}</h3>
+                      <p className="text-accent font-bold">₹{Number(product.price).toLocaleString('en-IN')}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="mt-6 flex justify-between">
                 <button
+                  type="button"
                   onClick={() => setStep(1)}
                   className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
                 >
                   Back
                 </button>
                 <button
+                  type="button"
                   onClick={() => setStep(3)}
                   disabled={!selectedProduct}
                   className="bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2"
@@ -177,22 +236,29 @@ export default function Customize() {
             <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8">
               <h2 className="text-lg font-bold text-text-primary mb-4">3. Review Your Order</h2>
               <div className="flex gap-4 mb-6">
-                <img src={uploadPreview} alt="Your photo" className="w-24 h-24 object-cover rounded-xl border border-border-subtle" />
+                <img
+                  src={uploadPreview}
+                  alt="Your photo"
+                  className="w-24 h-24 object-cover rounded-xl border border-border-subtle"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
                 <div>
                   <p className="text-text-muted text-xs mb-1">Selected Product</p>
                   <p className="text-text-primary font-semibold">{selectedProduct?.name}</p>
-                  <p className="text-accent font-bold text-lg">₹{selectedProduct?.price}</p>
+                  <p className="text-accent font-bold text-lg">₹{Number(selectedProduct?.price).toLocaleString('en-IN')}</p>
                   <p className="text-text-muted text-xs mt-1">Free shipping across India</p>
                 </div>
               </div>
               <div className="flex justify-between">
                 <button
+                  type="button"
                   onClick={() => setStep(2)}
                   className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
                 >
                   Back
                 </button>
                 <button
+                  type="button"
                   onClick={() => setStep(4)}
                   className="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2"
                 >
@@ -216,6 +282,7 @@ export default function Customize() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
+                  type="button"
                   onClick={handleAddToCart}
                   disabled={adding}
                   className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
