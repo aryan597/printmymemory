@@ -4,7 +4,7 @@ import { Upload, Image, Box, Truck, Check, ChevronRight, Loader2, ShoppingCart }
 import { useContext } from 'react';
 import { CartContext } from '../contexts/CartContext';
 import { useAuth } from '../hooks/useAuth';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
 
@@ -28,6 +28,8 @@ export default function Customize() {
   const { addToCart } = useContext(CartContext);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedProductId = Number(searchParams.get('productId')) || null;
 
   // Load customised products from DB
   useEffect(() => {
@@ -43,6 +45,10 @@ export default function Customize() {
         if (!cancelled) {
           if (error) throw error;
           setProducts(data || []);
+          if (preselectedProductId) {
+            const preselected = data?.find((p) => p.id === preselectedProductId);
+            if (preselected) setSelectedProduct(preselected);
+          }
         }
       } catch (err) {
         console.error('Failed to load customised products:', err);

@@ -439,3 +439,31 @@ CREATE INDEX IF NOT EXISTS idx_vouchers_active ON vouchers(is_active);
 INSERT INTO vouchers (code, discount_percent, max_discount_amount, min_order_amount, usage_limit, is_active, starts_at, expires_at)
 VALUES ('WELCOME10', 10, 500, 0, NULL, true, NOW(), NOW() + INTERVAL '1 year')
 ON CONFLICT (code) DO NOTHING;
+
+-- ============================================================
+-- 17. PRODUCT VIEWS (analytics for product detail page)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_views (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  viewer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  session_id TEXT,
+  source TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_product_views_product ON product_views(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_views_viewer ON product_views(viewer_id);
+CREATE INDEX IF NOT EXISTS idx_product_views_created ON product_views(created_at DESC);
+
+-- Anyone (guest or authenticated) can record a view
+CREATE POLICY "Anyone can insert product views" ON product_views
+  FOR INSERT WITH CHECK (true);
+
+-- Admins can view all analytics
+CREATE POLICY "Admins can view product views" ON product_views
+  FOR SELECT USING (public.is_admin());
+
+-- Users can view their own product views (optional, keeps select usable for auth users)
+CREATE POLICY "Users can view own product views" ON product_views
+  FOR SELECT USING (auth.uid() = viewer_id);

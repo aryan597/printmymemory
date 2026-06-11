@@ -12,7 +12,7 @@ export default function ProductCard({ product, index }) {
       whileHover={{ y: -6 }}
       className="group bg-bg-card border border-border-subtle rounded-2xl overflow-hidden hover:border-accent/40 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5"
     >
-      <div className="relative aspect-square overflow-hidden bg-bg-secondary">
+      <Link to={`/products/${product.id}`} className="block relative aspect-square overflow-hidden bg-bg-secondary">
         <img
           src={product.image}
           alt={product.name}
@@ -20,14 +20,16 @@ export default function ProductCard({ product, index }) {
           onError={(e) => { e.target.onerror = null; e.target.src = '/images/products/model1.jpeg'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-bg-card/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
+      </Link>
       <div className="p-4 sm:p-5">
-        <h3 className="text-text-primary font-semibold text-base sm:text-lg mb-1">{product.name}</h3>
+        <Link to={`/products/${product.id}`}>
+          <h3 className="text-text-primary font-semibold text-base sm:text-lg mb-1 hover:text-accent transition-colors">{product.name}</h3>
+        </Link>
         <Link
-          to="/shop"
+          to={`/products/${product.id}`}
           className="inline-flex items-center gap-1.5 text-accent text-sm font-medium hover:gap-2.5 transition-all"
         >
-          Shop Now
+          View Product
           <ArrowRight size={14} />
         </Link>
       </div>

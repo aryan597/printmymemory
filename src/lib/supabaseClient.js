@@ -37,4 +37,5 @@ export const TABLES = {
   ADDRESSES: 'addresses',
   VOUCHERS: 'vouchers',
   CONTACT_SUBMISSIONS: 'contact_submissions',
+  PRODUCT_VIEWS: 'product_views',
 };

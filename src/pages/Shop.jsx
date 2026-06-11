@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ShoppingCart, Loader2, Search, SlidersHorizontal, Package, RefreshCw } from 'lucide-react';
+import { ArrowRight, ShoppingCart, Loader2, Search, SlidersHorizontal, Package, RefreshCw, Eye } from 'lucide-react';
 import { CartContext } from '../contexts/CartContext';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
@@ -150,15 +150,17 @@ export default function Shop() {
                 className="group bg-bg-card border border-border-subtle rounded-2xl overflow-hidden hover:border-accent/40 transition-all duration-300"
               >
                 <div className="relative aspect-square overflow-hidden bg-bg-secondary">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/images/products/model1.jpeg';
-                    }}
-                  />
+                  <Link to={`/products/${product.id}`}>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/images/products/model1.jpeg';
+                      }}
+                    />
+                  </Link>
                   <span className="absolute top-2.5 left-2.5 bg-bg-primary/80 backdrop-blur-sm text-text-secondary text-[10px] sm:text-xs px-2 py-0.5 rounded-full border border-border-subtle">
                     {product.category?.name || product.category}
                   </span>
@@ -167,17 +169,28 @@ export default function Shop() {
                       Customised
                     </span>
                   )}
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    disabled={addingId === product.id}
-                    aria-label={`Add ${product.name} to cart`}
-                    className="absolute bottom-2.5 right-2.5 w-9 h-9 bg-accent hover:bg-accent-hover text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300"
-                  >
-                    {addingId === product.id ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
-                  </button>
+                  <div className="absolute bottom-2.5 right-2.5 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                    <Link
+                      to={`/products/${product.id}`}
+                      className="w-9 h-9 bg-bg-primary/90 hover:bg-bg-elevated text-text-primary rounded-full flex items-center justify-center shadow-lg"
+                      aria-label={`View ${product.name}`}
+                    >
+                      <Eye size={16} />
+                    </Link>
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      disabled={addingId === product.id}
+                      aria-label={`Add ${product.name} to cart`}
+                      className="w-9 h-9 bg-accent hover:bg-accent-hover text-white rounded-full flex items-center justify-center shadow-lg"
+                    >
+                      {addingId === product.id ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="p-3.5 sm:p-5">
-                  <h3 className="text-text-primary font-semibold text-sm sm:text-base mb-1">{product.name}</h3>
+                  <Link to={`/products/${product.id}`}>
+                    <h3 className="text-text-primary font-semibold text-sm sm:text-base mb-1 hover:text-accent transition-colors">{product.name}</h3>
+                  </Link>
                   <p className="text-text-muted text-xs mb-3 line-clamp-2">{product.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-accent font-bold text-base sm:text-lg">{formatPrice(product.price)}</span>

@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
+import ProductDetail from './pages/ProductDetail';
 import Customize from './pages/Customize';
 import Gallery from './pages/Gallery';
 import About from './pages/About';
@@ -35,6 +36,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
               <Route path="/customize" element={<Customize />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/about" element={<About />} />
