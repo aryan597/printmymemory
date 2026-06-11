@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ShoppingBag, ChevronLeft, ChevronRight, Sparkles, Zap, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase, TABLES } from '../lib/supabaseClient';
+import Button from './ui/Button';
+import IconButton from './ui/IconButton';
 
-const productImages = [
+const fallbackImages = [
   { src: '/images/products/globe_front.jpeg', alt: 'Moon Lamp Lithophane', label: 'Moon Lamp Lithophane' },
   { src: '/images/products/model1_raw.jpeg', alt: '3D Printed Bust', label: '3D Face Miniature' },
   { src: '/images/products/model1.jpeg', alt: 'Painted Miniature', label: 'Hand-Painted Finish' },
@@ -12,22 +15,62 @@ const productImages = [
 
 export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [productSlides, setProductSlides] = useState(null);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  const slides = productSlides || fallbackImages;
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadProducts() {
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.PRODUCTS)
+          .select('id, name, image')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(6);
+        if (!cancelled) {
+          if (error) throw error;
+          if (data && data.length > 0) {
+            setProductSlides(
+              data.map((p) => ({
+                src: p.image,
+                alt: p.name,
+                label: p.name,
+                productId: p.id,
+              }))
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load hero products:', err);
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    }
+    loadProducts();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % productImages.length);
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % productImages.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + productImages.length) % productImages.length);
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
     <section className="relative overflow-hidden pt-8 pb-10 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-20">
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent" />
-      <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-accent/[0.03] rounded-full blur-[150px] pointer-events-none" />
+      {/* Animated background orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-accent/10 rounded-full blur-[150px] animate-blob" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[150px] animate-blob" style={{ animationDelay: '-5s' }} />
+        <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-[120px] animate-blob" style={{ animationDelay: '-8s' }} />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -38,7 +81,7 @@ export default function HeroSection() {
             transition={{ duration: 0.7, ease: 'easeOut' }}
           >
             {/* Tag */}
-            <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 rounded-full px-3.5 py-1.5 mb-6">
+            <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
               <Sparkles size={12} className="text-accent" />
               <span className="text-accent text-[11px] font-semibold tracking-wide">
                 BOUTIQUE 3D PRINTING STUDIO
@@ -46,62 +89,60 @@ export default function HeroSection() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-extrabold text-text-primary leading-[1.08] mb-5">
+            <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-extrabold leading-[1.08] mb-5">
               Your Photos,{' '}
-              <span className="text-accent">Sculpted</span>
+              <span className="gradient-text">Sculpted</span>
               <br />
               Into Reality
             </h1>
 
             {/* Subheadline */}
             <p className="text-text-secondary text-base sm:text-lg leading-relaxed mb-6 max-w-lg">
-              A two-person studio in Bangalore & Bhubaneswar turning your digital memories into tangible, 
+              A two-person studio in Bangalore & Bhubaneswar turning your digital memories into tangible,
               high-quality 3D art pieces — printed on a Bambu Lab printer with love.
             </p>
 
             {/* Offer Bar */}
             <div className="flex flex-wrap items-center gap-3 mb-8">
-              <div className="inline-flex items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5">
+              <div className="inline-flex items-center gap-1.5 glass rounded-full px-3.5 py-1.5 border-accent/20">
                 <Zap size={12} className="text-accent" />
                 <span className="text-accent text-xs font-semibold">WELCOME10 — 10% OFF</span>
               </div>
-              <div className="inline-flex items-center gap-1.5 bg-pink-400/10 border border-pink-400/20 rounded-lg px-3 py-1.5">
+              <div className="inline-flex items-center gap-1.5 glass rounded-full px-3.5 py-1.5 border-pink-400/20">
                 <Gift size={12} className="text-pink-400" />
-                <span className="text-pink-400 text-xs font-semibold">Free Premium Packaging (First 50)</span>
+                <span className="text-pink-400 text-xs font-semibold">Free Premium Packaging</span>
               </div>
             </div>
 
             {/* CTAs */}
             <div className="flex flex-wrap gap-3 mb-10">
-              <Link
-                to="/customize"
-                className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5"
-              >
-                Start Customizing
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/shop"
-                className="inline-flex items-center gap-2 bg-bg-card hover:bg-bg-elevated text-text-primary border border-border-subtle hover:border-border-hover px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300"
-              >
-                Browse Collection
-                <ShoppingBag size={16} />
-              </Link>
+              <Button asChild>
+                <Link to="/customize">
+                  Start Customizing
+                  <ArrowRight size={16} />
+                </Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link to="/shop">
+                  Browse Collection
+                  <ShoppingBag size={16} />
+                </Link>
+              </Button>
             </div>
 
             {/* Trust Line */}
-            <div className="flex items-center gap-4 text-text-muted text-xs">
+            <div className="flex flex-wrap items-center gap-4 text-text-muted text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                 Made in India
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                 Pan-India Shipping
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                100% Upfront — No COD
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                Premium PLA
               </span>
             </div>
           </motion.div>
@@ -115,52 +156,58 @@ export default function HeroSection() {
           >
             <div className="relative">
               {/* Glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] bg-accent/10 rounded-full blur-[120px]" />
 
-              {/* Main Image */}
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border-subtle/60 shadow-2xl shadow-black/50">
-                {productImages.map((img, index) => (
-                  <motion.img
-                    key={img.src}
-                    src={img.src}
-                    alt={img.alt}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    initial={false}
-                    animate={{
-                      opacity: index === currentSlide ? 1 : 0,
-                      scale: index === currentSlide ? 1 : 1.08,
-                    }}
-                    transition={{ duration: 0.7, ease: 'easeInOut' }}
-                  />
-                ))}
+              {/* Main Image Frame */}
+              <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden gradient-border shadow-glass-lg">
+                <div className="absolute inset-0 bg-bg-primary/30 backdrop-blur-sm" />
+                <AnimatePresence mode="wait">
+                  {slides.map((img, index) =>
+                    index === currentSlide ? (
+                      <motion.img
+                        key={img.src + index}
+                        src={img.src}
+                        alt={img.alt}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        initial={{ opacity: 0, scale: 1.08 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.7, ease: 'easeInOut' }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/images/products/model1.jpeg';
+                        }}
+                      />
+                    ) : null
+                  )}
+                </AnimatePresence>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-bg-primary/95 via-bg-primary/40 to-transparent p-5">
-                  <p className="text-text-primary font-semibold text-sm">{productImages[currentSlide].label}</p>
+                  <p className="text-text-primary font-semibold text-sm">{slides[currentSlide].label}</p>
                 </div>
               </div>
 
               {/* Navigation */}
-              <button
-                onClick={prevSlide}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-bg-primary/90 backdrop-blur-sm border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-lg"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-bg-primary/90 backdrop-blur-sm border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-lg"
-              >
-                <ChevronRight size={16} />
-              </button>
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <IconButton onClick={prevSlide} aria-label="Previous slide">
+                  <ChevronLeft size={18} />
+                </IconButton>
+              </div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <IconButton onClick={nextSlide} aria-label="Next slide">
+                  <ChevronRight size={18} />
+                </IconButton>
+              </div>
 
               {/* Dots */}
-              <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 flex gap-2">
-                {productImages.map((_, index) => (
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+                {slides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentSlide ? 'bg-accent w-6' : 'bg-border-subtle w-1.5'
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentSlide ? 'bg-accent w-7 shadow-glow-sm' : 'bg-glass-border-strong w-2 hover:bg-white/30'
                     }`}
+                    aria-label={`Go to slide ${index + 1}`}
                   />
                 ))}
               </div>
@@ -168,12 +215,12 @@ export default function HeroSection() {
 
             {/* Floating info cards */}
             <motion.div
-              animate={{ y: [0, -5, 0] }}
+              animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -bottom-3 -left-4 sm:-left-10 bg-bg-card border border-border-subtle rounded-xl p-3 shadow-xl shadow-black/30"
+              className="absolute -bottom-3 -left-4 sm:-left-10 glass-strong p-3.5 rounded-2xl"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-accent/15 rounded-lg flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
                   <span className="text-accent text-xs font-bold">FDM</span>
                 </div>
                 <div>
@@ -184,12 +231,12 @@ export default function HeroSection() {
             </motion.div>
 
             <motion.div
-              animate={{ y: [0, 5, 0] }}
+              animate={{ y: [0, 6, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute -top-4 -right-4 sm:-right-8 bg-bg-card border border-border-subtle rounded-xl p-3 shadow-xl shadow-black/30"
+              className="absolute -top-4 -right-4 sm:-right-8 glass-strong p-3.5 rounded-2xl"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-emerald-400/15 rounded-lg flex items-center justify-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/20 to-emerald-400/5 border border-emerald-400/20 flex items-center justify-center">
                   <span className="text-emerald-400 text-xs font-bold">5-7</span>
                 </div>
                 <div>

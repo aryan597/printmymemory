@@ -2,10 +2,12 @@ import { useState, useEffect, useRef, useContext, useMemo } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ShoppingCart, Heart, Share2, Truck, ShieldCheck, RotateCcw, ChevronRight,
+  Heart, Share2, Truck, ShieldCheck, RotateCcw, ChevronRight,
   Minus, Plus, Loader2, Package, Star, ChevronDown, ChevronUp, ArrowLeft,
-  Sparkles, Eye
+  Sparkles, Eye, ShoppingCart
 } from 'lucide-react';
+import Button from '../components/ui/Button';
+import IconButton from '../components/ui/IconButton';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { CartContext } from '../contexts/CartContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -209,7 +211,9 @@ export default function ProductDetail() {
   if (loading) {
     return (
       <main className="py-20 flex items-center justify-center min-h-[60vh]">
-        <Loader2 size={32} className="animate-spin text-accent" />
+        <div className="glass-strong p-6 rounded-full">
+          <Loader2 size={32} className="animate-spin text-accent" />
+        </div>
       </main>
     );
   }
@@ -217,11 +221,11 @@ export default function ProductDetail() {
   if (error || !product) {
     return (
       <main className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="max-w-md mx-auto px-4 text-center glass-strong p-8 sm:p-10 rounded-[2rem]">
           <Package size={48} className="text-text-muted mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-text-primary mb-2">Product not found</h1>
           <p className="text-text-secondary text-sm mb-6">{error || 'We couldn\'t find the product you were looking for.'}</p>
-          <Link to="/shop" className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          <Link to="/shop" className="inline-flex items-center gap-2 bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-all shadow-glow-sm hover:shadow-glow">
             <ArrowLeft size={16} /> Browse Products
           </Link>
         </div>
@@ -254,7 +258,7 @@ export default function ProductDetail() {
           >
             <div
               ref={imageRef}
-              className="relative aspect-square bg-bg-card border border-border-subtle rounded-2xl overflow-hidden group cursor-crosshair"
+              className="relative aspect-square glass-strong rounded-[2rem] overflow-hidden group cursor-crosshair"
               onMouseMove={handleMouseMove}
               onMouseLeave={() => setZoom((z) => ({ ...z, active: false }))}
             >
@@ -286,8 +290,8 @@ export default function ProductDetail() {
                   <button
                     key={idx}
                     onClick={() => setActiveImage(idx)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
-                      activeImage === idx ? 'border-accent' : 'border-border-subtle hover:border-border-hover'
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 transition-all shrink-0 ${
+                      activeImage === idx ? 'border-accent shadow-glow-sm' : 'border-glass-border hover:border-glass-border-strong'
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
@@ -305,11 +309,11 @@ export default function ProductDetail() {
             className="flex flex-col"
           >
             <div className="mb-1">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium glass text-accent">
                 {categoryName}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-3">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-3 tracking-tight">{product.name}</h1>
 
             {reviews.length > 0 && (
               <div className="flex items-center gap-2 mb-4">
@@ -320,13 +324,13 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="text-3xl sm:text-4xl font-bold text-accent mb-4">
+            <div className="text-3xl sm:text-4xl font-bold gradient-text mb-4">
               {formatPrice(product.price)}
               <span className="text-text-muted text-sm font-normal ml-2">incl. of all taxes</span>
             </div>
 
-            <div className={`inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-xs font-medium mb-5 ${status.color}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            <div className={`inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-xs font-medium mb-5 glass ${status.color}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
               {status.label}
             </div>
 
@@ -338,7 +342,7 @@ export default function ProductDetail() {
               {product.description && product.description.length > 120 && (
                 <button
                   onClick={() => setShowFullDesc((s) => !s)}
-                  className="inline-flex items-center gap-1 text-accent text-xs font-medium mt-2 hover:underline"
+                  className="inline-flex items-center gap-1 text-accent text-xs font-medium mt-2 hover:underline hover:gap-1.5 transition-all"
                 >
                   {showFullDesc ? 'Show less' : 'Read more'} {showFullDesc ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
@@ -348,19 +352,19 @@ export default function ProductDetail() {
             {/* Specs */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               {product.material && (
-                <div className="bg-bg-card border border-border-subtle rounded-xl p-3 text-center">
+                <div className="glass p-3 text-center rounded-xl">
                   <p className="text-text-muted text-[10px] uppercase tracking-wide">Material</p>
                   <p className="text-text-primary text-sm font-semibold mt-0.5">{product.material}</p>
                 </div>
               )}
               {product.weight_grams && (
-                <div className="bg-bg-card border border-border-subtle rounded-xl p-3 text-center">
+                <div className="glass p-3 text-center rounded-xl">
                   <p className="text-text-muted text-[10px] uppercase tracking-wide">Weight</p>
                   <p className="text-text-primary text-sm font-semibold mt-0.5">{product.weight_grams}g</p>
                 </div>
               )}
               {product.print_time_minutes && (
-                <div className="bg-bg-card border border-border-subtle rounded-xl p-3 text-center">
+                <div className="glass p-3 text-center rounded-xl">
                   <p className="text-text-muted text-[10px] uppercase tracking-wide">Print Time</p>
                   <p className="text-text-primary text-sm font-semibold mt-0.5">{product.print_time_minutes}m</p>
                 </div>
@@ -370,11 +374,11 @@ export default function ProductDetail() {
             {/* Quantity */}
             <div className="flex items-center gap-4 mb-6">
               <span className="text-text-secondary text-sm">Quantity</span>
-              <div className="flex items-center bg-bg-card border border-border-subtle rounded-xl">
+              <div className="flex items-center glass rounded-full">
                 <button
                   onClick={() => handleQuantity(-1)}
                   disabled={quantity <= 1}
-                  className="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-bg-elevated disabled:opacity-40 rounded-l-xl transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-white/5 disabled:opacity-40 rounded-l-full transition-colors"
                 >
                   <Minus size={16} />
                 </button>
@@ -382,7 +386,7 @@ export default function ProductDetail() {
                 <button
                   onClick={() => handleQuantity(1)}
                   disabled={product.stock_quantity ? quantity >= product.stock_quantity : false}
-                  className="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-bg-elevated disabled:opacity-40 rounded-r-xl transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-white/5 disabled:opacity-40 rounded-r-full transition-colors"
                 >
                   <Plus size={16} />
                 </button>
@@ -391,27 +395,28 @@ export default function ProductDetail() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <button
+              <Button
                 onClick={() => handleAddToCart(false)}
                 disabled={adding || !product.in_stock || product.stock_quantity <= 0}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover disabled:opacity-60 disabled:hover:bg-accent text-white py-3.5 rounded-xl font-semibold transition-colors"
+                className="flex-1 py-3.5"
               >
                 {adding ? <Loader2 size={18} className="animate-spin" /> : <ShoppingCart size={18} />}
                 Add to Cart
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => handleAddToCart(true)}
                 disabled={adding || !product.in_stock || product.stock_quantity <= 0}
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-bg-card border border-border-subtle hover:border-accent hover:text-accent text-text-primary py-3.5 rounded-xl font-semibold transition-colors"
+                className="flex-1 py-3.5"
               >
                 Buy Now
-              </button>
+              </Button>
             </div>
 
             {product.product_type === 'customised' && (
               <Link
                 to={`/customize?productId=${product.id}`}
-                className="mb-6 inline-flex items-center justify-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 py-3 rounded-xl font-semibold transition-colors"
+                className="mb-6 inline-flex items-center justify-center gap-2 glass hover:border-purple-400/40 text-purple-400 border-purple-400/30 py-3 rounded-full font-semibold transition-all hover:-translate-y-0.5"
               >
                 <Sparkles size={18} /> Customize This Gift
               </Link>
@@ -419,29 +424,37 @@ export default function ProductDetail() {
 
             {/* Trust badges */}
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="flex items-start gap-2.5 bg-bg-card border border-border-subtle rounded-xl p-3">
-                <Truck size={18} className="text-accent mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2.5 glass rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <Truck size={16} className="text-accent" />
+                </div>
                 <div>
                   <p className="text-text-primary text-xs font-semibold">Free Shipping</p>
                   <p className="text-text-muted text-[10px]">On orders above ₹999</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 bg-bg-card border border-border-subtle rounded-xl p-3">
-                <ShieldCheck size={18} className="text-accent mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2.5 glass rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <ShieldCheck size={16} className="text-accent" />
+                </div>
                 <div>
                   <p className="text-text-primary text-xs font-semibold">Quality Assured</p>
                   <p className="text-text-muted text-[10px]">Hand-finished 3D prints</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 bg-bg-card border border-border-subtle rounded-xl p-3">
-                <RotateCcw size={18} className="text-accent mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2.5 glass rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <RotateCcw size={16} className="text-accent" />
+                </div>
                 <div>
                   <p className="text-text-primary text-xs font-semibold">Easy Returns</p>
                   <p className="text-text-muted text-[10px]">7-day return policy</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 bg-bg-card border border-border-subtle rounded-xl p-3">
-                <Eye size={18} className="text-accent mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2.5 glass rounded-xl p-3">
+                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <Eye size={16} className="text-accent" />
+                </div>
                 <div>
                   <p className="text-text-primary text-xs font-semibold">Design Preview</p>
                   <p className="text-text-muted text-[10px]">Approve before printing</p>
@@ -469,21 +482,21 @@ export default function ProductDetail() {
 
         {/* Reviews */}
         <section className="mt-14 sm:mt-20">
-          <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6">Customer Reviews</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6">Customer <span className="gradient-text">Reviews</span></h2>
           {reviewsLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 size={24} className="animate-spin text-accent" />
             </div>
           ) : reviews.length === 0 ? (
-            <div className="bg-bg-card border border-border-subtle rounded-xl p-6 text-center">
+            <div className="glass rounded-2xl p-6 text-center">
               <p className="text-text-secondary text-sm">No reviews yet. Be the first to review this product!</p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {reviews.map((review) => (
-                <div key={review.id} className="bg-bg-card border border-border-subtle rounded-xl p-4">
+                <div key={review.id} className="glass rounded-2xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/20 flex items-center justify-center text-accent text-xs font-bold">
                       {(review.profile?.full_name || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -510,7 +523,7 @@ export default function ProductDetail() {
         {related.length > 0 && (
           <section className="mt-14 sm:mt-20">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">You May Also Like</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-text-primary">You May Also <span className="gradient-text">Like</span></h2>
               <Link to="/shop" className="text-accent text-sm font-medium hover:underline">View all</Link>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -518,9 +531,9 @@ export default function ProductDetail() {
                 <Link
                   key={p.id}
                   to={`/products/${p.id}`}
-                  className="group bg-bg-card border border-border-subtle rounded-2xl overflow-hidden hover:border-accent/40 transition-all duration-300"
+                  className="group glass-card overflow-hidden"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-bg-secondary">
+                  <div className="relative aspect-square overflow-hidden bg-bg-secondary/50">
                     <img
                       src={p.image}
                       alt={p.name}

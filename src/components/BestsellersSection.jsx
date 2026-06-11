@@ -45,7 +45,7 @@ export default function BestsellersSection() {
         >
           <div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-2">
-              Shop by <span className="text-accent">Category</span>
+              Shop by <span className="gradient-text">Category</span>
             </h2>
             <p className="text-text-secondary text-sm sm:text-base">
               Real categories, real products — no dropshipping nonsense
@@ -73,7 +73,7 @@ export default function BestsellersSection() {
               <Link
                 key={cat.id}
                 to={`/shop?category=${encodeURIComponent(cat.name)}`}
-                className="px-4 py-2 bg-bg-card border border-border-subtle rounded-lg text-text-secondary hover:text-text-primary hover:border-accent/40 hover:bg-accent/5 transition-all text-sm font-medium"
+                className="px-4 py-2 glass rounded-full text-text-secondary hover:text-text-primary hover:border-accent/40 hover:bg-accent/10 transition-all text-sm font-medium"
               >
                 {cat.name}
               </Link>

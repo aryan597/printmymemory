@@ -159,13 +159,13 @@ export default function AddressManager({ userId }) {
   };
 
   return (
-    <div className="bg-bg-card border border-border-subtle rounded-xl p-6">
+    <div className="glass rounded-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-text-primary">Delivery Addresses</h3>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 bg-accent/10 hover:bg-accent/20 text-accent text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 glass hover:border-accent/40 text-accent text-sm font-medium px-4 py-1.5 rounded-full transition-all hover:-translate-y-0.5"
           >
             <Plus size={14} /> Add New
           </button>
@@ -181,7 +181,7 @@ export default function AddressManager({ userId }) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-6"
           >
-            <div className="bg-bg-primary border border-border-subtle rounded-xl p-5 space-y-4">
+            <div className="glass-strong rounded-2xl p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-text-primary font-semibold text-sm">
                   {editingId ? 'Edit Address' : 'New Address'}
@@ -197,7 +197,7 @@ export default function AddressManager({ userId }) {
                   <select
                     value={form.label}
                     onChange={(e) => setForm({ ...form, label: e.target.value })}
-                    className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
                   >
                     <option>Home</option>
                     <option>Work</option>
@@ -210,7 +210,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.full_name}
                     onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                    className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
                     placeholder="Recipient name"
                   />
                 </div>
@@ -256,7 +256,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
                     placeholder="Bangalore"
                   />
                 </div>
@@ -266,7 +266,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.state}
                     onChange={(e) => setForm({ ...form, state: e.target.value })}
-                    className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
                     placeholder="Karnataka"
                   />
                 </div>
@@ -276,7 +276,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.postcode}
                     onChange={(e) => setForm({ ...form, postcode: e.target.value })}
-                    className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
                     placeholder="560064"
                   />
                 </div>

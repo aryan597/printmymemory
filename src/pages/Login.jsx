@@ -49,7 +49,7 @@ export default function Login() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md mx-4"
       >
-        <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8">
+        <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-text-primary mb-2">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
@@ -77,7 +77,7 @@ export default function Login() {
           {/* Setup Guide Toggle */}
           <button
             onClick={() => setShowSetupGuide(!showSetupGuide)}
-            className="w-full mb-4 p-2.5 rounded-lg bg-accent/10 border border-accent/20 text-accent text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-accent/20 transition-colors"
+            className="w-full mb-4 p-2.5 rounded-full glass border-accent/20 text-accent text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-accent/10 transition-colors"
           >
             <Info size={14} />
             {showSetupGuide ? 'Hide Setup Guide' : 'Having trouble logging in? Click here'}
@@ -87,7 +87,7 @@ export default function Login() {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mb-4 p-4 rounded-lg bg-bg-secondary border border-border-subtle text-text-secondary text-xs leading-relaxed whitespace-pre-wrap"
+              className="mb-4 p-4 rounded-2xl glass text-text-secondary text-xs leading-relaxed whitespace-pre-wrap"
             >
               {getAuthSetupGuide()}
             </motion.div>
@@ -96,7 +96,7 @@ export default function Login() {
           {/* Google Sign In */}
           <button
             onClick={handleGoogle}
-            className="w-full bg-bg-secondary border border-border-subtle hover:border-border-hover text-text-primary py-2.5 rounded-xl font-medium transition-all mb-4 flex items-center justify-center gap-2"
+            className="w-full glass hover:border-glass-border-strong text-text-primary py-2.5 rounded-full font-medium transition-all mb-4 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -109,10 +109,10 @@ export default function Login() {
 
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border-subtle"></div>
+              <div className="w-full border-t border-glass-border"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-bg-card px-2 text-text-muted">or</span>
+              <span className="bg-bg-primary px-2 text-text-muted">or</span>
             </div>
           </div>
 
@@ -127,7 +127,7 @@ export default function Login() {
                     required
                     value={form.fullName}
                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                    className="w-full bg-bg-primary border border-border-subtle rounded-xl pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
+                    className="w-full glass rounded-full pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
                     placeholder="John Doe"
                   />
                 </div>
@@ -156,7 +156,7 @@ export default function Login() {
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full bg-bg-primary border border-border-subtle rounded-xl pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
+                    className="w-full glass rounded-full pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
                     placeholder="+91-7463812249"
                   />
                 </div>
@@ -179,7 +179,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-white py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-60 text-white py-2.5 rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               {isSignUp ? 'Create Account' : 'Sign In'}

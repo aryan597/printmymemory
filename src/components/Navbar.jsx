@@ -61,15 +61,15 @@ export default function Navbar() {
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-bg-primary/85 backdrop-blur-xl shadow-lg shadow-black/10 border-b border-border-subtle/60'
-          : 'bg-bg-primary'
+          ? 'bg-bg-primary/70 backdrop-blur-2xl shadow-lg shadow-black/10 border-b border-glass-border-strong'
+          : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-[68px]">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
+            <div className="w-9 h-9 bg-gradient-to-br from-accent to-amber-500 rounded-full flex items-center justify-center shadow-lg shadow-accent/25">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                 <path d="M2 17l10 5 10-5" />
@@ -88,10 +88,10 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 to={link.path}
-                className={`relative px-3 py-2 rounded-lg text-[13px] font-medium transition-colors ${
+                className={`relative px-3 py-2 rounded-full text-[13px] font-medium transition-colors ${
                   location.pathname === link.path
-                    ? 'text-accent'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-card'
+                    ? 'text-accent bg-accent/10'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-glass'
                 }`}
               >
                 {link.name}
@@ -121,7 +121,7 @@ export default function Navbar() {
             {/* Cart */}
             <Link
               to="/cart"
-              className="relative p-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors"
+              className="relative p-2 text-text-secondary hover:text-text-primary hover:bg-glass rounded-full transition-colors"
               aria-label="Shopping cart"
             >
               <ShoppingCart size={20} />
@@ -141,7 +141,7 @@ export default function Navbar() {
               <div className="relative ml-1" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-1.5 p-1.5 pr-2.5 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 p-1.5 pr-2.5 text-text-secondary hover:text-text-primary hover:bg-glass rounded-full transition-colors"
                   aria-expanded={showUserMenu}
                   aria-haspopup="true"
                 >
@@ -158,9 +158,9 @@ export default function Navbar() {
                       initial={{ opacity: 0, y: 8, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      className="absolute right-0 top-full mt-2 w-52 bg-bg-card border border-border-subtle rounded-xl shadow-xl shadow-black/30 overflow-hidden z-50"
+                      className="absolute right-0 top-full mt-2 w-52 glass-strong rounded-2xl shadow-glass-lg overflow-hidden z-50"
                     >
-                      <div className="p-3 border-b border-border-subtle">
+                      <div className="p-3 border-b border-glass-border">
                         <p className="text-text-primary text-sm font-medium truncate">{user?.user_metadata?.full_name || user?.email}</p>
                         <p className="text-text-muted text-xs truncate">{user?.email}</p>
                       </div>
@@ -175,7 +175,7 @@ export default function Navbar() {
                       </Link>
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 text-sm transition-colors border-t border-border-subtle"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 text-sm transition-colors border-t border-glass-border"
                       >
                         <LogOut size={15} /> Sign Out
                       </button>
@@ -186,7 +186,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="ml-1 px-3 py-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors text-sm font-medium"
+                className="ml-1 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-glass rounded-full transition-colors text-sm font-medium"
                 aria-label="Sign in"
               >
                 Sign In
@@ -195,7 +195,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-text-secondary hover:text-text-primary hover:bg-bg-card rounded-lg transition-colors ml-1"
+              className="lg:hidden p-2 text-text-secondary hover:text-text-primary hover:bg-glass rounded-full transition-colors ml-1"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -211,7 +211,7 @@ export default function Navbar() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="lg:hidden bg-bg-secondary/95 backdrop-blur-xl border-t border-border-subtle overflow-hidden"
+            className="lg:hidden glass-strong border-t border-glass-border-strong overflow-hidden"
           >
             <div className="px-4 py-3 space-y-0.5">
               {navLinks.map((link) => (
@@ -240,7 +240,7 @@ export default function Navbar() {
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-3 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
                   >
                     Sign Out
                   </button>

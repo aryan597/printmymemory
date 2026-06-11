@@ -9,21 +9,20 @@ export default function ProductCard({ product, index }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -6 }}
-      className="group bg-bg-card border border-border-subtle rounded-2xl overflow-hidden hover:border-accent/40 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5"
+      className="group glass-card overflow-hidden"
     >
-      <Link to={`/products/${product.id}`} className="block relative aspect-square overflow-hidden bg-bg-secondary">
+      <Link to={`/products/${product.id}`} className="block relative aspect-square overflow-hidden bg-bg-secondary/50">
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           onError={(e) => { e.target.onerror = null; e.target.src = '/images/products/model1.jpeg'; }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-card/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Link>
       <div className="p-4 sm:p-5">
         <Link to={`/products/${product.id}`}>
-          <h3 className="text-text-primary font-semibold text-base sm:text-lg mb-1 hover:text-accent transition-colors">{product.name}</h3>
+          <h3 className="text-text-primary font-semibold text-base sm:text-lg mb-1 group-hover:text-accent transition-colors">{product.name}</h3>
         </Link>
         <Link
           to={`/products/${product.id}`}

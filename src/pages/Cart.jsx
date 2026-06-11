@@ -251,14 +251,14 @@ export default function Cart() {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <div className="w-20 h-20 bg-bg-card rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 glass rounded-full flex items-center justify-center mx-auto mb-6">
             <ShoppingBag size={32} className="text-text-muted" />
           </div>
           <h2 className="text-xl font-bold text-text-primary mb-2">Your cart is empty</h2>
           <p className="text-text-secondary text-sm mb-6">Add some amazing 3D gifts to get started!</p>
           <Link
             to="/shop"
-            className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-xl font-semibold transition-all"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 text-white px-6 py-3 rounded-full font-semibold transition-all shadow-glow-sm hover:shadow-glow"
           >
             Browse Products <ArrowRight size={16} />
           </Link>
@@ -275,7 +275,7 @@ export default function Cart() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Shopping Cart ({cartCount})</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Shopping <span className="gradient-text">Cart</span> ({cartCount})</h1>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -290,9 +290,9 @@ export default function Cart() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-bg-card border border-border-subtle rounded-xl p-4 flex gap-4"
+                  className="glass p-4 flex gap-4 rounded-2xl"
                 >
-                  <div className="w-20 h-20 rounded-lg overflow-hidden bg-bg-secondary shrink-0">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-bg-secondary/50 shrink-0">
                     <img
                       src={product.image || '/images/products/model1.jpeg'}
                       alt={product.name}
@@ -305,14 +305,14 @@ export default function Cart() {
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => updateQuantity(item.id || item.product_id, item.quantity - 1)}
-                        className="w-7 h-7 bg-bg-secondary border border-border-subtle rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+                        className="w-7 h-7 glass rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors"
                       >
                         <Minus size={12} />
                       </button>
                       <span className="text-text-primary text-sm font-medium w-6 text-center">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id || item.product_id, item.quantity + 1)}
-                        className="w-7 h-7 bg-bg-secondary border border-border-subtle rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+                        className="w-7 h-7 glass rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-accent/40 transition-colors"
                       >
                         <Plus size={12} />
                       </button>
@@ -334,7 +334,7 @@ export default function Cart() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-bg-card border border-border-subtle rounded-xl p-6 h-fit"
+            className="glass-strong rounded-2xl p-6 h-fit"
           >
             <h2 className="text-lg font-bold text-text-primary mb-4">Order Summary</h2>
             <div className="space-y-3 mb-4">
@@ -351,7 +351,7 @@ export default function Cart() {
                 <span className="text-accent">-₹0</span>
               </div>
             </div>
-            <div className="border-t border-border-subtle pt-4 mb-4">
+            <div className="border-t border-glass-border pt-4 mb-4">
               <div className="flex justify-between">
                 <span className="text-text-primary font-semibold">Total</span>
                 <span className="text-accent font-bold text-xl">₹{cartTotal}</span>
@@ -369,7 +369,7 @@ export default function Cart() {
                   <Loader2 size={14} className="animate-spin" /> Loading addresses...
                 </div>
               ) : addresses.length === 0 ? (
-                <div className="bg-bg-secondary border border-border-subtle rounded-xl p-4 text-center">
+                <div className="glass rounded-2xl p-4 text-center">
                   <MapPin size={20} className="text-text-muted mx-auto mb-2" />
                   <p className="text-text-secondary text-sm">No delivery address saved</p>
                   <Link to="/profile" className="text-accent text-xs hover:underline inline-flex items-center gap-1 mt-1">
@@ -388,7 +388,7 @@ export default function Cart() {
                         className={`w-full flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
                           isSelected
                             ? 'border-accent bg-accent/10'
-                            : 'border-border-subtle bg-bg-secondary hover:border-border-default'
+                            : 'border-glass-border bg-glass hover:border-glass-border-strong'
                         }`}
                       >
                         <Icon size={14} className={`mt-0.5 shrink-0 ${isSelected ? 'text-accent' : 'text-text-muted'}`} />
@@ -423,7 +423,7 @@ export default function Cart() {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
                   paymentMethod === 'online'
                     ? 'border-accent bg-accent/10 text-text-primary'
-                    : 'border-border-subtle bg-bg-secondary text-text-secondary hover:text-text-primary'
+                    : 'border-glass-border bg-glass text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <CreditCard size={18} className={paymentMethod === 'online' ? 'text-accent' : 'text-text-muted'} />
@@ -440,7 +440,7 @@ export default function Cart() {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
                   paymentMethod === 'cod'
                     ? 'border-accent bg-accent/10 text-text-primary'
-                    : 'border-border-subtle bg-bg-secondary text-text-secondary hover:text-text-primary'
+                    : 'border-glass-border bg-glass text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <Banknote size={18} className={paymentMethod === 'cod' ? 'text-accent' : 'text-text-muted'} />
@@ -457,7 +457,7 @@ export default function Cart() {
             <button
               onClick={handleCheckout}
               disabled={checkingOut}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-60 text-white py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow"
             >
               {checkingOut ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               {paymentMethod === 'cod' ? 'Place COD Order' : 'Pay with Razorpay'}

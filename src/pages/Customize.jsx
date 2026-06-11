@@ -106,7 +106,7 @@ export default function Customize() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-3">
-            Create Your <span className="text-accent">Custom Gift</span>
+            Create Your <span className="gradient-text">Custom Gift</span>
           </h1>
           <p className="text-text-secondary text-sm max-w-md mx-auto">
             Follow these simple steps to turn your memories into personalized 3D gifts
@@ -119,14 +119,14 @@ export default function Customize() {
             <div key={s.id} className="flex items-center">
               <div className={`flex flex-col items-center ${step >= s.id ? 'text-accent' : 'text-text-muted'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                  step >= s.id ? 'bg-accent border-accent text-white' : 'bg-bg-card border-border-subtle'
+                  step >= s.id ? 'bg-gradient-to-br from-accent to-amber-500 border-accent text-white shadow-glow-sm' : 'glass border-glass-border'
                 }`}>
                   {step > s.id ? <Check size={16} /> : s.id}
                 </div>
                 <span className="text-[10px] mt-1.5 hidden sm:block">{s.title}</span>
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-colors ${step > s.id ? 'bg-accent' : 'bg-border-subtle'}`} />
+                <div className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-colors ${step > s.id ? 'bg-accent' : 'bg-glass-border-strong'}`} />
               )}
             </div>
           ))}
@@ -135,12 +135,12 @@ export default function Customize() {
         {/* Step 1: Upload Photo */}
         {step === 1 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8">
+            <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
               <h2 className="text-lg font-bold text-text-primary mb-4">1. Upload Your Photo</h2>
-              <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${uploadPreview ? 'border-accent/40 bg-accent/5' : 'border-border-subtle hover:border-border-hover'}`}>
+              <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${uploadPreview ? 'border-accent/40 bg-accent/5' : 'border-glass-border hover:border-glass-border-strong'}`}>
                 {uploadPreview ? (
                   <div className="flex flex-col items-center">
-                    <img src={uploadPreview} alt="Preview" className="w-40 h-40 object-cover rounded-xl mb-4 border border-border-subtle" />
+                    <img src={uploadPreview} alt="Preview" className="w-40 h-40 object-cover rounded-2xl mb-4 border border-glass-border" />
                     <button
                       type="button"
                       onClick={() => { setUploadPreview(null); setUploadedImage(null); }}
@@ -151,7 +151,7 @@ export default function Customize() {
                   </div>
                 ) : (
                   <label className="cursor-pointer flex flex-col items-center">
-                    <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-3">
+                    <div className="w-14 h-14 glass-strong rounded-2xl flex items-center justify-center mb-3">
                       <Upload size={24} className="text-accent" />
                     </div>
                     <p className="text-text-primary font-medium text-sm mb-1">Click to upload photo</p>
@@ -165,7 +165,7 @@ export default function Customize() {
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={!uploadPreview}
-                  className="bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2"
+                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 shadow-glow-sm hover:shadow-glow"
                 >
                   Next Step <ChevronRight size={16} />
                 </button>
@@ -177,7 +177,7 @@ export default function Customize() {
         {/* Step 2: Choose Product */}
         {step === 2 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8">
+            <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
               <h2 className="text-lg font-bold text-text-primary mb-4">2. Choose Your Product</h2>
               {productsLoading ? (
                 <div className="flex justify-center py-10">
@@ -201,7 +201,7 @@ export default function Customize() {
                           : 'border-border-subtle hover:border-border-hover bg-bg-secondary'
                       }`}
                     >
-                      <div className="aspect-square rounded-lg overflow-hidden mb-3">
+                      <div className="aspect-square rounded-xl overflow-hidden mb-3">
                         <img
                           src={product.image}
                           alt={product.name}
@@ -219,7 +219,7 @@ export default function Customize() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
+                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors px-4 py-2 rounded-full hover:bg-glass"
                 >
                   Back
                 </button>
@@ -227,7 +227,7 @@ export default function Customize() {
                   type="button"
                   onClick={() => setStep(3)}
                   disabled={!selectedProduct}
-                  className="bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2"
+                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 shadow-glow-sm hover:shadow-glow"
                 >
                   Next Step <ChevronRight size={16} />
                 </button>
@@ -239,13 +239,13 @@ export default function Customize() {
         {/* Step 3: Review */}
         {step === 3 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8">
+            <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
               <h2 className="text-lg font-bold text-text-primary mb-4">3. Review Your Order</h2>
               <div className="flex gap-4 mb-6">
                 <img
                   src={uploadPreview}
                   alt="Your photo"
-                  className="w-24 h-24 object-cover rounded-xl border border-border-subtle"
+                  className="w-24 h-24 object-cover rounded-2xl border border-glass-border"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
                 <div>
@@ -259,14 +259,14 @@ export default function Customize() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors"
+                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors px-4 py-2 rounded-full hover:bg-glass"
                 >
                   Back
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(4)}
-                  className="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2"
+                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 shadow-glow-sm hover:shadow-glow"
                 >
                   Confirm <Check size={16} />
                 </button>
@@ -279,7 +279,7 @@ export default function Customize() {
         {step === 4 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
             <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8 text-center">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 glass-strong rounded-full flex items-center justify-center mx-auto mb-4">
                 <ShoppingCart size={28} className="text-accent" />
               </div>
               <h2 className="text-xl font-bold text-text-primary mb-2">Ready to Order!</h2>
@@ -291,14 +291,14 @@ export default function Customize() {
                   type="button"
                   onClick={handleAddToCart}
                   disabled={adding}
-                  className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-60 text-white px-6 py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow"
                 >
                   {adding ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
                   Add to Cart & Checkout
                 </button>
                 <Link
                   to="/shop"
-                  className="bg-bg-secondary border border-border-subtle hover:border-border-hover text-text-primary px-6 py-3 rounded-xl font-semibold transition-all inline-flex items-center justify-center gap-2"
+                  className="glass hover:border-glass-border-strong text-text-primary px-6 py-3 rounded-full font-semibold transition-all inline-flex items-center justify-center gap-2"
                 >
                   Browse More
                 </Link>

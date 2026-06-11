@@ -41,7 +41,7 @@ export default function HowItWorks() {
           className="text-center mb-12 sm:mb-14"
         >
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-3">
-            How It <span className="text-accent">Works</span>
+            How It <span className="gradient-text">Works</span>
           </h2>
           <p className="text-text-secondary text-sm sm:text-base max-w-md mx-auto">
             Simple. Transparent. No corporate BS.
@@ -59,11 +59,11 @@ export default function HowItWorks() {
               className="relative text-center group"
             >
               <div className="relative inline-flex flex-col items-center">
-                <div className="w-14 h-14 rounded-2xl bg-bg-card border border-border-subtle flex items-center justify-center mb-4 group-hover:border-accent/40 group-hover:bg-accent/5 transition-all">
+                <div className="w-14 h-14 rounded-full glass-strong border border-glass-border-strong flex items-center justify-center mb-4 group-hover:border-accent/40 group-hover:bg-accent/10 transition-all shadow-glass">
                   <step.icon size={22} className="text-accent" />
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-7 left-full w-full h-px bg-border-subtle" />
+                  <div className="hidden lg:block absolute top-7 left-full w-full h-px bg-gradient-to-r from-glass-border-strong via-accent/30 to-glass-border-strong" />
                 )}
               </div>
               <h3 className="text-text-primary font-semibold text-sm sm:text-base mb-1">

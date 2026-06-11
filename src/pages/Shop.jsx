@@ -71,7 +71,7 @@ export default function Shop() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-2">
-            Our <span className="text-accent">Products</span>
+            Our <span className="gradient-text">Products</span>
           </h1>
           <p className="text-text-secondary text-sm">Browse our collection of personalized 3D printed gifts</p>
         </motion.div>
@@ -85,17 +85,17 @@ export default function Shop() {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-bg-card border border-border-subtle rounded-xl pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
+              className="w-full glass rounded-full pl-10 pr-4 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent transition-colors"
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <SlidersHorizontal size={16} className="text-text-muted shrink-0" />
             <button
               onClick={() => setActiveCategory('All')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                 activeCategory === 'All'
-                  ? 'bg-accent text-white'
-                  : 'bg-bg-card text-text-secondary hover:text-text-primary border border-border-subtle'
+                  ? 'bg-accent text-white shadow-glow-sm'
+                  : 'glass text-text-secondary hover:text-text-primary hover:border-accent/40'
               }`}
             >
               All
@@ -104,10 +104,10 @@ export default function Shop() {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.name)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                   activeCategory === cat.name
-                    ? 'bg-accent text-white'
-                    : 'bg-bg-card text-text-secondary hover:text-text-primary border border-border-subtle'
+                    ? 'bg-accent text-white shadow-glow-sm'
+                    : 'glass text-text-secondary hover:text-text-primary hover:border-accent/40'
                 }`}
               >
                 {cat.name}
@@ -128,7 +128,7 @@ export default function Shop() {
             <p className="text-text-secondary text-sm mb-4">{error}</p>
             <button
               onClick={loadData}
-              className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 text-white px-6 py-2.5 rounded-full text-sm font-medium transition-all shadow-glow-sm hover:shadow-glow"
             >
               <RefreshCw size={14} /> Try Again
             </button>
@@ -148,9 +148,9 @@ export default function Shop() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.06 }}
                 whileHover={{ y: -6 }}
-                className="group bg-bg-card border border-border-subtle rounded-2xl overflow-hidden hover:border-accent/40 transition-all duration-300"
+                className="group glass-card overflow-hidden"
               >
-                <div className="relative aspect-square overflow-hidden bg-bg-secondary">
+                <div className="relative aspect-square overflow-hidden bg-bg-secondary/50">
                   <Link to={`/products/${product.id}`}>
                     <img
                       src={product.image}
@@ -162,18 +162,18 @@ export default function Shop() {
                       }}
                     />
                   </Link>
-                  <span className="absolute top-2.5 left-2.5 bg-bg-primary/80 backdrop-blur-sm text-text-secondary text-[10px] sm:text-xs px-2 py-0.5 rounded-full border border-border-subtle">
+                  <span className="absolute top-2.5 left-2.5 glass text-text-secondary text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full">
                     {product.category?.name || product.category}
                   </span>
                   {product.product_type === 'customised' && (
-                    <span className="absolute top-2.5 right-2.5 bg-purple-500/80 backdrop-blur-sm text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full">
+                    <span className="absolute top-2.5 right-2.5 glass-strong text-purple-300 border-purple-400/30 text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full">
                       Customised
                     </span>
                   )}
                   <div className="absolute bottom-2.5 right-2.5 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                     <Link
                       to={`/products/${product.id}`}
-                      className="w-9 h-9 bg-bg-primary/90 hover:bg-bg-elevated text-text-primary rounded-full flex items-center justify-center shadow-lg"
+                      className="w-9 h-9 glass-strong hover:border-accent/40 text-text-primary rounded-full flex items-center justify-center shadow-lg transition-all hover:-translate-y-0.5"
                       aria-label={`View ${product.name}`}
                     >
                       <Eye size={16} />
@@ -182,7 +182,7 @@ export default function Shop() {
                       onClick={() => handleAddToCart(product)}
                       disabled={addingId === product.id}
                       aria-label={`Add ${product.name} to cart`}
-                      className="w-9 h-9 bg-accent hover:bg-accent-hover text-white rounded-full flex items-center justify-center shadow-lg"
+                      className="w-9 h-9 bg-gradient-to-br from-accent to-amber-500 hover:opacity-90 text-white rounded-full flex items-center justify-center shadow-lg shadow-accent/25 transition-all hover:-translate-y-0.5 disabled:hover:transform-none"
                     >
                       {addingId === product.id ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
                     </button>
@@ -207,7 +207,7 @@ export default function Shop() {
                       onClick={() => handleAddToCart(product)}
                       disabled={addingId === product.id}
                       aria-label={`Add ${product.name} to cart`}
-                      className="hidden sm:inline-flex items-center gap-1.5 bg-accent/10 hover:bg-accent/20 text-accent text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                      className="hidden sm:inline-flex items-center gap-1.5 glass hover:border-accent/40 text-accent text-xs font-medium px-4 py-1.5 rounded-full transition-all hover:-translate-y-0.5"
                     >
                       {addingId === product.id ? <Loader2 size={12} className="animate-spin" /> : <ShoppingCart size={12} />}
                       Add to Cart

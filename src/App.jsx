@@ -29,7 +29,8 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <div className="min-h-screen bg-bg-primary text-text-primary flex flex-col">
+        <div className="min-h-screen bg-bg-primary text-text-primary flex flex-col relative">
+          <div className="glow-orbs" />
           <AnnouncementBar />
           <Navbar />
           <div className="flex-1">
@@ -60,9 +61,11 @@ function App() {
             position="top-right"
             toastOptions={{
               style: {
-                background: '#1a1f2e',
+                background: 'rgba(26, 31, 46, 0.85)',
                 color: '#f8fafc',
-                border: '1px solid #1e293b',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(16px)',
+                borderRadius: '16px',
               },
             }}
           />

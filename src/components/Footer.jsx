@@ -29,13 +29,13 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-bg-secondary border-t border-border-subtle">
+    <footer className="glass-strong border-t border-glass-border-strong rounded-t-[2rem]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {/* Brand Column */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
+              <div className="w-9 h-9 bg-gradient-to-br from-accent to-amber-500 rounded-full flex items-center justify-center shadow-lg shadow-accent/25">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
                   <path d="M2 17l10 5 10-5" />
@@ -57,7 +57,7 @@ export default function Footer() {
                   href={social.href}
                   target={social.href.startsWith('http') ? '_blank' : undefined}
                   rel={social.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="w-9 h-9 rounded-full bg-bg-card flex items-center justify-center text-text-secondary hover:text-accent hover:bg-accent/10 transition-all"
+                  className="w-9 h-9 rounded-full glass flex items-center justify-center text-text-secondary hover:text-accent hover:border-accent/40 transition-all"
                   aria-label={social.label}
                 >
                   {typeof social.icon === 'function' ? <social.icon /> : <social.icon size={15} />}
@@ -134,12 +134,12 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={subscribing}
-                className="flex-1 bg-bg-card border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
+                className="flex-1 bg-glass border border-glass-border rounded-full px-4 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={subscribing}
-                className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0 flex items-center gap-1.5"
+                className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-60 text-white px-5 py-2 rounded-full text-sm font-medium transition-all shrink-0 flex items-center gap-1.5 shadow-glow-sm hover:shadow-glow"
               >
                 {subscribing ? <Loader2 size={14} className="animate-spin" /> : null}
                 Join
@@ -150,7 +150,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-border-subtle">
+      <div className="border-t border-glass-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
             <p className="text-text-muted text-xs flex items-center gap-1">
