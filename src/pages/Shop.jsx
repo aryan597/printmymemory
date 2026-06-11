@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { ArrowRight, ShoppingCart, Loader2, Search, SlidersHorizontal, Package, RefreshCw, Eye } from 'lucide-react';
 import { CartContext } from '../contexts/CartContext';
 import { supabase, TABLES } from '../lib/supabaseClient';
