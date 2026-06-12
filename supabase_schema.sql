@@ -221,6 +221,7 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_phone TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'online';
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_signature TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE orders ALTER COLUMN user_id DROP NOT NULL;
 
 -- Authenticated users see their own orders; guests use the lookup function
 DROP POLICY IF EXISTS "Users view own orders" ON orders;
