@@ -60,10 +60,18 @@ CREATE POLICY "Users can update own profile" ON profiles
 DROP POLICY IF EXISTS "Admins can manage all profiles" ON profiles;
 CREATE POLICY "Admins can manage all profiles" ON profiles
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
+
+-- Helper to check admin role without triggering RLS recursion on profiles
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
 -- 2. CATEGORIES
@@ -86,7 +94,7 @@ CREATE POLICY "Categories are viewable by everyone" ON categories
 DROP POLICY IF EXISTS "Admins can manage categories" ON categories;
 CREATE POLICY "Admins can manage categories" ON categories
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
@@ -130,7 +138,7 @@ CREATE POLICY "Products are viewable by everyone" ON products
 DROP POLICY IF EXISTS "Admins can manage products" ON products;
 CREATE POLICY "Admins can manage products" ON products
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
@@ -178,7 +186,7 @@ CREATE POLICY "Users can delete own cart items" ON cart_items
 DROP POLICY IF EXISTS "Admins can view all carts" ON cart_items;
 CREATE POLICY "Admins can view all carts" ON cart_items
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- ============================================================
@@ -220,7 +228,7 @@ CREATE POLICY "Users view own orders" ON orders
   FOR SELECT USING (
     auth.uid() = user_id OR
     guest_phone IS NOT NULL OR
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 DROP POLICY IF EXISTS "Anyone can insert orders" ON orders;
@@ -238,7 +246,7 @@ CREATE POLICY "Order owners and guests can update pending orders" ON orders
 DROP POLICY IF EXISTS "Admins can manage all orders" ON orders;
 CREATE POLICY "Admins can manage all orders" ON orders
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- Secure guest order lookup by order id + phone
@@ -301,7 +309,7 @@ CREATE POLICY "Order items viewable by order owner or admin" ON order_items
       SELECT 1 FROM orders
       WHERE orders.id = order_items.order_id
         AND (orders.user_id = auth.uid()
-             OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+             OR is_admin())
     )
   );
 
@@ -318,7 +326,7 @@ CREATE POLICY "Order items insertable by order owner or guest orders" ON order_i
 DROP POLICY IF EXISTS "Admins can manage order items" ON order_items;
 CREATE POLICY "Admins can manage order items" ON order_items
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- ============================================================
@@ -347,7 +355,7 @@ CREATE POLICY "Order history is viewable with order" ON order_status_history
 DROP POLICY IF EXISTS "Admins can manage order history" ON order_status_history;
 CREATE POLICY "Admins can manage order history" ON order_status_history
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- ============================================================
@@ -375,7 +383,7 @@ CREATE POLICY "Customizations are viewable with order" ON order_customizations
 DROP POLICY IF EXISTS "Admins can manage customizations" ON order_customizations;
 CREATE POLICY "Admins can manage customizations" ON order_customizations
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- ============================================================
@@ -408,7 +416,7 @@ CREATE POLICY "Anyone can insert reviews" ON reviews
 DROP POLICY IF EXISTS "Admins can manage reviews" ON reviews;
 CREATE POLICY "Admins can manage reviews" ON reviews
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- ============================================================
@@ -454,7 +462,7 @@ CREATE TABLE IF NOT EXISTS newsletter_subscriptions (
 DROP POLICY IF EXISTS "Admins can manage newsletter subscriptions" ON newsletter_subscriptions;
 CREATE POLICY "Admins can manage newsletter subscriptions" ON newsletter_subscriptions
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    is_admin()
   );
 
 -- Allow public insert (anyone can subscribe) but no public read
