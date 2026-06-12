@@ -18,8 +18,8 @@ const contactMethods = [
   {
     icon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>,
     label: 'Instagram DM',
-    value: '@giftedwithlove.in',
-    href: 'https://instagram.com/giftedwithlove.in',
+    value: '@printmymemory.in',
+    href: 'https://instagram.com/printmymemory.in',
     description: 'Slide into our DMs. We are always online.',
     color: 'text-pink-400',
     bg: 'bg-pink-400/10',
@@ -28,8 +28,8 @@ const contactMethods = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'hello@giftedwithlove.in',
-    href: 'mailto:hello@giftedwithlove.in',
+    value: 'hello@printmymemory.in',
+    href: 'mailto:hello@printmymemory.in',
     description: 'For detailed queries and bulk orders.',
     color: 'text-accent',
     bg: 'bg-accent/10',
@@ -64,9 +64,9 @@ export default function Contact() {
       });
       if (error) {
         if (error.message?.includes('does not exist')) {
-          const subject = encodeURIComponent(`[Gifted with Love] ${formData.subject}`);
+          const subject = encodeURIComponent(`[PrintMyMemory] ${formData.subject}`);
           const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`);
-          window.location.href = `mailto:hello@giftedwithlove.in?subject=${subject}&body=${body}`;
+          window.location.href = `mailto:hello@printmymemory.in?subject=${subject}&body=${body}`;
           toast.success('Opening your email client...');
         } else {
           throw error;

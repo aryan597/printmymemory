@@ -30,14 +30,14 @@ export default function ReturnRefund() {
             </div>
             <p className="text-text-secondary text-sm leading-relaxed">
               Every item we make is uniquely personalized to your photo and specifications. 
-              A returned lithophane lamp containing your family photo has zero resale value — 
-              it is literally unusable for anyone else. This is why we do not offer returns on custom orders.
+              A returned lithophane lamp containing your family photo has zero resale value. 
+              It is literally unusable for anyone else. This is why we do not offer returns on custom orders.
             </p>
           </motion.div>
 
           <Section icon={ShieldAlert} title="Damaged in Transit? We Got You" color="text-accent">
             <p className="text-text-secondary text-sm leading-relaxed mb-3">
-              If your package arrives damaged, we will replace it free of charge — but we need proof.
+              If your package arrives damaged, we will replace it free of charge, but we need proof.
             </p>
             <div className="bg-bg-primary border border-border-subtle rounded-xl p-4">
               <p className="text-text-primary font-medium text-sm mb-2">The Anti-Fraud Unboxing Mandate</p>

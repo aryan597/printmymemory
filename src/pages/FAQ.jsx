@@ -11,7 +11,7 @@ const faqs = [
   {
     icon: ImageIcon,
     question: 'What kind of photo should I upload?',
-    answer: 'High-resolution photos work best — ideally 1MB+ with clear facial features. For lithophane lamps, well-lit portraits with good contrast produce the best results. Avoid blurry, dark, or heavily filtered images. We will review your photo before printing and let you know if it needs replacement.',
+    answer: 'High-resolution photos work best, ideally 1MB+ with clear facial features. For lithophane lamps, well-lit portraits with good contrast produce the best results. Avoid blurry, dark, or heavily filtered images. We will review your photo before printing and let you know if it needs replacement.',
   },
   {
     icon: Clock,
@@ -20,8 +20,8 @@ const faqs = [
   },
   {
     icon: CreditCard,
-    question: 'Why no Cash on Delivery (COD)?',
-    answer: 'Every product is made specifically for you with your photo. If you refuse delivery, we are left with a 100% un-resellable item and double courier costs. This is standard practice for personalized commodities. We accept UPI, Cards, and all major wallets via Razorpay.',
+    question: 'Do you offer Cash on Delivery (COD)?',
+    answer: 'Yes, COD is available for most products. For highly customised orders, we may ask for a partial prepayment to cover material and print time. We also accept UPI, Cards, and all major wallets via Razorpay.',
   },
   {
     icon: Truck,
@@ -31,7 +31,7 @@ const faqs = [
   {
     icon: Printer,
     question: 'What is a lithophane?',
-    answer: 'A lithophane is a 3D printed object where the image is embedded into the thickness of the material. When backlit, the varying thickness creates a stunning grayscale image. It is not painted or printed on the surface — the image IS the object.',
+    answer: 'A lithophane is a 3D printed object where the image is embedded into the thickness of the material. When backlit, the varying thickness creates a stunning grayscale image. It is not painted or printed on the surface; the image IS the object.',
   },
   {
     icon: CreditCard,
@@ -123,7 +123,7 @@ export default function FAQ() {
               WhatsApp Us
             </a>
             <a
-              href="https://instagram.com/giftedwithlove.in"
+              href="https://instagram.com/printmymemory.in"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-bg-card border border-border-subtle text-text-primary px-4 py-2 rounded-lg text-sm font-medium hover:border-accent/40 transition-colors"

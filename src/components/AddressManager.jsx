@@ -159,13 +159,13 @@ export default function AddressManager({ userId }) {
   };
 
   return (
-    <div className="glass rounded-2xl p-6">
+    <div className="card p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold text-text-primary">Delivery Addresses</h3>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 glass hover:border-accent/40 text-accent text-sm font-medium px-4 py-1.5 rounded-full transition-all hover:-translate-y-0.5"
+            className="flex items-center gap-1.5 bg-neutral-900 hover:border-white text-white border border-neutral-800 text-sm font-medium px-4 py-1.5 rounded-full transition-all hover:-translate-y-0.5"
           >
             <Plus size={14} /> Add New
           </button>
@@ -181,7 +181,7 @@ export default function AddressManager({ userId }) {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mb-6"
           >
-            <div className="glass-strong rounded-2xl p-5 space-y-4">
+            <div className="card p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-text-primary font-semibold text-sm">
                   {editingId ? 'Edit Address' : 'New Address'}
@@ -197,7 +197,7 @@ export default function AddressManager({ userId }) {
                   <select
                     value={form.label}
                     onChange={(e) => setForm({ ...form, label: e.target.value })}
-                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-white"
                   >
                     <option>Home</option>
                     <option>Work</option>
@@ -210,7 +210,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.full_name}
                     onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-white"
                     placeholder="Recipient name"
                   />
                 </div>
@@ -222,7 +222,7 @@ export default function AddressManager({ userId }) {
                   type="tel"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                  className="input"
                   placeholder="+91-XXXXXXXXXX"
                 />
               </div>
@@ -233,7 +233,7 @@ export default function AddressManager({ userId }) {
                   type="text"
                   value={form.address_line1}
                   onChange={(e) => setForm({ ...form, address_line1: e.target.value })}
-                  className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                  className="input"
                   placeholder="Street, building, locality..."
                 />
               </div>
@@ -244,7 +244,7 @@ export default function AddressManager({ userId }) {
                   type="text"
                   value={form.address_line2}
                   onChange={(e) => setForm({ ...form, address_line2: e.target.value })}
-                  className="w-full bg-bg-card border border-border-subtle rounded-lg px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                  className="input"
                   placeholder="Apartment, floor, landmark (optional)"
                 />
               </div>
@@ -256,7 +256,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-white"
                     placeholder="Bangalore"
                   />
                 </div>
@@ -266,7 +266,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.state}
                     onChange={(e) => setForm({ ...form, state: e.target.value })}
-                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-white"
                     placeholder="Karnataka"
                   />
                 </div>
@@ -276,7 +276,7 @@ export default function AddressManager({ userId }) {
                     type="text"
                     value={form.postcode}
                     onChange={(e) => setForm({ ...form, postcode: e.target.value })}
-                    className="w-full glass rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-accent"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2.5 text-text-primary text-sm focus:outline-none focus:border-white"
                     placeholder="560064"
                   />
                 </div>
@@ -287,7 +287,7 @@ export default function AddressManager({ userId }) {
                   type="checkbox"
                   checked={form.is_default}
                   onChange={(e) => setForm({ ...form, is_default: e.target.checked })}
-                  className="accent-accent"
+                  className="accent-white"
                 />
                 Set as default delivery address
               </label>
@@ -296,7 +296,7 @@ export default function AddressManager({ userId }) {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  className="bg-white hover:bg-neutral-200 disabled:opacity-60 text-black px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                   {editingId ? 'Update Address' : 'Save Address'}
@@ -333,17 +333,17 @@ export default function AddressManager({ userId }) {
                 key={addr.id}
                 className={`relative border rounded-xl p-4 transition-colors ${
                   addr.is_default
-                    ? 'border-accent/40 bg-accent/5'
-                    : 'border-border-subtle bg-bg-primary hover:border-border-default'
+                    ? 'border-white bg-neutral-800'
+                    : 'border-border-subtle bg-bg-primary hover:border-neutral-600'
                 }`}
               >
                 {addr.is_default && (
-                  <span className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                  <span className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-white bg-white/10 px-2 py-0.5 rounded-full">
                     <Star size={10} /> Default
                   </span>
                 )}
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-bg-card border border-border-subtle flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center shrink-0 mt-0.5">
                     <Icon size={14} className="text-text-muted" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -363,7 +363,7 @@ export default function AddressManager({ userId }) {
                   {!addr.is_default && (
                     <button
                       onClick={() => setDefault(addr.id)}
-                      className="text-xs text-accent hover:text-accent-hover font-medium transition-colors"
+                      className="text-xs text-white hover:text-neutral-300 font-medium transition-colors"
                     >
                       Set Default
                     </button>

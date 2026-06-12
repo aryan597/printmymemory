@@ -31,7 +31,7 @@ export const sendOrderConfirmationEmail = async ({
   }
 
   const orders = (items || []).map(item => ({
-    image_url: item.product?.image || item.image || 'https://giftedwithlove.in/images/products/model1.jpeg',
+    image_url: item.product?.image || item.image || `${window.location.origin}/images/products/model1.jpeg`,
     name: item.product?.name || item.name || 'Product',
     units: item.quantity || 1,
     price: item.product?.price || item.price || 0,
@@ -57,7 +57,7 @@ export const sendOrderConfirmationEmail = async ({
         },
         payment_method: payment_method === 'cod' ? 'Cash on Delivery' : 'Online (Razorpay)',
         order_date: order_date || new Date().toLocaleDateString('en-IN'),
-        brand_name: 'Gifted with Love',
+        brand_name: 'PrintMyMemory',
         website_link: window.location.origin,
         delivery: delivery || {},
       },
@@ -98,7 +98,7 @@ export const sendStatusUpdateEmail = async ({
         status,
         status_label: status_label || status,
         note: note || 'No additional notes.',
-        brand_name: 'Gifted with Love',
+        brand_name: 'PrintMyMemory',
         website_link: window.location.origin,
         delivery: delivery || {},
       },
@@ -115,13 +115,13 @@ export const sendStatusUpdateEmail = async ({
  * Generate WhatsApp click-to-chat link for customised orders
  */
 export const getWhatsAppOrderLink = ({
-  phone = '917463812249',
+  phone = import.meta.env.VITE_WHATSAPP_NUMBER || '917463812249',
   order_id,
   customer_name,
   product_name,
 }) => {
   const text = encodeURIComponent(
-    `Hi Gifted with Love! 👋\n\n` +
+    `Hi PrintMyMemory!\n\n` +
     `I just placed a customised order #${order_id?.slice(0, 8).toUpperCase() || ''}.\n` +
     `Product: ${product_name || 'Custom 3D Print'}\n` +
     `Name: ${customer_name || ''}\n\n` +

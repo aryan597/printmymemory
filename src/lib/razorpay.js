@@ -24,7 +24,7 @@ export const loadRazorpayScript = () => {
  * Does NOT require a pre-created order (no server-side order creation needed).
  * 
  * @param {Object} options
- * @param {number} options.amount - Amount in INR (rupees, not paise — converted inside)
+ * @param {number} options.amount - Amount in INR (rupees, not paise; converted inside)
  * @param {string} options.currency - Currency code (default: INR)
  * @param {string} options.name - Customer name
  * @param {string} options.email - Customer email
@@ -49,7 +49,7 @@ export const openRazorpayCheckout = async (
     key: RAZORPAY_KEY_ID,
     amount: amount * 100, // Convert to paise
     currency,
-    name: 'Gifted with Love',
+    name: 'PrintMyMemory',
     description: orderName,
     image: '/favicon.svg',
     prefill: {
@@ -59,7 +59,7 @@ export const openRazorpayCheckout = async (
     },
     notes: {
       source: 'storefront',
-      brand: 'Gifted with Love',
+      brand: 'PrintMyMemory',
     },
     theme: {
       color: '#f97316',

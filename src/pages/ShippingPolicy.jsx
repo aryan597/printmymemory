@@ -46,7 +46,7 @@ export default function ShippingPolicy() {
               We care about the unboxing experience as much as the product itself.
             </p>
             <ul className="space-y-2 text-text-secondary text-sm">
-              <li className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>Brown kraft paper box (12×12×12 cm) — locally sourced from Bangalore</span></li>
+              <li className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>Brown kraft paper box (12×12×12 cm), locally sourced from Bangalore</span></li>
               <li className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>Internal paper shred cushioning</span></li>
               <li className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>Organic jute twine exterior styling</span></li>
               <li className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>Custom die-cut logo sticker</span></li>

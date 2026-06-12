@@ -8,10 +8,10 @@ export default function WhatsAppButton() {
       href={`https://wa.me/${WHATSAPP_NUMBER}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-whatsapp rounded-full flex items-center justify-center shadow-glass-lg hover:scale-110 transition-transform duration-300 border border-white/10"
+      className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-whatsapp text-white rounded-full flex items-center justify-center shadow-soft-lg hover:scale-105 transition-transform duration-300"
       aria-label="Chat on WhatsApp"
     >
-      <MessageCircle size={28} className="text-white fill-white" />
+      <MessageCircle size={24} className="fill-white" />
     </a>
   );
 }

@@ -174,32 +174,83 @@ CREATE POLICY "Admins can view all carts" ON cart_items
 -- ============================================================
 CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  guest_name TEXT,
+  guest_email TEXT,
+  guest_phone TEXT,
   total_amount INTEGER NOT NULL,
   status TEXT DEFAULT 'order_placed',
   -- Valid statuses:
   -- Customised:  order_placed → pending_photo → design_ready → approved → printing → qc → shipped → delivered
   -- Uncustomised: order_placed → packed → shipped → delivered
   -- Universal: cancelled
+  payment_method TEXT DEFAULT 'online',
   razorpay_order_id TEXT,
   razorpay_payment_id TEXT,
+  razorpay_signature TEXT,
+  paid_at TIMESTAMP WITH TIME ZONE,
   shipping_address JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE POLICY "Users can view own orders" ON orders
-  FOR SELECT USING (auth.uid() = user_id);
+-- Authenticated users see their own orders; guests use the lookup function
+CREATE POLICY "Users view own orders" ON orders
+  FOR SELECT USING (
+    auth.uid() = user_id OR
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
 
-CREATE POLICY "Users can insert own orders" ON orders
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Anyone can insert orders" ON orders
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Order owners and guests can update pending orders" ON orders
+  FOR UPDATE USING (
+    auth.uid() = user_id OR guest_phone IS NOT NULL
+  ) WITH CHECK (
+    auth.uid() = user_id OR guest_phone IS NOT NULL
+  );
 
 CREATE POLICY "Admins can manage all orders" ON orders
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- Secure guest order lookup by order id + phone
+CREATE OR REPLACE FUNCTION get_guest_order(order_id UUID, phone TEXT)
+RETURNS SETOF orders AS $$
+BEGIN
+  RETURN QUERY
+  SELECT * FROM orders
+  WHERE id = order_id AND guest_phone = phone;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Guest order lookup including items (used by the storefront order tracker)
+CREATE OR REPLACE FUNCTION get_guest_order_with_items(order_id UUID, phone TEXT)
+RETURNS TABLE (
+  order_data JSONB
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT jsonb_build_object(
+    'order', row_to_json(o.*),
+    'items', COALESCE((
+      SELECT jsonb_agg(
+        row_to_json(oi.*) || jsonb_build_object('product', row_to_json(p.*))
+      )
+      FROM order_items oi
+      LEFT JOIN products p ON p.id = oi.product_id
+      WHERE oi.order_id = o.id
+    ), '[]'::jsonb)
+  )
+  FROM orders o
+  WHERE o.id = order_id AND o.guest_phone = phone;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_guest_phone ON orders(guest_phone);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at DESC);
 
@@ -212,20 +263,26 @@ CREATE TABLE IF NOT EXISTS order_items (
   product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
   quantity INTEGER NOT NULL,
   price INTEGER NOT NULL,
+  custom_image TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE POLICY "Users can view own order items" ON order_items
+CREATE POLICY "Order items viewable by order owner or admin" ON order_items
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid()
+      SELECT 1 FROM orders
+      WHERE orders.id = order_items.order_id
+        AND (orders.user_id = auth.uid()
+             OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
     )
   );
 
-CREATE POLICY "Users can insert own order items" ON order_items
+CREATE POLICY "Order items insertable by order owner or guest orders" ON order_items
   FOR INSERT WITH CHECK (
     EXISTS (
-      SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid()
+      SELECT 1 FROM orders
+      WHERE orders.id = order_items.order_id
+        AND (orders.user_id = auth.uid() OR orders.guest_phone IS NOT NULL)
     )
   );
 
@@ -249,10 +306,10 @@ CREATE TABLE IF NOT EXISTS order_status_history (
 CREATE INDEX IF NOT EXISTS idx_osh_order ON order_status_history(order_id);
 CREATE INDEX IF NOT EXISTS idx_osh_created ON order_status_history(created_at DESC);
 
-CREATE POLICY "Users can view own order history" ON order_status_history
+CREATE POLICY "Order history is viewable with order" ON order_status_history
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM orders WHERE orders.id = order_status_history.order_id AND orders.user_id = auth.uid()
+      SELECT 1 FROM orders WHERE orders.id = order_status_history.order_id
     )
   );
 
@@ -275,10 +332,10 @@ CREATE TABLE IF NOT EXISTS order_customizations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE POLICY "Users can view own customizations" ON order_customizations
+CREATE POLICY "Customizations are viewable with order" ON order_customizations
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM orders WHERE orders.id = order_customizations.order_id AND orders.user_id = auth.uid()
+      SELECT 1 FROM orders WHERE orders.id = order_customizations.order_id
     )
   );
 
@@ -292,21 +349,26 @@ CREATE POLICY "Admins can manage customizations" ON order_customizations
 -- ============================================================
 CREATE TABLE IF NOT EXISTS reviews (
   id SERIAL PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  guest_name TEXT,
+  guest_email TEXT,
   product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
+  is_approved BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE POLICY "Reviews are viewable by everyone" ON reviews
   FOR SELECT USING (true);
 
-CREATE POLICY "Users can insert own reviews" ON reviews
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Anyone can insert reviews" ON reviews
+  FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Users can update own reviews" ON reviews
-  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Admins can manage reviews" ON reviews
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
 
 -- ============================================================
 -- 10. COMMUNITY POSTS

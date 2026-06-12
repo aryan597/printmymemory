@@ -326,8 +326,8 @@ export default function OrderDetail() {
               <h3 className="text-text-primary font-semibold text-sm">Delivery Address</h3>
             </div>
             <div className="text-sm space-y-1">
-              <p className="text-text-primary font-medium">{order.shipping_address?.full_name || '—'}</p>
-              <p className="text-text-secondary">{order.shipping_address?.address_line1 || '—'}</p>
+              <p className="text-text-primary font-medium">{order.shipping_address?.full_name || '-'}</p>
+              <p className="text-text-secondary">{order.shipping_address?.address_line1 || '-'}</p>
               {order.shipping_address?.address_line2 && <p className="text-text-secondary">{order.shipping_address.address_line2}</p>}
               <p className="text-text-muted">
                 {order.shipping_address?.city}{order.shipping_address?.state ? `, ${order.shipping_address.state}` : ''} {order.shipping_address?.postcode}

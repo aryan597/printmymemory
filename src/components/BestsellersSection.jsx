@@ -41,21 +41,17 @@ export default function BestsellersSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10"
+          className="flex flex-col sm:flex-row sm:items-end justify-between mb-10"
         >
           <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-2">
-              Shop by <span className="gradient-text">Category</span>
-            </h2>
-            <p className="text-text-secondary text-sm sm:text-base">
-              Real categories, real products — no dropshipping nonsense
-            </p>
+            <p className="text-text-muted text-xs font-medium uppercase tracking-wide mb-2">Curated Collection</p>
+            <h2 className="section-title">Bestsellers</h2>
           </div>
           <Link
             to="/shop"
-            className="inline-flex items-center gap-2 text-text-secondary hover:text-accent transition-colors text-sm font-medium mt-3 sm:mt-0"
+            className="inline-flex items-center gap-2 text-text-secondary hover:text-white transition-colors text-sm font-medium mt-4 sm:mt-0"
           >
-            View All Products
+            View All
             <ArrowRight size={16} />
           </Link>
         </motion.div>
@@ -73,7 +69,7 @@ export default function BestsellersSection() {
               <Link
                 key={cat.id}
                 to={`/shop?category=${encodeURIComponent(cat.name)}`}
-                className="px-4 py-2 glass rounded-full text-text-secondary hover:text-text-primary hover:border-accent/40 hover:bg-accent/10 transition-all text-sm font-medium"
+                className="px-4 py-2 border border-border-subtle rounded-lg text-text-secondary hover:text-white hover:border-text-secondary transition-colors text-sm"
               >
                 {cat.name}
               </Link>
@@ -84,14 +80,14 @@ export default function BestsellersSection() {
         {/* Products Grid */}
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 size={28} className="animate-spin text-accent" />
+            <Loader2 size={24} className="animate-spin text-text-secondary" />
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-text-muted text-sm">Products coming soon. Check back shortly!</p>
+            <p className="text-text-muted text-sm">Products coming soon.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {products.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}

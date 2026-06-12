@@ -111,7 +111,7 @@ export default function TestimonialsSection() {
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <p className="text-text-primary text-sm font-medium">— {testimonial.name}</p>
+                        <p className="text-text-primary text-sm font-medium">{testimonial.name}</p>
                         <p className="text-text-muted text-xs">{testimonial.location}</p>
                       </div>
                     </div>

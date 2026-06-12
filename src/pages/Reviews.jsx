@@ -36,7 +36,7 @@ const fallbackReviews = [
     name: 'Neha & Karan',
     location: 'Pune',
     rating: 5,
-    text: 'Perfect anniversary gift! The couple lamp is just magical ❤️ We gifted it to our parents for their 25th anniversary and they were in tears. Thank you Gifted with Love!',
+    text: 'Perfect anniversary gift! The couple lamp is just magical ❤️ We gifted it to our parents for their 25th anniversary and they were in tears. Thank you PrintMyMemory!',
     product: 'Couple Lamp',
     image: '/images/products/model1.jpeg',
   },

@@ -46,7 +46,7 @@ export default function BulkOrders() {
             Bulk & Corporate <span className="text-accent">Orders</span>
           </h1>
           <p className="text-text-secondary max-w-lg mx-auto">
-            Whether it is wedding favours, corporate gifts, or event merchandise — we handle bulk with the same personal care.
+            Whether it is wedding favours, corporate gifts, or event merchandise, we handle bulk with the same personal care.
           </p>
         </motion.div>
 

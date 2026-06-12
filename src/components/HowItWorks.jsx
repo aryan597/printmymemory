@@ -1,75 +1,44 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, ImageIcon, CreditCard, Printer, Truck } from 'lucide-react';
+import { Upload, Box, CreditCard, Printer, Truck } from 'lucide-react';
 
 const steps = [
-  {
-    icon: MessageCircle,
-    title: 'DM Us on Instagram',
-    description: 'Slide into our DMs or use this site to tell us what you want',
-  },
-  {
-    icon: ImageIcon,
-    title: 'Upload Your Photo',
-    description: 'Share a high-res photo + any text or font preferences',
-  },
-  {
-    icon: CreditCard,
-    title: 'Pay 100% Upfront',
-    description: 'Secure UPI/Card payment. No COD for custom orders.',
-  },
-  {
-    icon: Printer,
-    title: 'We Print It',
-    description: 'Your design is sliced, printed on our Bambu Lab, and quality-checked',
-  },
-  {
-    icon: Truck,
-    title: 'Delivered in 5-7 Days',
-    description: 'Packed with eco-friendly materials and shipped pan-India',
-  },
+  { icon: Upload, title: 'Upload Photo', description: 'Share a clear photo you want to preserve.' },
+  { icon: Box, title: 'Choose Product', description: 'Pick from lamps, miniatures, keychains, and more.' },
+  { icon: CreditCard, title: 'Pay Securely', description: 'Checkout with Razorpay. Cards, UPI, and netbanking.' },
+  { icon: Printer, title: 'We Print', description: 'Your design is 3D printed and quality checked.' },
+  { icon: Truck, title: 'Delivered', description: 'Packed with care and shipped across India.' },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="py-16 sm:py-20 bg-bg-secondary/30">
+    <section className="py-16 sm:py-20 bg-bg-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-12 sm:mb-14"
+          className="text-center mb-12"
         >
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-3">
-            How It <span className="gradient-text">Works</span>
-          </h2>
-          <p className="text-text-secondary text-sm sm:text-base max-w-md mx-auto">
-            Simple. Transparent. No corporate BS.
-          </p>
+          <p className="text-text-muted text-xs font-medium uppercase tracking-wide mb-2">How It Works</p>
+          <h2 className="section-title">Simple. Transparent. Personal.</h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {steps.map((step, index) => (
             <motion.div
               key={step.title}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="relative text-center group"
+              className="text-center"
             >
-              <div className="relative inline-flex flex-col items-center">
-                <div className="w-14 h-14 rounded-full glass-strong border border-glass-border-strong flex items-center justify-center mb-4 group-hover:border-accent/40 group-hover:bg-accent/10 transition-all shadow-glass">
-                  <step.icon size={22} className="text-accent" />
-                </div>
-                {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-7 left-full w-full h-px bg-gradient-to-r from-glass-border-strong via-accent/30 to-glass-border-strong" />
-                )}
+              <div className="w-12 h-12 border border-border-subtle rounded-lg flex items-center justify-center mx-auto mb-4">
+                <step.icon size={20} className="text-white" />
               </div>
-              <h3 className="text-text-primary font-semibold text-sm sm:text-base mb-1">
-                {step.title}
-              </h3>
-              <p className="text-text-secondary text-xs sm:text-sm max-w-[180px] mx-auto leading-relaxed">
+              <h3 className="text-text-primary font-medium text-sm mb-1">{step.title}</h3>
+              <p className="text-text-secondary text-xs leading-relaxed max-w-[180px] mx-auto">
                 {step.description}
               </p>
             </motion.div>

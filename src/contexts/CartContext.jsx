@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 export const CartContext = createContext(null);
 
-const LOCAL_CART_KEY = 'giftedwithlove_cart';
+const LOCAL_CART_KEY = 'printmymemory_cart';
 
 export function CartProvider({ children }) {
   const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext);

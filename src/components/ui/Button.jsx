@@ -1,11 +1,10 @@
 import { forwardRef } from 'react';
 
 const variants = {
-  primary: 'bg-gradient-to-r from-accent to-amber-500 text-white shadow-lg shadow-accent/25 hover:shadow-accent/40 hover:-translate-y-0.5 border border-white/10',
-  secondary: 'bg-glass-strong text-text-primary border border-glass-border hover:border-glass-border-strong hover:bg-white/[0.12] hover:-translate-y-0.5',
-  outline: 'bg-transparent text-text-primary border border-glass-border hover:border-glass-border-strong hover:bg-glass hover:-translate-y-0.5',
-  ghost: 'bg-transparent text-text-secondary hover:text-text-primary hover:bg-glass border border-transparent',
-  danger: 'bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 hover:-translate-y-0.5',
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  ghost: 'inline-flex items-center justify-center gap-2 text-text-secondary hover:text-white text-sm font-medium transition-colors',
+  outline: 'inline-flex items-center justify-center gap-2 bg-transparent text-white border border-border-subtle hover:border-white px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 active:scale-[0.98]',
 };
 
 const sizes = {
@@ -19,10 +18,9 @@ const Button = forwardRef(function Button(
   ref
 ) {
   const classes = `
-    btn-pill
     ${variants[variant]}
-    ${sizes[size]}
-    ${disabled ? 'opacity-50 cursor-not-allowed hover:transform-none hover:shadow-none' : ''}
+    ${variant === 'primary' || variant === 'secondary' || variant === 'outline' ? sizes[size] : ''}
+    ${disabled ? 'opacity-40 cursor-not-allowed hover:transform-none' : ''}
     ${className}
   `;
 

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Image, Box, Truck, Check, ChevronRight, Loader2, ShoppingCart } from 'lucide-react';
+import { Upload, Image, Box, Truck, Check, ChevronRight, Loader2, ShoppingCart, MessageCircle } from 'lucide-react';
 import { useContext } from 'react';
 import { CartContext } from '../contexts/CartContext';
-import { useAuth } from '../hooks/useAuth';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
+import Button from '../components/ui/Button';
+
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '917463812249';
 
 const steps = [
   { id: 1, title: 'Upload Photo', icon: Image, desc: 'Upload a clear photo of your loved one' },
@@ -17,6 +19,16 @@ const steps = [
 
 const MAX_FILE_SIZE_MB = 10;
 
+function formatPrice(price) {
+  return 'Rs. ' + Number(price).toLocaleString('en-IN');
+}
+
+function whatsappLink(product) {
+  const url = `https://${window.location.host}/products/${product.id}`;
+  const text = `Hi PrintMyMemory, I'm interested in ${product.name}. Link: ${url}`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+}
+
 export default function Customize() {
   const [step, setStep] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -26,12 +38,10 @@ export default function Customize() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const { addToCart } = useContext(CartContext);
-  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preselectedProductId = Number(searchParams.get('productId')) || null;
 
-  // Load customised products from DB
   useEffect(() => {
     let cancelled = false;
     async function loadProducts() {
@@ -84,7 +94,6 @@ export default function Customize() {
     }
     setAdding(true);
     try {
-      // Pass the uploaded photo as custom_image so it's preserved for authenticated users
       await addToCart(
         { ...selectedProduct, image: uploadPreview || selectedProduct.image },
         1,
@@ -99,34 +108,42 @@ export default function Customize() {
     }
   };
 
-  const displayProducts = products.length > 0 ? products : [];
+  const displayProducts = products;
 
   return (
     <main className="py-10 sm:py-14">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary mb-3">
-            Create Your <span className="gradient-text">Custom Gift</span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3">
+            Create Your Custom Gift
           </h1>
-          <p className="text-text-secondary text-sm max-w-md mx-auto">
+          <p className="text-neutral-400 text-sm max-w-md mx-auto">
             Follow these simple steps to turn your memories into personalized 3D gifts
           </p>
+          <a
+            href={selectedProduct ? whatsappLink(selectedProduct) : `https://wa.me/${WHATSAPP_NUMBER}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-whatsapp hover:opacity-90 text-white px-5 py-2.5 rounded-full text-sm font-semibold mt-4 transition-all"
+          >
+            <MessageCircle size={16} /> Prefer to chat? Message us on WhatsApp
+          </a>
         </motion.div>
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-10">
           {steps.map((s, index) => (
             <div key={s.id} className="flex items-center">
-              <div className={`flex flex-col items-center ${step >= s.id ? 'text-accent' : 'text-text-muted'}`}>
+              <div className={`flex flex-col items-center ${step >= s.id ? 'text-white' : 'text-neutral-500'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                  step >= s.id ? 'bg-gradient-to-br from-accent to-amber-500 border-accent text-white shadow-glow-sm' : 'glass border-glass-border'
+                  step >= s.id ? 'bg-white border-white text-black' : 'bg-neutral-900 border-neutral-800'
                 }`}>
                   {step > s.id ? <Check size={16} /> : s.id}
                 </div>
                 <span className="text-[10px] mt-1.5 hidden sm:block">{s.title}</span>
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-colors ${step > s.id ? 'bg-accent' : 'bg-glass-border-strong'}`} />
+                <div className={`w-8 sm:w-16 h-0.5 mx-1 sm:mx-2 transition-colors ${step > s.id ? 'bg-white/40' : 'bg-neutral-800'}`} />
               )}
             </div>
           ))}
@@ -135,40 +152,35 @@ export default function Customize() {
         {/* Step 1: Upload Photo */}
         {step === 1 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-text-primary mb-4">1. Upload Your Photo</h2>
-              <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${uploadPreview ? 'border-accent/40 bg-accent/5' : 'border-glass-border hover:border-glass-border-strong'}`}>
+            <div className="card p-6 sm:p-8">
+              <h2 className="text-lg font-bold text-white mb-4">1. Upload Your Photo</h2>
+              <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${uploadPreview ? 'border-white bg-neutral-900' : 'border-neutral-800 hover:border-neutral-600'}`}>
                 {uploadPreview ? (
                   <div className="flex flex-col items-center">
-                    <img src={uploadPreview} alt="Preview" className="w-40 h-40 object-cover rounded-2xl mb-4 border border-glass-border" />
+                    <img src={uploadPreview} alt="Preview" className="w-40 h-40 object-cover rounded-2xl mb-4 border border-neutral-800" />
                     <button
                       type="button"
                       onClick={() => { setUploadPreview(null); setUploadedImage(null); }}
-                      className="text-text-secondary hover:text-accent text-sm transition-colors"
+                      className="text-neutral-400 hover:text-white text-sm transition-colors"
                     >
                       Remove & Upload Another
                     </button>
                   </div>
                 ) : (
                   <label className="cursor-pointer flex flex-col items-center">
-                    <div className="w-14 h-14 glass-strong rounded-2xl flex items-center justify-center mb-3">
-                      <Upload size={24} className="text-accent" />
+                    <div className="w-14 h-14 card rounded-2xl flex items-center justify-center mb-3">
+                      <Upload size={24} className="text-white" />
                     </div>
-                    <p className="text-text-primary font-medium text-sm mb-1">Click to upload photo</p>
-                    <p className="text-text-muted text-xs">JPG, PNG up to {MAX_FILE_SIZE_MB}MB</p>
+                    <p className="text-white font-medium text-sm mb-1">Click to upload photo</p>
+                    <p className="text-neutral-500 text-xs">JPG, PNG up to {MAX_FILE_SIZE_MB}MB</p>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   </label>
                 )}
               </div>
               <div className="mt-6 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  disabled={!uploadPreview}
-                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 shadow-glow-sm hover:shadow-glow"
-                >
+                <Button onClick={() => setStep(2)} disabled={!uploadPreview}>
                   Next Step <ChevronRight size={16} />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -177,16 +189,16 @@ export default function Customize() {
         {/* Step 2: Choose Product */}
         {step === 2 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-text-primary mb-4">2. Choose Your Product</h2>
+            <div className="card p-6 sm:p-8">
+              <h2 className="text-lg font-bold text-white mb-4">2. Choose Your Product</h2>
               {productsLoading ? (
                 <div className="flex justify-center py-10">
-                  <Loader2 size={24} className="animate-spin text-accent" />
+                  <Loader2 size={24} className="animate-spin text-white" />
                 </div>
               ) : displayProducts.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-text-muted text-sm">No customised products available right now.</p>
-                  <Link to="/shop" className="text-accent text-sm hover:underline mt-2 inline-block">Browse our shop</Link>
+                  <p className="text-neutral-500 text-sm">No customised products available right now.</p>
+                  <Link to="/shop" className="text-white text-sm hover:underline mt-2 inline-block">Browse our shop</Link>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -197,8 +209,8 @@ export default function Customize() {
                       onClick={() => setSelectedProduct(product)}
                       className={`border rounded-xl p-3 text-left transition-all ${
                         selectedProduct?.id === product.id
-                          ? 'border-accent bg-accent/5 shadow-lg shadow-accent/10'
-                          : 'border-border-subtle hover:border-border-hover bg-bg-secondary'
+                          ? 'border-white bg-neutral-800'
+                          : 'border-neutral-800 hover:border-neutral-600 bg-neutral-900'
                       }`}
                     >
                       <div className="aspect-square rounded-xl overflow-hidden mb-3">
@@ -209,8 +221,8 @@ export default function Customize() {
                           onError={(e) => { e.target.src = '/images/products/model1.jpeg'; }}
                         />
                       </div>
-                      <h3 className="text-text-primary font-semibold text-sm">{product.name}</h3>
-                      <p className="text-accent font-bold">₹{Number(product.price).toLocaleString('en-IN')}</p>
+                      <h3 className="text-white font-semibold text-sm">{product.name}</h3>
+                      <p className="text-white font-bold">{formatPrice(product.price)}</p>
                     </button>
                   ))}
                 </div>
@@ -219,18 +231,13 @@ export default function Customize() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors px-4 py-2 rounded-full hover:bg-glass"
+                  className="text-neutral-400 hover:text-white text-sm font-medium transition-colors px-4 py-2 rounded-full hover:bg-neutral-900"
                 >
                   Back
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  disabled={!selectedProduct}
-                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 shadow-glow-sm hover:shadow-glow"
-                >
+                <Button onClick={() => setStep(3)} disabled={!selectedProduct}>
                   Next Step <ChevronRight size={16} />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -239,37 +246,33 @@ export default function Customize() {
         {/* Step 3: Review */}
         {step === 3 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="glass-strong rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-text-primary mb-4">3. Review Your Order</h2>
+            <div className="card p-6 sm:p-8">
+              <h2 className="text-lg font-bold text-white mb-4">3. Review Your Order</h2>
               <div className="flex gap-4 mb-6">
                 <img
                   src={uploadPreview}
                   alt="Your photo"
-                  className="w-24 h-24 object-cover rounded-2xl border border-glass-border"
+                  className="w-24 h-24 object-cover rounded-2xl border border-neutral-800"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
                 <div>
-                  <p className="text-text-muted text-xs mb-1">Selected Product</p>
-                  <p className="text-text-primary font-semibold">{selectedProduct?.name}</p>
-                  <p className="text-accent font-bold text-lg">₹{Number(selectedProduct?.price).toLocaleString('en-IN')}</p>
-                  <p className="text-text-muted text-xs mt-1">Free shipping across India</p>
+                  <p className="text-neutral-500 text-xs mb-1">Selected Product</p>
+                  <p className="text-white font-semibold">{selectedProduct?.name}</p>
+                  <p className="text-white font-bold text-lg">{formatPrice(selectedProduct?.price)}</p>
+                  <p className="text-neutral-500 text-xs mt-1">Free shipping across India</p>
                 </div>
               </div>
               <div className="flex justify-between">
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="text-text-secondary hover:text-text-primary text-sm font-medium transition-colors px-4 py-2 rounded-full hover:bg-glass"
+                  className="text-neutral-400 hover:text-white text-sm font-medium transition-colors px-4 py-2 rounded-full hover:bg-neutral-900"
                 >
                   Back
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(4)}
-                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-2 shadow-glow-sm hover:shadow-glow"
-                >
+                <Button onClick={() => setStep(4)}>
                   Confirm <Check size={16} />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -278,39 +281,36 @@ export default function Customize() {
         {/* Step 4: Checkout */}
         {step === 4 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
-            <div className="bg-bg-card border border-border-subtle rounded-2xl p-6 sm:p-8 text-center">
-              <div className="w-16 h-16 glass-strong rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingCart size={28} className="text-accent" />
+            <div className="card p-6 sm:p-8 text-center">
+              <div className="w-16 h-16 card rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingCart size={28} className="text-white" />
               </div>
-              <h2 className="text-xl font-bold text-text-primary mb-2">Ready to Order!</h2>
-              <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto">
-                Your custom {selectedProduct?.name} will be crafted with love and delivered to your doorstep.
+              <h2 className="text-xl font-bold text-white mb-2">Ready to Order!</h2>
+              <p className="text-neutral-400 text-sm mb-6 max-w-sm mx-auto">
+                Your custom {selectedProduct?.name} will be crafted with care and delivered to your doorstep.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={adding}
-                  className="bg-gradient-to-r from-accent to-amber-500 hover:opacity-90 disabled:opacity-60 text-white px-6 py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-2 shadow-glow-sm hover:shadow-glow"
-                >
+                <Button onClick={handleAddToCart} disabled={adding}>
                   {adding ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
                   Add to Cart & Checkout
-                </button>
+                </Button>
                 <Link
                   to="/shop"
-                  className="glass hover:border-glass-border-strong text-text-primary px-6 py-3 rounded-full font-semibold transition-all inline-flex items-center justify-center gap-2"
+                  className="inline-flex items-center justify-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-800 px-6 py-3 rounded-full font-semibold transition-all"
                 >
                   Browse More
                 </Link>
               </div>
+              <a
+                href={selectedProduct ? whatsappLink(selectedProduct) : `https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-whatsapp hover:opacity-90 text-white px-5 py-2.5 rounded-full text-sm font-semibold mt-4 transition-all"
+              >
+                <MessageCircle size={16} /> Questions? Chat on WhatsApp
+              </a>
             </div>
           </motion.div>
-        )}
-
-        {!isAuthenticated && (
-          <p className="text-center text-text-muted text-xs">
-            <Link to="/login" className="text-accent hover:underline">Sign in</Link> to save your customization and track your order
-          </p>
         )}
       </div>
     </main>
