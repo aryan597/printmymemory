@@ -49,12 +49,15 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- RLS: Profiles are viewable by everyone; users can update own
+DROP POLICY IF EXISTS "Profiles are viewable by everyone" ON profiles;
 CREATE POLICY "Profiles are viewable by everyone" ON profiles
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admins can manage all profiles" ON profiles;
 CREATE POLICY "Admins can manage all profiles" ON profiles
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -76,9 +79,11 @@ CREATE TABLE IF NOT EXISTS categories (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON categories;
 CREATE POLICY "Categories are viewable by everyone" ON categories
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage categories" ON categories;
 CREATE POLICY "Admins can manage categories" ON categories
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -118,9 +123,11 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- RLS: Products are readable by everyone; admins manage
+DROP POLICY IF EXISTS "Products are viewable by everyone" ON products;
 CREATE POLICY "Products are viewable by everyone" ON products
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage products" ON products;
 CREATE POLICY "Admins can manage products" ON products
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -152,18 +159,23 @@ CREATE TABLE IF NOT EXISTS cart_items (
   UNIQUE(user_id, product_id)
 );
 
+DROP POLICY IF EXISTS "Users can view own cart" ON cart_items;
 CREATE POLICY "Users can view own cart" ON cart_items
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own cart items" ON cart_items;
 CREATE POLICY "Users can insert own cart items" ON cart_items
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own cart items" ON cart_items;
 CREATE POLICY "Users can update own cart items" ON cart_items
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own cart items" ON cart_items;
 CREATE POLICY "Users can delete own cart items" ON cart_items
   FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can view all carts" ON cart_items;
 CREATE POLICY "Admins can view all carts" ON cart_items
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -195,15 +207,18 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 -- Authenticated users see their own orders; guests use the lookup function
+DROP POLICY IF EXISTS "Users view own orders" ON orders;
 CREATE POLICY "Users view own orders" ON orders
   FOR SELECT USING (
     auth.uid() = user_id OR
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+DROP POLICY IF EXISTS "Anyone can insert orders" ON orders;
 CREATE POLICY "Anyone can insert orders" ON orders
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Order owners and guests can update pending orders" ON orders;
 CREATE POLICY "Order owners and guests can update pending orders" ON orders
   FOR UPDATE USING (
     auth.uid() = user_id OR guest_phone IS NOT NULL
@@ -211,6 +226,7 @@ CREATE POLICY "Order owners and guests can update pending orders" ON orders
     auth.uid() = user_id OR guest_phone IS NOT NULL
   );
 
+DROP POLICY IF EXISTS "Admins can manage all orders" ON orders;
 CREATE POLICY "Admins can manage all orders" ON orders
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -267,6 +283,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Order items viewable by order owner or admin" ON order_items;
 CREATE POLICY "Order items viewable by order owner or admin" ON order_items
   FOR SELECT USING (
     EXISTS (
@@ -277,6 +294,7 @@ CREATE POLICY "Order items viewable by order owner or admin" ON order_items
     )
   );
 
+DROP POLICY IF EXISTS "Order items insertable by order owner or guest orders" ON order_items;
 CREATE POLICY "Order items insertable by order owner or guest orders" ON order_items
   FOR INSERT WITH CHECK (
     EXISTS (
@@ -286,6 +304,7 @@ CREATE POLICY "Order items insertable by order owner or guest orders" ON order_i
     )
   );
 
+DROP POLICY IF EXISTS "Admins can manage order items" ON order_items;
 CREATE POLICY "Admins can manage order items" ON order_items
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -306,6 +325,7 @@ CREATE TABLE IF NOT EXISTS order_status_history (
 CREATE INDEX IF NOT EXISTS idx_osh_order ON order_status_history(order_id);
 CREATE INDEX IF NOT EXISTS idx_osh_created ON order_status_history(created_at DESC);
 
+DROP POLICY IF EXISTS "Order history is viewable with order" ON order_status_history;
 CREATE POLICY "Order history is viewable with order" ON order_status_history
   FOR SELECT USING (
     EXISTS (
@@ -313,6 +333,7 @@ CREATE POLICY "Order history is viewable with order" ON order_status_history
     )
   );
 
+DROP POLICY IF EXISTS "Admins can manage order history" ON order_status_history;
 CREATE POLICY "Admins can manage order history" ON order_status_history
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -332,6 +353,7 @@ CREATE TABLE IF NOT EXISTS order_customizations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Customizations are viewable with order" ON order_customizations;
 CREATE POLICY "Customizations are viewable with order" ON order_customizations
   FOR SELECT USING (
     EXISTS (
@@ -339,6 +361,7 @@ CREATE POLICY "Customizations are viewable with order" ON order_customizations
     )
   );
 
+DROP POLICY IF EXISTS "Admins can manage customizations" ON order_customizations;
 CREATE POLICY "Admins can manage customizations" ON order_customizations
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -359,12 +382,15 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Reviews are viewable by everyone" ON reviews;
 CREATE POLICY "Reviews are viewable by everyone" ON reviews
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Anyone can insert reviews" ON reviews;
 CREATE POLICY "Anyone can insert reviews" ON reviews
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins can manage reviews" ON reviews;
 CREATE POLICY "Admins can manage reviews" ON reviews
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -383,15 +409,19 @@ CREATE TABLE IF NOT EXISTS community_posts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Community posts are viewable by everyone" ON community_posts;
 CREATE POLICY "Community posts are viewable by everyone" ON community_posts
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert own posts" ON community_posts;
 CREATE POLICY "Users can insert own posts" ON community_posts
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own posts" ON community_posts;
 CREATE POLICY "Users can update own posts" ON community_posts
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own posts" ON community_posts;
 CREATE POLICY "Users can delete own posts" ON community_posts
   FOR DELETE USING (auth.uid() = user_id);
 
@@ -406,12 +436,14 @@ CREATE TABLE IF NOT EXISTS newsletter_subscriptions (
   unsubscribed_at TIMESTAMP WITH TIME ZONE
 );
 
+DROP POLICY IF EXISTS "Admins can manage newsletter subscriptions" ON newsletter_subscriptions;
 CREATE POLICY "Admins can manage newsletter subscriptions" ON newsletter_subscriptions
   FOR ALL USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
 -- Allow public insert (anyone can subscribe) but no public read
+DROP POLICY IF EXISTS "Anyone can subscribe" ON newsletter_subscriptions;
 CREATE POLICY "Anyone can subscribe" ON newsletter_subscriptions
   FOR INSERT WITH CHECK (true);
 
@@ -448,9 +480,11 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Admins can manage contact submissions" ON contact_submissions;
 CREATE POLICY "Admins can manage contact submissions" ON contact_submissions
   FOR ALL USING (public.is_admin());
 
+DROP POLICY IF EXISTS "Anyone can submit contact form" ON contact_submissions;
 CREATE POLICY "Anyone can submit contact form" ON contact_submissions
   FOR INSERT WITH CHECK (true);
 
@@ -488,9 +522,11 @@ CREATE TABLE IF NOT EXISTS vouchers (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+DROP POLICY IF EXISTS "Vouchers are viewable by everyone" ON vouchers;
 CREATE POLICY "Vouchers are viewable by everyone" ON vouchers
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage vouchers" ON vouchers;
 CREATE POLICY "Admins can manage vouchers" ON vouchers
   FOR ALL USING (public.is_admin());
 
@@ -519,13 +555,16 @@ CREATE INDEX IF NOT EXISTS idx_product_views_viewer ON product_views(viewer_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_created ON product_views(created_at DESC);
 
 -- Anyone (guest or authenticated) can record a view
+DROP POLICY IF EXISTS "Anyone can insert product views" ON product_views;
 CREATE POLICY "Anyone can insert product views" ON product_views
   FOR INSERT WITH CHECK (true);
 
 -- Admins can view all analytics
+DROP POLICY IF EXISTS "Admins can view product views" ON product_views;
 CREATE POLICY "Admins can view product views" ON product_views
   FOR SELECT USING (public.is_admin());
 
 -- Users can view their own product views (optional, keeps select usable for auth users)
+DROP POLICY IF EXISTS "Users can view own product views" ON product_views;
 CREATE POLICY "Users can view own product views" ON product_views
   FOR SELECT USING (auth.uid() = viewer_id);
