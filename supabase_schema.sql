@@ -219,6 +219,7 @@ DROP POLICY IF EXISTS "Users view own orders" ON orders;
 CREATE POLICY "Users view own orders" ON orders
   FOR SELECT USING (
     auth.uid() = user_id OR
+    guest_phone IS NOT NULL OR
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
