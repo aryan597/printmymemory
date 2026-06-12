@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Package, Clock, CheckCircle, ShoppingBag, Loader2, ChevronRight, Search, ArrowLeft } from 'lucide-react';
+import { Package, Clock, CheckCircle, ShoppingBag, Loader2, ChevronRight, Search, ArrowLeft, Printer } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import toast from 'react-hot-toast';
@@ -27,7 +27,7 @@ function formatPrice(price) {
   return 'Rs. ' + Number(price).toLocaleString('en-IN');
 }
 
-function OrderCard({ order, onClick }) {
+function OrderCard({ order, onClick, phone }) {
   const status = statusConfig[order.status] || statusConfig.order_placed;
   const StatusIcon = status.icon;
   const type = order.items?.[0]?.product?.product_type || 'uncustomised';
@@ -97,6 +97,15 @@ function OrderCard({ order, onClick }) {
           Customised order: photo/design details will be coordinated over WhatsApp.
         </div>
       )}
+      <div className="mt-4 pt-3 border-t border-neutral-800">
+        <Link
+          to={`/receipt?orderId=${order.id}${phone ? `&phone=${phone.replace(/\D/g, '')}` : ''}`}
+          className="inline-flex items-center gap-1.5 text-xs text-white hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Printer size={12} /> Print receipt / packing slip
+        </Link>
+      </div>
     </motion.div>
   );
 }
@@ -238,7 +247,7 @@ export default function Orders() {
 
           {guestOrder && !guestLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <OrderCard order={guestOrder} onClick={() => {}} />
+              <OrderCard order={guestOrder} onClick={() => {}} phone={lookupPhone} />
               <div className="card p-5 mt-4">
                 <h3 className="text-white font-semibold mb-3">Items</h3>
                 <div className="space-y-3">
@@ -306,7 +315,7 @@ export default function Orders() {
 
         <div className="space-y-4">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} onClick={() => navigate(`/orders/${order.id}`)} />
+            <OrderCard key={order.id} order={order} onClick={() => navigate(`/orders/${order.id}`)} phone="" />
           ))}
         </div>
       </div>

@@ -24,6 +24,7 @@ import ShippingPolicy from './pages/ShippingPolicy';
 import ReturnRefund from './pages/ReturnRefund';
 import FAQ from './pages/FAQ';
 import BulkOrders from './pages/BulkOrders';
+import Receipt from './pages/Receipt';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
               <Route path="/return-refund" element={<ReturnRefund />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/bulk-orders" element={<BulkOrders />} />
+              <Route path="/receipt" element={<Receipt />} />
             </Routes>
           </div>
           <Footer />

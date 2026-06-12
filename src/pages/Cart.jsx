@@ -193,7 +193,7 @@ export default function Cart() {
           window.open(waLink, '_blank');
         }
 
-        navigate(`/orders?id=${orderId}&phone=${customerPhone}`);
+        navigate(`/receipt?orderId=${orderId}&phone=${customerPhone}`);
         return;
       }
 
@@ -244,7 +244,7 @@ export default function Cart() {
               window.open(waLink, '_blank');
             }
 
-            navigate(`/orders?id=${orderId}&phone=${customerPhone}`);
+            navigate(`/receipt?orderId=${orderId}&phone=${customerPhone}`);
           } catch (err) {
             console.error('Post-payment update failed:', err);
             toast.error('Payment received but order update failed. Contact support.');

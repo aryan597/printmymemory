@@ -268,10 +268,10 @@ RETURNS TABLE (
 BEGIN
   RETURN QUERY
   SELECT jsonb_build_object(
-    'order', row_to_json(o.*),
+    'order', to_jsonb(o.*),
     'items', COALESCE((
       SELECT jsonb_agg(
-        row_to_json(oi.*) || jsonb_build_object('product', row_to_json(p.*))
+        to_jsonb(oi.*) || jsonb_build_object('product', to_jsonb(p.*))
       )
       FROM order_items oi
       LEFT JOIN products p ON p.id = oi.product_id
@@ -530,7 +530,30 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS voucher_code TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount INTEGER DEFAULT 0;
 
 -- ============================================================
--- 16. VOUCHERS / PROMO CODES
+-- 16. ADMINS (dashboard login, not Supabase Auth)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admins (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT DEFAULT 'admin',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Admins table is managed directly in Supabase SQL Editor / dashboard.
+-- Only the service role can read/write; frontend anon/authenticated users cannot.
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role manages admins" ON admins;
+CREATE POLICY "Service role manages admins" ON admins
+  FOR ALL USING (auth.role() = 'service_role');
+
+-- Example: insert your first admin from the SQL Editor
+-- INSERT INTO admins (username, password_hash, role) VALUES ('admin', '<bcrypt_hash>', 'admin');
+
+-- ============================================================
+-- 17. VOUCHERS / PROMO CODES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS vouchers (
   id SERIAL PRIMARY KEY,
