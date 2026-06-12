@@ -206,6 +206,14 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Ensure existing orders tables get the new guest/payment columns
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_name TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_email TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_phone TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'online';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_signature TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP WITH TIME ZONE;
+
 -- Authenticated users see their own orders; guests use the lookup function
 DROP POLICY IF EXISTS "Users view own orders" ON orders;
 CREATE POLICY "Users view own orders" ON orders
@@ -282,6 +290,8 @@ CREATE TABLE IF NOT EXISTS order_items (
   custom_image TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS custom_image TEXT;
 
 DROP POLICY IF EXISTS "Order items viewable by order owner or admin" ON order_items;
 CREATE POLICY "Order items viewable by order owner or admin" ON order_items
@@ -381,6 +391,10 @@ CREATE TABLE IF NOT EXISTS reviews (
   is_approved BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS guest_name TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS guest_email TEXT;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true;
 
 DROP POLICY IF EXISTS "Reviews are viewable by everyone" ON reviews;
 CREATE POLICY "Reviews are viewable by everyone" ON reviews
