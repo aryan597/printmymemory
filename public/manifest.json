@@ -1,0 +1,16 @@
+{
+  "name": "PrintMyMemory",
+  "short_name": "PrintMyMemory",
+  "description": "Turn your favorite photos into personalized 3D printed keepsakes. Custom lithophane lamps, mini busts, keychains & more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "100x100",
+      "type": "image/png"
+    }
+  ]
+}

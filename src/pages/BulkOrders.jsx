@@ -23,7 +23,7 @@ export default function BulkOrders() {
       const body = encodeURIComponent(
         `*Bulk Order Enquiry*\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nProduct: ${formData.product}\nQuantity: ${formData.quantity}\nMessage: ${formData.message}`
       );
-      window.open(`https://wa.me/917463812249?text=${body}`, '_blank');
+      window.open(`https://wa.me/919471725271?text=${body}`, '_blank');
       toast.success('Opening WhatsApp with your enquiry!');
       setFormData({ name: '', email: '', phone: '', quantity: '', product: '', message: '' });
     } catch (err) {
@@ -34,7 +34,7 @@ export default function BulkOrders() {
   };
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

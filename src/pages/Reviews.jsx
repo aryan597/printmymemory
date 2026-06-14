@@ -94,7 +94,7 @@ export default function Reviews() {
     : '4.9';
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -121,7 +121,7 @@ export default function Reviews() {
             <span className="text-4xl font-bold text-text-primary">{averageRating}</span>
             <div className="flex">
               {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} size={20} className="text-accent fill-accent" />
+                <Star key={`hero-star-${i}`} size={20} className="text-accent fill-accent" />
               ))}
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function Reviews() {
                   </div>
                   <div className="flex">
                     {[...Array(review.rating || 5)].map((_, i) => (
-                      <Star key={i} size={12} className="text-accent fill-accent" />
+                      <Star key={`star-${review.id}-${i}`} size={12} className="text-accent fill-accent" />
                     ))}
                   </div>
                 </div>

@@ -3,7 +3,7 @@ import { XCircle, ShieldAlert, Video, RotateCcw } from 'lucide-react';
 
 export default function ReturnRefund() {
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -68,7 +68,7 @@ export default function ReturnRefund() {
             <ol className="space-y-3 text-text-secondary text-sm">
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-cyan-400/10 text-cyan-400 text-xs font-bold flex items-center justify-center shrink-0">1</span>
-                <span>WhatsApp us at <strong>+91-7463812249</strong> within 24 hours of delivery</span>
+                <span>WhatsApp us at <strong>+91-94717-25271</strong> within 24 hours of delivery</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-cyan-400/10 text-cyan-400 text-xs font-bold flex items-center justify-center shrink-0">2</span>

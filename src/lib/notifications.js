@@ -115,7 +115,7 @@ export const sendStatusUpdateEmail = async ({
  * Generate WhatsApp click-to-chat link for customised orders
  */
 export const getWhatsAppOrderLink = ({
-  phone = import.meta.env.VITE_WHATSAPP_NUMBER || '917463812249',
+  phone = '919471725271',
   order_id,
   customer_name,
   product_name,
@@ -135,7 +135,7 @@ export const getWhatsAppOrderLink = ({
  */
 export const getAdminWhatsAppLink = ({
   customerPhone,
-  order_id,
+
   message,
 }) => {
   const cleanPhone = customerPhone?.replace(/\D/g, '');

@@ -64,7 +64,7 @@ export default function Gallery() {
   }, [lightbox, items.length]);
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

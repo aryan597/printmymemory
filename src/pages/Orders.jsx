@@ -127,8 +127,10 @@ export default function Orders() {
       loadOrders();
     } else {
       setLoading(false);
-      if (searchParams.get('id') && searchParams.get('phone')) {
-        fetchGuestOrder(searchParams.get('id'), searchParams.get('phone'));
+      const id = searchParams.get('id')?.trim().replace(/^#/, '');
+      const phone = searchParams.get('phone');
+      if (id && phone) {
+        fetchGuestOrder(id, phone);
       }
     }
   }, [isAuthenticated, searchParams]);
@@ -154,9 +156,14 @@ export default function Orders() {
     if (!id || !phone) return;
     setGuestLoading(true);
     try {
+      // Clean the ID: remove # prefix and trim whitespace
+      let cleanId = id.trim().replace(/^#/, '');
       const cleanPhone = phone.replace(/\D/g, '');
+      
+      // If ID is a short code (8 chars), we might need to look it up differently
+      // For now, try passing it to the RPC - the DB function should handle short IDs
       const { data, error } = await supabase.rpc('get_guest_order_with_items', {
-        order_id: id,
+        order_id: cleanId,
         phone: cleanPhone,
       });
       if (error) throw error;
@@ -175,6 +182,7 @@ export default function Orders() {
     } catch (err) {
       console.error('Guest order lookup error:', err);
       toast.error(err.message || 'Failed to look up order');
+      setGuestOrder(null);
     } finally {
       setGuestLoading(false);
     }
@@ -182,17 +190,18 @@ export default function Orders() {
 
   const handleLookup = (e) => {
     e.preventDefault();
+    const cleanId = lookupId.trim().replace(/^#/, '');
     const cleanPhone = lookupPhone.replace(/\D/g, '');
-    if (!lookupId.trim() || cleanPhone.length < 10) {
+    if (!cleanId || cleanPhone.length < 10) {
       toast.error('Please enter a valid order ID and phone number');
       return;
     }
-    setSearchParams({ id: lookupId.trim(), phone: cleanPhone });
+    setSearchParams({ id: cleanId, phone: cleanPhone });
   };
 
   if (loading) {
     return (
-      <main className="py-16 flex items-center justify-center">
+      <main className="section-padding flex items-center justify-center">
         <Loader2 size={32} className="animate-spin text-white" />
       </main>
     );
@@ -201,7 +210,7 @@ export default function Orders() {
   // Guest lookup view
   if (!isAuthenticated) {
     return (
-      <main className="py-12 sm:py-16">
+      <main className="section-padding">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-white">Track Your Order</h1>
@@ -292,7 +301,7 @@ export default function Orders() {
 
   if (orders.length === 0) {
     return (
-      <main className="py-16 sm:py-24 flex flex-col items-center justify-center min-h-[60vh]">
+      <main className="section-padding flex flex-col items-center justify-center min-h-[60vh]">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <ShoppingBag size={48} className="text-neutral-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">No orders yet</h2>

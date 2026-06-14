@@ -20,7 +20,7 @@ function formatDate(iso) {
 export default function Receipt() {
   const [searchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
-  const orderId = searchParams.get('orderId') || searchParams.get('id') || '';
+  const orderId = (searchParams.get('orderId') || searchParams.get('id') || '').trim().replace(/^#/, '');
   const phone = searchParams.get('phone') || '';
 
   const [order, setOrder] = useState(null);
@@ -101,7 +101,7 @@ export default function Receipt() {
   const shippingAddr = order.shipping_address || {};
 
   return (
-    <main className="py-10 sm:py-14">
+    <main className="section-padding">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -128,10 +128,10 @@ export default function Receipt() {
               <p className="text-white text-sm font-medium">PrintMyMemory</p>
               <p className="text-neutral-400 text-sm">Bangalore, India</p>
               <p className="text-neutral-500 text-sm flex items-center gap-1.5 mt-1">
-                <Phone size={12} /> +91-7463812249
+                <Phone size={12} /> +91-94717-25271
               </p>
               <p className="text-neutral-500 text-sm flex items-center gap-1.5">
-                <Mail size={12} /> hello@printmymemory.in
+                <Mail size={12} /> printmymemory120626@gmail.com
               </p>
             </div>
             <div>
@@ -192,7 +192,7 @@ export default function Receipt() {
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-neutral-400">
-                  <span>Discount</span>
+                  <span>Discount {order.voucher_code && <span className="text-brand-orange text-xs">({order.voucher_code})</span>}</span>
                   <span>-{formatPrice(discount)}</span>
                 </div>
               )}
@@ -207,7 +207,7 @@ export default function Receipt() {
           <div className="border-t border-neutral-800 pt-6 text-center">
             <p className="text-neutral-400 text-sm mb-1">Thank you for shopping with PrintMyMemory!</p>
             <p className="text-neutral-500 text-xs">
-              Questions? Reach us on WhatsApp at +91-7463812249 or email hello@printmymemory.in
+              Questions? Reach us on WhatsApp at +91-94717-25271 or email printmymemory120626@gmail.com
             </p>
             {order.payment_method === 'cod' && (
               <p className="text-white text-sm font-medium mt-3">

@@ -62,7 +62,7 @@ export default function Community() {
   };
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Community</h1>

@@ -26,7 +26,7 @@ const features = [
 
 export default function TrustBar() {
   return (
-    <section className="py-8 sm:py-10">
+    <section className="py-8 sm:py-10" aria-label="Trust and features">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -40,7 +40,7 @@ export default function TrustBar() {
               key={feature.title}
               className="bg-bg-card border border-border-subtle rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 hover:border-border-hover transition-colors"
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0" aria-hidden="true">
                 <feature.icon size={20} className="text-accent" />
               </div>
               <div>

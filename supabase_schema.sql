@@ -13,6 +13,18 @@ ALTER TABLE IF EXISTS reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS profiles ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
+-- HELPER: is_admin() — must be defined BEFORE any policies use it
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
 -- 1. PROFILES (extends auth.users)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS profiles (
@@ -64,14 +76,6 @@ CREATE POLICY "Admins can manage all profiles" ON profiles
   );
 
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
-
--- Helper to check admin role without triggering RLS recursion on profiles
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin');
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
 -- 2. CATEGORIES
@@ -127,6 +131,9 @@ CREATE TABLE IF NOT EXISTS products (
   print_time_minutes INTEGER,
   material TEXT DEFAULT 'PLA',
   in_stock BOOLEAN DEFAULT true,
+  is_ams_compatible BOOLEAN DEFAULT false,
+  ams_colors JSONB DEFAULT '[]',
+  print_settings JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -146,13 +153,13 @@ CREATE INDEX IF NOT EXISTS idx_products_type ON products(product_type);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
 
 -- Insert default products (linked to categories)
-INSERT INTO products (name, description, price, image, category_id, product_type, stock_quantity, weight_grams, print_time_minutes, material) VALUES
-  ('3D Face Miniatures', 'Detailed hand-painted 3D bust of your loved one', 2499, '/images/products/model1.jpeg', 1, 'customised', 999, 150, 180, 'PLA+'),
-  ('Lithophane Lamps', 'Your photos illuminate beautifully when lit from behind', 1999, '/images/products/globe_front.jpeg', 2, 'customised', 999, 200, 240, 'PLA'),
-  ('Personalized Name Plates', 'Elegant 3D printed name plates for desk or door', 999, '/images/products/globe_back.jpeg', 3, 'uncustomised', 100, 80, 90, 'PLA'),
-  ('Custom Keychains', 'Carry your memories everywhere with photo keychains', 499, '/images/products/model1_raw.jpeg', 4, 'customised', 999, 20, 30, 'PLA'),
-  ('Couple Gifts Set', 'Heart-shaped lamps and couple busts for special days', 3499, '/images/products/model1_raw_generated.jpeg', 5, 'customised', 999, 250, 300, 'PLA'),
-  ('Corporate Gift Box', 'Premium bulk 3D printed gifts for clients', 4999, '/images/products/globe_front.jpeg', 6, 'uncustomised', 50, 500, 360, 'PLA+')
+INSERT INTO products (name, description, price, image, category_id, product_type, stock_quantity, weight_grams, print_time_minutes, material, is_ams_compatible, ams_colors, print_settings) VALUES
+  ('3D Face Miniatures', 'Detailed hand-painted 3D bust of your loved one', 2499, '/images/products/model1.jpeg', 1, 'customised', 999, 150, 180, 'PLA+', true, '["#3b82f6", "#8b5cf6", "#ec4899"]', '{"layer_height": 0.12, "infill": 15, "supports": true}'),
+  ('Lithophane Lamps', 'Your photos illuminate beautifully when lit from behind', 1999, '/images/products/globe_front.jpeg', 2, 'customised', 999, 200, 240, 'PLA', true, '["#f97316", "#ec4899", "#ffffff"]', '{"layer_height": 0.16, "infill": 100, "supports": false}'),
+  ('Personalized Name Plates', 'Elegant 3D printed name plates for desk or door', 999, '/images/products/globe_back.jpeg', 3, 'uncustomised', 100, 80, 90, 'PLA', true, '["#3b82f6", "#22c55e"]', '{"layer_height": 0.2, "infill": 20, "supports": false}'),
+  ('Custom Keychains', 'Carry your memories everywhere with photo keychains', 499, '/images/products/model1_raw.jpeg', 4, 'customised', 999, 20, 30, 'PLA', true, '["#f97316", "#3b82f6", "#8b5cf6"]', '{"layer_height": 0.2, "infill": 30, "supports": true}'),
+  ('Couple Gifts Set', 'Heart-shaped lamps and couple busts for special days', 3499, '/images/products/model1_raw_generated.jpeg', 5, 'customised', 999, 250, 300, 'PLA', true, '["#ec4899", "#f97316", "#ffffff"]', '{"layer_height": 0.16, "infill": 15, "supports": true}'),
+  ('Corporate Gift Box', 'Premium bulk 3D printed gifts for clients', 4999, '/images/products/globe_front.jpeg', 6, 'uncustomised', 50, 500, 360, 'PLA+', true, '["#3b82f6", "#8b5cf6", "#22c55e"]', '{"layer_height": 0.2, "infill": 25, "supports": true}')
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
@@ -425,7 +432,7 @@ CREATE POLICY "Admins can manage reviews" ON reviews
 -- ============================================================
 CREATE TABLE IF NOT EXISTS community_posts (
   id SERIAL PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   image TEXT,
@@ -469,6 +476,11 @@ CREATE POLICY "Admins can manage newsletter subscriptions" ON newsletter_subscri
 -- Allow public insert (anyone can subscribe) but no public read
 DROP POLICY IF EXISTS "Anyone can subscribe" ON newsletter_subscriptions;
 CREATE POLICY "Anyone can subscribe" ON newsletter_subscriptions
+  FOR INSERT WITH CHECK (true);
+
+-- Allow public insert on community_posts (guest posts)
+DROP POLICY IF EXISTS "Anyone can insert community posts" ON community_posts;
+CREATE POLICY "Anyone can insert community posts" ON community_posts
   FOR INSERT WITH CHECK (true);
 
 CREATE INDEX IF NOT EXISTS idx_newsletter_email ON newsletter_subscriptions(email);
@@ -519,6 +531,75 @@ CREATE INDEX IF NOT EXISTS idx_contact_read ON contact_submissions(is_read);
 -- 15. SCHEMA MIGRATIONS (run these on existing tables)
 -- ============================================================
 
+-- Add voucher fields to orders
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS voucher_code TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount INTEGER DEFAULT 0;
+
+-- Add AMS fields to existing products
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_ams_compatible BOOLEAN DEFAULT false;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS ams_colors JSONB DEFAULT '[]';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS print_settings JSONB DEFAULT '{}';
+
+-- ============================================================
+-- 18. PRODUCT CUSTOMIZATION CONFIGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_customization_configs (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE NOT NULL,
+  field_key TEXT NOT NULL,
+  field_type TEXT NOT NULL CHECK (field_type IN ('photo_upload', 'text', 'textarea', 'select', 'color_picker', 'ams_color', 'number', 'checkbox', 'radio')),
+  field_label TEXT NOT NULL,
+  field_placeholder TEXT,
+  options JSONB DEFAULT '[]',
+  is_required BOOLEAN DEFAULT true,
+  price_adjustment INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pcc_product ON product_customization_configs(product_id);
+CREATE INDEX IF NOT EXISTS idx_pcc_sort ON product_customization_configs(sort_order);
+
+DROP POLICY IF EXISTS "Product customization configs are viewable by everyone" ON product_customization_configs;
+CREATE POLICY "Product customization configs are viewable by everyone" ON product_customization_configs
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Admins can manage product customization configs" ON product_customization_configs;
+CREATE POLICY "Admins can manage product customization configs" ON product_customization_configs
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- 19. ORDER CUSTOMIZATION VALUES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS order_customization_values (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  order_item_id INTEGER REFERENCES order_items(id) ON DELETE CASCADE NOT NULL,
+  field_key TEXT NOT NULL,
+  field_value TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ocv_order_item ON order_customization_values(order_item_id);
+
+DROP POLICY IF EXISTS "Order customization values viewable by order owner or admin" ON order_customization_values;
+CREATE POLICY "Order customization values viewable by order owner or admin" ON order_customization_values
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      WHERE oi.id = order_customization_values.order_item_id
+        AND (o.user_id = auth.uid() OR o.guest_phone IS NOT NULL OR public.is_admin())
+    )
+  );
+
+DROP POLICY IF EXISTS "Admins can manage order customization values" ON order_customization_values;
+CREATE POLICY "Admins can manage order customization values" ON order_customization_values
+  FOR ALL USING (public.is_admin());
+
+-- ============================================================
+-- 20. SCHEMA MIGRATIONS (run these on existing tables)
+-- ============================================================
+
 -- Add custom_image to cart_items for photo uploads in customize flow
 ALTER TABLE cart_items ADD COLUMN IF NOT EXISTS custom_image TEXT;
 
@@ -544,6 +625,11 @@ CREATE TABLE IF NOT EXISTS admins (
 -- Admins table is managed directly in Supabase SQL Editor / dashboard.
 -- Only the service role can read/write; frontend anon/authenticated users cannot.
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+
+-- Allow anonymous SELECT for login (only returns data if username matches)
+DROP POLICY IF EXISTS "Allow login select" ON admins;
+CREATE POLICY "Allow login select" ON admins
+  FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Service role manages admins" ON admins;
 CREATE POLICY "Service role manages admins" ON admins
@@ -615,3 +701,21 @@ CREATE POLICY "Admins can view product views" ON product_views
 DROP POLICY IF EXISTS "Users can view own product views" ON product_views;
 CREATE POLICY "Users can view own product views" ON product_views
   FOR SELECT USING (auth.uid() = viewer_id);
+
+-- ============================================================
+-- VOUCHER UPDATE: Set WELCOME10 limit to 20 users
+-- Run this to update existing WELCOME10 voucher
+-- ============================================================
+UPDATE vouchers SET usage_limit = 20 WHERE code = 'WELCOME10';
+
+-- ============================================================
+-- VOUCHER RPC FUNCTION: Increment usage count
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.increment_voucher_usage(code TEXT)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE vouchers
+  SET usage_count = usage_count + 1
+  WHERE vouchers.code = code;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

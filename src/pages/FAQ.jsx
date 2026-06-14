@@ -49,7 +49,7 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(null);
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -115,7 +115,7 @@ export default function FAQ() {
           <p className="text-text-secondary text-sm mb-4">DM us on Instagram or WhatsApp. We reply fast.</p>
           <div className="flex flex-wrap gap-3 justify-center">
             <a
-              href="https://wa.me/917463812249"
+              href="https://wa.me/919471725271"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-whatsapp text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"

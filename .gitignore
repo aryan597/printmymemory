@@ -49,3 +49,7 @@ SUPABASE_SETUP_GUIDE.md
 *.njsproj
 *.sln
 *.sw?
+
+# WhatsApp reference images
+WhatsApp Image*.jpeg
+

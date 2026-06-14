@@ -3,7 +3,7 @@ import { Truck, Package, MapPin, Clock, AlertTriangle } from 'lucide-react';
 
 export default function ShippingPolicy() {
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

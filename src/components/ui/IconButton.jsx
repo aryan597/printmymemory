@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 
 const variants = {
-  primary: 'bg-white text-black hover:bg-neutral-200',
+  primary: 'bg-brand-orange text-white hover:brightness-110',
   secondary: 'bg-transparent text-white border border-border-subtle hover:border-text-secondary hover:bg-surface-hover',
   ghost: 'bg-transparent text-text-secondary hover:text-white',
 };
@@ -13,7 +13,7 @@ const sizes = {
 };
 
 const IconButton = forwardRef(function IconButton(
-  { children, variant = 'secondary', size = 'md', className = '', disabled = false, type = 'button', ...props },
+  { children, variant = 'secondary', size = 'md', className = '', disabled = false, type = 'button', ariaLabel, ...props },
   ref
 ) {
   return (
@@ -28,6 +28,8 @@ const IconButton = forwardRef(function IconButton(
         ${disabled ? 'opacity-40 cursor-not-allowed hover:transform-none' : ''}
         ${className}
       `}
+      aria-label={ariaLabel}
+      aria-disabled={disabled}
       {...props}
     >
       {children}

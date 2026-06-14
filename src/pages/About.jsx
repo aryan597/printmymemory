@@ -9,7 +9,7 @@ const stats = [
 
 export default function About() {
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero */}
         <motion.div

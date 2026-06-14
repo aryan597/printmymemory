@@ -8,8 +8,8 @@ const contactMethods = [
   {
     icon: MessageCircle,
     label: 'WhatsApp',
-    value: '+91-7463812249',
-    href: 'https://wa.me/917463812249',
+    value: '+91-94717-25271',
+    href: 'https://wa.me/919471725271',
     description: 'Fastest response. Usually replies within minutes.',
     color: 'text-whatsapp',
     bg: 'bg-whatsapp/10',
@@ -28,8 +28,8 @@ const contactMethods = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'hello@printmymemory.in',
-    href: 'mailto:hello@printmymemory.in',
+    value: 'printmymemory120626@gmail.com',
+    href: 'mailto:printmymemory120626@gmail.com',
     description: 'For detailed queries and bulk orders.',
     color: 'text-accent',
     bg: 'bg-accent/10',
@@ -38,8 +38,8 @@ const contactMethods = [
   {
     icon: Phone,
     label: 'Call',
-    value: '+91-7463812249',
-    href: 'tel:+917463812249',
+    value: '+91-94717-25271',
+    href: 'tel:+919471725271',
     description: 'Mon-Sat, 10AM - 7PM. Might go to voicemail.',
     color: 'text-cyan-400',
     bg: 'bg-cyan-400/10',
@@ -66,7 +66,7 @@ export default function Contact() {
         if (error.message?.includes('does not exist')) {
           const subject = encodeURIComponent(`[PrintMyMemory] ${formData.subject}`);
           const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`);
-          window.location.href = `mailto:hello@printmymemory.in?subject=${subject}&body=${body}`;
+          window.location.href = `mailto:printmymemory120626@gmail.com?subject=${subject}&body=${body}`;
           toast.success('Opening your email client...');
         } else {
           throw error;
@@ -85,7 +85,7 @@ export default function Contact() {
   };
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -221,7 +221,7 @@ export default function Contact() {
               <div className="flex items-start gap-3 text-text-secondary text-sm">
                 <MapPin size={16} className="text-accent shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-text-primary font-medium">Jakkur, Bangalore</p>
+                  <p className="text-text-primary font-medium">Bangalore, India</p>
                   <p className="text-text-muted text-xs">Karnataka 560064, India</p>
                   <p className="text-text-muted text-xs mt-1">Branding & packaging coordinated from Bhubaneswar, Odisha</p>
                 </div>

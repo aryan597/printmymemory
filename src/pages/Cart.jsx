@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, CreditCard, Banknote, MapPin, Home, Briefcase, PlusCircle, MessageCircle } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, CreditCard, Banknote, MapPin, Home, Briefcase, PlusCircle, MessageCircle, Tag, Check, X } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { openRazorpayCheckout } from '../lib/razorpay';
@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import Button from '../components/ui/Button';
 
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '917463812249';
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919471725271';
 
 function formatPrice(price) {
   return 'Rs. ' + Number(price).toLocaleString('en-IN');
@@ -37,6 +37,9 @@ export default function Cart() {
     postcode: '',
   });
   const [formErrors, setFormErrors] = useState({});
+  const [voucherCode, setVoucherCode] = useState('');
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [appliedVoucher, setAppliedVoucher] = useState(null); // { code, discountPercent, discountAmount }
 
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -113,6 +116,77 @@ export default function Cart() {
     return Object.keys(errors).length === 0;
   };
 
+  const discountAmount = appliedVoucher ? appliedVoucher.discountAmount : 0;
+  const finalTotal = Math.max(0, cartTotal - discountAmount);
+
+  const applyVoucher = async () => {
+    const code = voucherCode.trim().toUpperCase();
+    if (!code) {
+      toast.error('Please enter a voucher code');
+      return;
+    }
+    setVoucherLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from(TABLES.VOUCHERS)
+        .select('*')
+        .eq('code', code)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        toast.error('Invalid voucher code');
+        setAppliedVoucher(null);
+        return;
+      }
+
+      // Check expiry
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        toast.error('This voucher has expired');
+        setAppliedVoucher(null);
+        return;
+      }
+
+      // Check usage limit
+      if (data.usage_limit !== null && data.usage_count >= data.usage_limit) {
+        toast.error('This voucher has reached its usage limit');
+        setAppliedVoucher(null);
+        return;
+      }
+
+      // Check minimum order amount
+      if (data.min_order_amount && cartTotal < data.min_order_amount) {
+        toast.error(`Minimum order of ${formatPrice(data.min_order_amount)} required`);
+        setAppliedVoucher(null);
+        return;
+      }
+
+      // Calculate discount
+      let discount = Math.round((cartTotal * data.discount_percent) / 100);
+      if (data.max_discount_amount && discount > data.max_discount_amount) {
+        discount = data.max_discount_amount;
+      }
+
+      setAppliedVoucher({
+        code: data.code,
+        discountPercent: data.discount_percent,
+        discountAmount: discount,
+      });
+      toast.success(`${data.code} applied! You saved ${formatPrice(discount)}`);
+    } catch (err) {
+      console.error('Voucher error:', err);
+      toast.error('Failed to apply voucher');
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
+  const removeVoucher = () => {
+    setAppliedVoucher(null);
+    setVoucherCode('');
+    toast('Voucher removed', { icon: 'ℹ️' });
+  };
+
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
       toast.error('Your cart is empty');
@@ -130,10 +204,12 @@ export default function Cart() {
       const shipping = buildShippingAddress();
       const orderPayload = {
         user_id: isAuthenticated ? user.id : null,
-        total_amount: cartTotal,
+        total_amount: finalTotal,
         status: 'order_placed',
         payment_method: paymentMethod,
         shipping_address: shipping,
+        voucher_code: appliedVoucher?.code || null,
+        discount_amount: discountAmount,
       };
       if (!isAuthenticated) {
         orderPayload.guest_name = shipping.full_name;
@@ -161,6 +237,15 @@ export default function Cart() {
       const { error: itemsError } = await supabase.from(TABLES.ORDER_ITEMS).insert(orderItems);
       if (itemsError) throw itemsError;
 
+      // Increment voucher usage count if voucher was applied
+      if (appliedVoucher) {
+        try {
+          await supabase.rpc('increment_voucher_usage', { code: appliedVoucher.code });
+        } catch (vErr) {
+          console.debug('Voucher usage increment failed:', vErr);
+        }
+      }
+
       const hasCustomised = cartItems.some(
         item => item.product?.product_type === 'customised' || item.product_type === 'customised'
       );
@@ -174,14 +259,14 @@ export default function Cart() {
           to_email: customerEmail,
           to_name: customerName,
           order_id: orderId,
-          total_amount: cartTotal,
+          total_amount: finalTotal,
           payment_method: 'cod',
           items: cartItems,
           delivery: shipping,
         });
 
         await clearCart();
-        toast.success('Order placed! Pay ' + formatPrice(cartTotal) + ' on delivery.');
+        toast.success('Order placed! Pay ' + formatPrice(finalTotal) + ' on delivery.');
 
         if (hasCustomised) {
           const waLink = getWhatsAppOrderLink({
@@ -200,7 +285,7 @@ export default function Cart() {
       // Online flow
       await openRazorpayCheckout(
         {
-          amount: cartTotal,
+          amount: finalTotal,
           name: customerName,
           email: customerEmail,
           phone: customerPhone,
@@ -228,7 +313,7 @@ export default function Cart() {
               to_email: customerEmail,
               to_name: customerName,
               order_id: orderId,
-              total_amount: cartTotal,
+              total_amount: finalTotal,
               payment_method: 'online',
               items: cartItems,
               delivery: shipping,
@@ -279,7 +364,7 @@ export default function Cart() {
 
   if (cartItems.length === 0) {
     return (
-      <main className="py-16 sm:py-24 flex flex-col items-center justify-center min-h-[60vh]">
+      <main className="section-padding flex flex-col items-center justify-center min-h-[60vh]">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -302,7 +387,7 @@ export default function Cart() {
   }
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Shopping Cart ({cartCount})</h1>
@@ -376,17 +461,55 @@ export default function Cart() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-400">Discount</span>
-                <span className="text-white">-Rs. 0</span>
+                <span className={appliedVoucher ? 'text-green-400' : 'text-white'}>
+                  {appliedVoucher ? `-${formatPrice(discountAmount)}` : '-Rs. 0'}
+                </span>
               </div>
+              {appliedVoucher && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-brand-orange font-medium">{appliedVoucher.code}</span>
+                  <button onClick={removeVoucher} className="text-neutral-500 hover:text-red-400 transition-colors">
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
             </div>
             <div className="border-t border-neutral-800 pt-4 mb-4">
               <div className="flex justify-between">
                 <span className="text-white font-semibold">Total</span>
-                <span className="text-white font-bold text-xl">{formatPrice(cartTotal)}</span>
+                <span className="text-white font-bold text-xl">{formatPrice(finalTotal)}</span>
               </div>
             </div>
 
-            {/* Delivery details */}
+            {/* Voucher Input */}
+            <div className="mb-4">
+              <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Voucher Code</p>
+              {appliedVoucher ? (
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-green-500/30 bg-green-500/10">
+                  <Check size={14} className="text-green-400" />
+                  <span className="text-green-400 text-sm font-medium">{appliedVoucher.code} applied</span>
+                  <span className="text-green-400/70 text-xs">(-{appliedVoucher.discountPercent}%)</span>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter code (e.g. WELCOME10)"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                    className="input flex-1 text-sm"
+                    onKeyDown={(e) => e.key === 'Enter' && applyVoucher()}
+                  />
+                  <button
+                    onClick={applyVoucher}
+                    disabled={voucherLoading}
+                    className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    {voucherLoading ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="mb-4">
               <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Deliver To</p>
               {isAuthenticated ? (
@@ -557,7 +680,7 @@ export default function Cart() {
                 <Banknote size={18} className={paymentMethod === 'cod' ? 'text-white' : 'text-neutral-500'} />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Cash on Delivery</p>
-                  <p className="text-xs text-neutral-500">Pay {formatPrice(cartTotal)} when your order arrives</p>
+                  <p className="text-xs text-neutral-500">Pay {formatPrice(finalTotal)} when your order arrives</p>
                 </div>
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cod' ? 'border-white' : 'border-neutral-600'}`}>
                   {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-white" />}

@@ -1,47 +1,79 @@
-import { motion } from 'framer-motion';
-import { Upload, Box, CreditCard, Printer, Truck } from 'lucide-react';
+import { ImageIcon, MessageCircle, PenTool, Printer, Truck } from 'lucide-react';
 
 const steps = [
-  { icon: Upload, title: 'Upload Photo', description: 'Share a clear photo you want to preserve.' },
-  { icon: Box, title: 'Choose Product', description: 'Pick from lamps, miniatures, keychains, and more.' },
-  { icon: CreditCard, title: 'Pay Securely', description: 'Checkout with Razorpay. Cards, UPI, and netbanking.' },
-  { icon: Printer, title: 'We Print', description: 'Your design is 3D printed and quality checked.' },
-  { icon: Truck, title: 'Delivered', description: 'Packed with care and shipped across India.' },
+  {
+    number: '1',
+    icon: ImageIcon,
+    title: 'Upload Photo',
+    description: 'Upload a clear photo of your loved one',
+  },
+  {
+    number: '2',
+    icon: MessageCircle,
+    title: 'Chat on WhatsApp',
+    description: 'Share your photo and discuss your design with us',
+  },
+  {
+    number: '3',
+    icon: PenTool,
+    title: 'Get Design Done',
+    description: 'Our experts create the perfect 3D model for you',
+  },
+  {
+    number: '4',
+    icon: () => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    ),
+    title: 'We Print, Ship & Deliver',
+    description: 'High quality 3D printing with premium materials, carefully packed and delivered',
+  },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="py-16 sm:py-20 bg-bg-secondary">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <p className="text-text-muted text-xs font-medium uppercase tracking-wide mb-2">How It Works</p>
-          <h2 className="section-title">Simple. Transparent. Personal.</h2>
-        </motion.div>
+    <section className="section-padding bg-bg-secondary" aria-label="How it works">
+      <div className="max-w-7xl mx-auto container-padding">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-headline font-bold text-white">
+            How It <span className="text-brand-orange">Works</span>
+          </h2>
+          <p className="text-text-muted text-sm mt-2">Simple steps to create your perfect 3D gift</p>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        {/* Steps */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((step, index) => (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="text-center"
+            <div
+              key={step.number}
+              className="relative text-center"
+              aria-label={`Step ${step.number}: ${step.title}`}
             >
-              <div className="w-12 h-12 border border-border-subtle rounded-lg flex items-center justify-center mx-auto mb-4">
-                <step.icon size={20} className="text-white" />
+              {/* Connector line */}
+              {index < steps.length - 1 && (
+                <div className="hidden lg:block absolute top-8 left-[60%] right-0 w-full">
+                  <div className="flex items-center gap-1">
+                    {[...Array(8)].map((_, i) => (
+                      <div key={`dot-${index}-${i}`} className="w-1 h-1 rounded-full bg-white/20" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-bg-card border border-border-subtle mb-4 relative">
+                <step.icon size={22} className="text-brand-orange" />
+                {/* Number badge */}
+                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-brand-orange text-white text-xs font-bold flex items-center justify-center">
+                  {step.number}
+                </div>
               </div>
-              <h3 className="text-text-primary font-medium text-sm mb-1">{step.title}</h3>
-              <p className="text-text-secondary text-xs leading-relaxed max-w-[180px] mx-auto">
-                {step.description}
-              </p>
-            </motion.div>
+
+              <h3 className="text-white font-semibold text-sm mb-1">{step.title}</h3>
+              <p className="text-text-muted text-xs leading-relaxed max-w-[200px] mx-auto">{step.description}</p>
+            </div>
           ))}
         </div>
       </div>

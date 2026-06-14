@@ -1,147 +1,207 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Star, Loader2 } from 'lucide-react';
+import { supabase, TABLES } from '../lib/supabaseClient';
 
-const testimonials = [
+const fallbackTestimonials = [
   {
     id: 1,
     name: 'Priya S.',
     location: 'Mumbai',
-    text: 'The name lamp turned out better than expectations. It\'s so beautiful and brings back memories every day.',
-    image: '/images/globe_front.jpeg',
-    avatar: 'PS',
     rating: 5,
+    text: 'The lithophane lamp turned out beyond my expectations. It\'s so beautiful and brings back memories every day.',
+    productImage: '/images/products/lamp.jpg',
+    avatar: '/images/avatars/avatar1.jpg',
   },
   {
     id: 2,
     name: 'Rahul M.',
     location: 'Bangalore',
-    text: 'The 3D miniature of my son is so cute! Amazing quality and perfect detailing.',
-    image: '/images/model1_raw.jpeg',
-    avatar: 'RM',
     rating: 5,
+    text: 'The 3D miniature of my son is so cute! Amazing quality and perfect detailing.',
+    productImage: '/images/products/miniature.jpg',
+    avatar: '/images/avatars/avatar2.jpg',
   },
   {
     id: 3,
     name: 'Ankit D.',
     location: 'Delhi',
-    text: 'Got a name plate for my desk and everyone loved it! Super premium finish.',
-    image: '/images/globe_back.jpeg',
-    avatar: 'AD',
     rating: 5,
+    text: 'Got a name plate for my desk and everyone loved it. Super premium finish.',
+    productImage: '/images/products/nameplate.jpg',
+    avatar: '/images/avatars/avatar3.jpg',
   },
   {
     id: 4,
     name: 'Neha & Karan',
     location: 'Pune',
-    text: 'Perfect anniversary gift! The couple lamp is just magical ❤️',
-    image: '/images/model1.jpeg',
-    avatar: 'NK',
     rating: 5,
+    text: 'Perfect anniversary gift! The couple lamp is just magical.',
+    productImage: '/images/products/couple.jpg',
+    avatar: '/images/avatars/avatar4.jpg',
   },
 ];
 
 export default function TestimonialsSection() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerView = typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2;
+  const [current, setCurrent] = useState(0);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(1);
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-  };
+  // Fetch reviews from Supabase
+  useEffect(() => {
+    let cancelled = false;
 
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
+    async function loadReviews() {
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.REVIEWS)
+          .select('*, product:products(name, image)')
+          .eq('is_approved', true)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-  const visibleTestimonials = [];
-  for (let i = 0; i < itemsPerView; i++) {
-    visibleTestimonials.push(testimonials[(currentIndex + i) % testimonials.length]);
+        if (!cancelled) {
+          if (data && data.length > 0) {
+            // Map Supabase reviews to testimonial format
+            const mapped = data.map((review, index) => ({
+              id: review.id,
+              name: review.customer_name || 'Happy Customer',
+              location: review.customer_location || 'India',
+              rating: review.rating || 5,
+              text: review.comment || review.review_text || 'Great product!',
+              productImage: review.product?.image || review.product_image || '/images/products/placeholder.jpg',
+              avatar: review.customer_avatar || `/images/avatars/avatar${(index % 4) + 1}.jpg`,
+            }));
+            setTestimonials(mapped);
+          } else {
+            setTestimonials(fallbackTestimonials);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+        if (!cancelled) {
+          setTestimonials(fallbackTestimonials);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadReviews();
+    return () => { cancelled = true };
+  }, []);
+
+  // Handle responsive visible count
+  useEffect(() => {
+    const handleResize = () => {
+      setVisibleCount(window.innerWidth >= 1024 ? 2 : 1);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const next = () => setCurrent((prev) => (prev + 1) % testimonials.length);
+  const prev = () => setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+
+  const visible = [];
+  for (let i = 0; i < visibleCount; i++) {
+    visible.push(testimonials[(current + i) % testimonials.length]);
   }
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5 }}
-          className="mb-10 sm:mb-12"
-        >
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary">
-            What Our <span className="text-accent">Customers</span> Say
+    <section className="section-padding bg-bg-primary" aria-label="Customer testimonials">
+      <div className="max-w-7xl mx-auto container-padding">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h2 className="text-headline font-bold text-white">
+            What Our <span className="text-brand-orange">Customers Say</span>
           </h2>
-        </motion.div>
+        </div>
 
-        <div className="relative">
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 w-10 h-10 bg-bg-card border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors hidden sm:flex"
-            aria-label="Previous testimonial"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 w-10 h-10 bg-bg-card border border-border-subtle rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors hidden sm:flex"
-            aria-label="Next testimonial"
-          >
-            <ChevronRight size={20} />
-          </button>
-
-          {/* Testimonials Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 overflow-hidden">
-            <AnimatePresence mode="wait">
-              {visibleTestimonials.map((testimonial, index) => (
-                <motion.div
-                  key={`${testimonial.id}-${currentIndex}`}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="bg-bg-card border border-border-subtle rounded-2xl p-5 sm:p-6"
-                >
-                  <p className="text-text-primary text-sm sm:text-base leading-relaxed mb-5">
-                    "{testimonial.text}"
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
-                        {testimonial.avatar}
-                      </div>
-                      <div>
-                        <p className="text-text-primary text-sm font-medium">{testimonial.name}</p>
-                        <p className="text-text-muted text-xs">{testimonial.location}</p>
-                      </div>
-                    </div>
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0">
+        {/* Loading state */}
+        {loading ? (
+          <div className="flex justify-center py-16" role="status" aria-label="Loading reviews">
+            <Loader2 size={28} className="animate-spin text-brand-orange" aria-hidden="true" />
+          </div>
+        ) : testimonials.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-text-muted text-sm">No reviews yet. Be the first to share your experience!</p>
+          </div>
+        ) : (
+          <>
+            {/* Testimonials */}
+            <div className="relative">
+              <div className="grid lg:grid-cols-2 gap-4">
+                {visible.map((t) => (
+                  <div
+                    key={t.id}
+                    className="bg-bg-card rounded-2xl border border-border-subtle overflow-hidden flex flex-col sm:flex-row"
+                  >
+                    {/* Product image */}
+                    <div className="sm:w-2/5 aspect-square sm:aspect-auto relative bg-bg-secondary">
                       <img
-                        src={testimonial.image}
-                        alt={testimonial.name}
+                        src={t.productImage}
+                        alt={`Product by ${t.name}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/images/products/placeholder.jpg';
+                        }}
                       />
                     </div>
+                    {/* Content */}
+                    <div className="sm:w-3/5 p-5 flex flex-col justify-center">
+                      <div className="flex items-center gap-1 mb-2">
+                        {[...Array(Math.min(t.rating, 5))].map((_, i) => (
+                          <Star key={`star-${t.id}-${i}`} size={12} className="text-brand-orange fill-brand-orange" />
+                        ))}
+                      </div>
+                      <p className="text-text-secondary text-sm leading-relaxed mb-4">"{t.text}"</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-bg-secondary overflow-hidden">
+                          <img
+                            src={t.avatar}
+                            alt={t.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.style.background = '#333';
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-white text-sm font-medium">{t.name}</p>
+                          <p className="text-text-muted text-xs">{t.location}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                ))}
+              </div>
 
-          {/* Mobile Navigation */}
-          <div className="flex justify-center gap-2 mt-6 sm:hidden">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-accent' : 'bg-border-subtle'
-                }`}
-                aria-label={`Go to testimonial ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
+              {/* Navigation arrows */}
+              <div className="flex justify-center gap-2 mt-6">
+                <button
+                  onClick={prev}
+                  className="w-10 h-10 rounded-full bg-bg-card border border-border-subtle flex items-center justify-center text-text-secondary hover:text-white hover:border-border transition-colors"
+                  aria-label="Previous testimonial"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={next}
+                  className="w-10 h-10 rounded-full bg-bg-card border border-border-subtle flex items-center justify-center text-text-secondary hover:text-white hover:border-border transition-colors"
+                  aria-label="Next testimonial"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

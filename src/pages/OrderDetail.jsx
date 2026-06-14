@@ -207,7 +207,7 @@ export default function OrderDetail() {
 
   if (!isAuthenticated) {
     return (
-      <main className="py-16 flex flex-col items-center justify-center min-h-[60vh]">
+      <main className="section-padding flex flex-col items-center justify-center min-h-[60vh]">
         <Package size={48} className="text-text-muted mx-auto mb-4" />
         <h2 className="text-xl font-bold text-text-primary mb-2">Please sign in</h2>
         <Link to="/login" className="bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-xl font-semibold transition-all mt-4">Sign In</Link>
@@ -217,7 +217,7 @@ export default function OrderDetail() {
 
   if (loading) {
     return (
-      <main className="py-16 flex items-center justify-center">
+      <main className="section-padding flex items-center justify-center">
         <Loader2 size={32} className="animate-spin text-accent" />
       </main>
     );
@@ -247,7 +247,7 @@ export default function OrderDetail() {
   };
 
   return (
-    <main className="py-12 sm:py-16">
+    <main className="section-padding">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">

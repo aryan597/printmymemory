@@ -14,7 +14,7 @@ const sizes = {
 };
 
 const Button = forwardRef(function Button(
-  { children, variant = 'primary', size = 'md', className = '', disabled = false, type = 'button', asChild, ...props },
+  { children, variant = 'primary', size = 'md', className = '', disabled = false, type = 'button', asChild, ariaLabel, ...props },
   ref
 ) {
   const classes = `
@@ -33,6 +33,7 @@ const Button = forwardRef(function Button(
         {...child.props}
         {...props}
         className={`${classes} ${child.props.className || ''}`}
+        aria-label={ariaLabel || child.props['aria-label']}
       >
         {child.props.children}
       </child.type>
@@ -45,6 +46,8 @@ const Button = forwardRef(function Button(
       type={type}
       disabled={disabled}
       className={classes}
+      aria-label={ariaLabel}
+      aria-disabled={disabled}
       {...props}
     >
       {children}
