@@ -53,3 +53,12 @@ SUPABASE_SETUP_GUIDE.md
 # WhatsApp reference images
 WhatsApp Image*.jpeg
 
+# Invoice / generator artifacts
+*.pdf
+generate-invoice.js
+generated_invoice*.png
+invoice_*.png
+first_order_invoice.png
+reference_invoice_format.png
+logo_base64.txt
+

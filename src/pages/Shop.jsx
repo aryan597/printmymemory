@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, Loader2, Package, RefreshCw, X, ShoppingCart
 import { CartContext } from '../contexts/CartContext';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { formatPrice } from '../lib/utils';
+import PageHead from '../components/PageHead';
 import toast from 'react-hot-toast';
 
 export default function Shop() {
@@ -76,6 +77,11 @@ export default function Shop() {
 
   return (
     <main className="min-h-screen bg-bg-primary">
+      <PageHead
+        title="Shop"
+        description="Browse our collection of personalized 3D printed gifts. Face miniatures, lithophane lamps, keychains, couple gifts and more. Handcrafted in Bangalore."
+        path="/shop"
+      />
       {/* ── Page header ── */}
       <div className="pt-28 pb-10 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
         <div className="absolute inset-0 dot-grid opacity-50 pointer-events-none" aria-hidden="true" />

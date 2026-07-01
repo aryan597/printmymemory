@@ -1,10 +1,10 @@
 /**
  * design-assistant Edge Function
  * Receives: { prompt, imageBase64?, imageMediaType? }
- * Returns:  { reply, matchedProduct?, customizationType?, fields? }
+ * Returns:  { reply, matchedProduct?, nextAction?, confidence? }
  *
- * Deploy: supabase functions deploy design-assistant --project-ref svaceoqmieqnvfxnjjdn
- * Secret: supabase secrets set GEMINI_API_KEY=<your_key> --project-ref svaceoqmieqnvfxnjjdn
+ * Deploy: supabase functions deploy design-assistant --project-ref aqkvpcbocxdiobyuowsd
+ * Secret: supabase secrets set GEMINI_API_KEY=<key> --project-ref aqkvpcbocxdiobyuowsd
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -17,6 +17,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/** Extract JSON from Gemini response that may be wrapped in markdown, thinking tags, etc. */
+function extractJSON(raw: string): any {
+  // Try direct parse first
+  try { return JSON.parse(raw); } catch {}
+
+  // Strip markdown code fences
+  let cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
+
+  // Strip <think>...</think> tags (Gemini 2.5 sometimes adds these)
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+  // Find the first { ... } block
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch {}
+  }
+
+  return null;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -28,13 +49,8 @@ Deno.serve(async (req: Request) => {
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-    console.log('[design-assistant] SUPABASE_URL:', SUPABASE_URL);
-    console.log('[design-assistant] Has service key:', !!SUPABASE_SERVICE_KEY);
-
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // --- Parse request ---
     const body = await req.json();
     const { prompt, imageBase64, imageMediaType, debug } = body;
 
@@ -45,41 +61,29 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // --- Fetch active products ---
+    // --- Fetch products ---
     const { data: products, error: prodErr } = await db
       .from('products')
       .select('id, name, description, price, image, category_id, product_type')
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
-    console.log('[design-assistant] Products fetched:', products?.length ?? 0, 'error:', prodErr?.message ?? 'none');
-
     if (prodErr) throw new Error(`Products fetch failed: ${prodErr.message}`);
-    if (!products || products.length === 0) {
-      throw new Error(`No active products found. Check that products table has is_active=true rows.`);
-    }
+    if (!products?.length) throw new Error('No active products found.');
 
     // --- Fetch categories ---
-    const { data: categories, error: catErr } = await db
-      .from('categories')
-      .select('id, name, slug');
-
-    console.log('[design-assistant] Categories fetched:', categories?.length ?? 0, 'error:', catErr?.message ?? 'none');
-
+    const { data: categories } = await db.from('categories').select('id, name, slug');
     const catMap = Object.fromEntries((categories ?? []).map((c: any) => [c.id, c.name]));
 
-    // --- Fetch customization configs (may not exist yet) ---
+    // --- Fetch customization configs ---
     let configs: any[] = [];
     const { data: cfgData, error: cfgErr } = await db
       .from('product_customization_configs')
       .select('product_id, field_key, field_type, field_label, options, is_required, sort_order')
       .order('sort_order', { ascending: true });
-
-    console.log('[design-assistant] Configs fetched:', cfgData?.length ?? 0, 'error:', cfgErr?.message ?? 'none');
-
     if (!cfgErr) configs = cfgData ?? [];
 
-    const productCatalog = (products ?? []).map((p: any) => ({
+    const productCatalog = products.map((p: any) => ({
       id: p.id,
       name: p.name,
       description: p.description,
@@ -90,9 +94,7 @@ Deno.serve(async (req: Request) => {
       configs: configs.filter((c: any) => c.product_id === p.id),
     }));
 
-    console.log('[design-assistant] Catalog built:', productCatalog.length, 'products');
-
-    // Debug mode: return catalog without calling Gemini
+    // Debug mode
     if (debug) {
       return new Response(
         JSON.stringify({ productCatalog, configsCount: configs.length }),
@@ -100,45 +102,33 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --- Build Gemini prompt ---
-    const systemContext = `You are a helpful design assistant for PrintMyMemory, a Bangalore-based 3D printing gift shop.
+    // --- Gemini system prompt ---
+    const systemPrompt = `You are a design consultant at PrintMyMemory, a Bangalore-based 3D printing studio. You talk like a real person who works here, not a bot. You know 3D printing inside out.
 
-PRODUCT CATALOG (JSON):
-${JSON.stringify(productCatalog, null, 2)}
+WHAT WE MAKE (product catalog):
+${JSON.stringify(productCatalog.map(p => ({ id: p.id, name: p.name, description: p.description, price: p.price, category: p.category, type: p.type })), null, 2)}
 
-CUSTOMIZATION TYPES:
-- photo_upload: customer needs to upload a photo (lithophanes, face miniatures, couple gifts with photos)
-- text: customer needs to provide text (name plates, keychains with names, custom text)
-- ams_color: customer picks colors from our AMS multi-color printer palette
-- select / color_picker: customer picks from predefined options
+HOW TO BEHAVE:
+- You are "PrintMyMemory" speaking directly. Use "we" not "they". Example: "We can definitely make that for you!"
+- Be warm, enthusiastic, and specific. Repeat back what the customer asked so they know you understood. For example if they say "keychain with Aryan on it", say something like "A custom keychain with 'Aryan' engraved on it? We'd love to make that for you!"
+- If a product matches, mention it naturally with the price. Don't just list it, weave it into a helpful suggestion.
+- If the idea is 3D printable but we don't have an exact product for it, say we can custom-make it and invite them to chat with us on WhatsApp to discuss details, materials, and pricing.
+- If the customer sends an image, describe what you see and suggest what we could create from it.
+- Keep replies to 2-4 sentences. No em dashes. Use periods and commas only.
+- Sound human. Don't say "I'm an AI" or "based on our catalog". Just talk naturally.
 
-YOUR JOB:
-1. Understand what the customer wants from their message (and optional image).
-2. Match them to the best product from the catalog above (by id and name).
-3. Determine what customization is needed.
-4. Reply in a friendly, concise way (2-4 sentences max). No em dashes. Use "." or "," not "—".
-5. Return structured JSON with your response.
+RESPOND WITH ONLY THIS JSON (no markdown, no code fences, no extra text):
+{"reply":"your message","matchedProduct":{"id":NUMBER,"name":"NAME"},"nextAction":"upload_photo|enter_text|pick_color|add_to_cart|chat_whatsapp","confidence":"high|medium|low"}
 
-RESPONSE FORMAT (strict JSON, no markdown fences):
-{
-  "reply": "friendly message to customer",
-  "matchedProduct": { "id": <number>, "name": "<string>" } | null,
-  "nextAction": "upload_photo" | "enter_text" | "pick_color" | "view_catalog" | "none",
-  "confidence": "high" | "medium" | "low"
-}
+Set matchedProduct to null only if we truly cannot help at all (non-3D-printing request).
+Use nextAction "chat_whatsapp" when the request is something we can do but need to discuss further on WhatsApp.`;
 
-If you cannot match a product or the request is unclear, set matchedProduct to null and nextAction to "view_catalog".
-If the request is completely off-topic (not about gifts or printing), politely redirect.`;
-
-    // --- Build Gemini content parts ---
-    const parts: any[] = [{ text: `${systemContext}\n\nCUSTOMER: ${prompt || 'I uploaded an image, what can you make from this?'}` }];
+    // --- Build request parts ---
+    const parts: any[] = [{ text: `${systemPrompt}\n\nCUSTOMER MESSAGE: ${prompt || 'I uploaded an image. What can you make from this?'}` }];
 
     if (imageBase64 && imageMediaType) {
       parts.push({
-        inline_data: {
-          mime_type: imageMediaType,
-          data: imageBase64,
-        },
+        inline_data: { mime_type: imageMediaType, data: imageBase64 },
       });
     }
 
@@ -150,30 +140,44 @@ If the request is completely off-topic (not about gifts or printing), politely r
         contents: [{ parts }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 512,
-          responseMimeType: 'application/json',
+          maxOutputTokens: 1024,
         },
       }),
     });
 
     if (!geminiRes.ok) {
       const err = await geminiRes.text();
-      throw new Error(`Gemini API error ${geminiRes.status}: ${err}`);
+      console.error('[design-assistant] Gemini error:', err);
+      throw new Error(`AI service error (${geminiRes.status})`);
     }
 
     const geminiData = await geminiRes.json();
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
-    let parsed: any = {};
-    try {
-      parsed = JSON.parse(rawText);
-    } catch {
-      // Gemini occasionally wraps in ```json ... ```, strip it
-      const clean = rawText.replace(/```json\n?|\n?```/g, '').trim();
-      try { parsed = JSON.parse(clean); } catch { parsed = { reply: rawText }; }
+    console.log('[design-assistant] Gemini raw:', rawText.slice(0, 500));
+
+    const parsed = extractJSON(rawText);
+
+    if (!parsed || !parsed.reply) {
+      console.error('[design-assistant] Failed to parse Gemini response:', rawText);
+      // Try to extract just the reply value from malformed JSON
+      let fallbackReply = 'We can definitely help you with that! Send us a message on WhatsApp and our team will work with you on the details.';
+      const replyMatch = rawText.match(/"reply"\s*:\s*"([^"]+)"/);
+      if (replyMatch) {
+        fallbackReply = replyMatch[1];
+      }
+      return new Response(
+        JSON.stringify({
+          reply: fallbackReply,
+          matchedProduct: null,
+          nextAction: 'chat_whatsapp',
+          confidence: 'low',
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     }
 
-    // --- Enrich with full product + configs if matched ---
+    // --- Enrich matched product with full data ---
     let enrichedProduct = null;
     if (parsed.matchedProduct?.id) {
       enrichedProduct = productCatalog.find((p) => p.id === parsed.matchedProduct.id) ?? null;
@@ -181,24 +185,18 @@ If the request is completely off-topic (not about gifts or printing), politely r
 
     return new Response(
       JSON.stringify({
-        reply: parsed.reply ?? 'I can help you create something beautiful!',
+        reply: parsed.reply,
         matchedProduct: enrichedProduct,
         nextAction: parsed.nextAction ?? 'none',
         confidence: parsed.confidence ?? 'low',
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err: any) {
-    console.error('design-assistant error:', err);
+    console.error('[design-assistant] Error:', err);
     return new Response(
-      JSON.stringify({ error: err.message ?? 'Internal server error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: err.message ?? 'Something went wrong' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });

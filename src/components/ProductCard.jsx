@@ -33,7 +33,7 @@ export default function ProductCard({ product, index = 0 }) {
           {/* Image */}
           <div className="relative aspect-[4/5] overflow-hidden bg-bg-elevated">
             <img
-              src={product.image || '/images/products/placeholder.jpg'}
+              src={(Array.isArray(product.images) && product.images[0]) || product.image || '/images/products/placeholder.jpg'}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
               loading="lazy"

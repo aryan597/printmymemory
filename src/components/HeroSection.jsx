@@ -32,14 +32,18 @@ export default function HeroSection() {
       try {
         const { data: products } = await supabase
           .from(TABLES.PRODUCTS)
-          .select('id, name, image, price')
+          .select('id, name, image, images, price')
           .eq('is_active', true)
           .not('image', 'is', null)
           .order('created_at', { ascending: false })
           .limit(6);
 
         if (!cancelled && products?.length > 0) {
-          setHeroImages(products.map(p => ({ src: p.image, alt: p.name, price: p.price || 499 })));
+          setHeroImages(products.map(p => ({
+            src: (Array.isArray(p.images) && p.images[0]) || p.image,
+            alt: p.name,
+            price: p.price || 499,
+          })));
         }
       } catch (err) {
         console.error('Hero data load failed:', err);

@@ -5,7 +5,7 @@ import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { sendOrderConfirmationEmail, getWhatsAppOrderLink } from '../lib/notifications';
-import UPIPayment from '../components/UPIPayment';
+import { openRazorpayCheckout } from '../lib/razorpay';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import Button from '../components/ui/Button';
@@ -208,7 +208,7 @@ export default function Cart() {
         user_id: isAuthenticated ? user.id : null,
         total_amount: finalTotal,
         status: 'pending_payment',
-        payment_method: 'upi',
+        payment_method: 'razorpay',
         shipping_address: shipping,
         voucher_code: appliedVoucher?.code || null,
         discount_amount: discountAmount,
@@ -249,8 +249,56 @@ export default function Cart() {
       }
 
       setPlacedOrderId(orderId);
-      setShowPayment(true);
-      toast.success('Order created! Complete payment to confirm.');
+
+      // Open Razorpay checkout (supports GPay, PhonePe, Paytm, UPI, cards, wallets)
+      await openRazorpayCheckout(
+        {
+          amount: finalTotal,
+          name: shipping.full_name,
+          email: shipping.email,
+          phone: shipping.phone,
+          orderName: `PrintMyMemory Order #${orderId.slice(0, 8).toUpperCase()}`,
+        },
+        // onSuccess
+        async (response) => {
+          try {
+            await supabase
+              .from(TABLES.ORDERS)
+              .update({
+                status: 'order_placed',
+                payment_method: 'razorpay',
+                razorpay_payment_id: response.razorpay_payment_id,
+                paid_at: new Date().toISOString(),
+              })
+              .eq('id', orderId);
+
+            await clearCart();
+
+            await sendOrderConfirmationEmail({
+              to_email: shipping.email,
+              to_name: shipping.full_name,
+              order_id: orderId,
+              total_amount: finalTotal,
+              payment_method: 'razorpay',
+              items: cartItems,
+              delivery: shipping,
+            });
+
+            toast.success('Payment successful! Order confirmed.');
+            navigate(`/receipt?orderId=${orderId}&phone=${shipping.phone}`);
+          } catch (err) {
+            console.error('Post-payment error:', err);
+            toast.error('Payment received but order update failed. Please contact us on WhatsApp.');
+          }
+        },
+        // onError
+        async (err) => {
+          console.error('Payment failed/cancelled:', err);
+          toast.error('Payment was not completed. Your order has been saved, you can retry.');
+          setShowPayment(false);
+          setCheckingOut(false);
+        }
+      );
 
     } catch (error) {
       console.error('Order creation error:', error);
@@ -264,43 +312,6 @@ export default function Cart() {
       }
     } finally {
       setCheckingOut(false);
-    }
-  };
-
-  const handlePaymentComplete = async ({ screenshotUrl, verified } = {}) => {
-    if (!placedOrderId) return;
-
-    try {
-      const shipping = buildShippingAddress();
-
-      // Order stays as pending_payment until admin verifies the screenshot.
-      // Only set paid_at so admin knows when screenshot was submitted.
-      await supabase
-        .from(TABLES.ORDERS)
-        .update({
-          // Keep status as pending_payment — admin will move to order_placed after verifying screenshot
-          payment_screenshot_url: screenshotUrl || null,
-          paid_at: new Date().toISOString(),
-        })
-        .eq('id', placedOrderId);
-
-      await clearCart();
-
-      await sendOrderConfirmationEmail({
-        to_email: shipping.email,
-        to_name: shipping.full_name,
-        order_id: placedOrderId,
-        total_amount: finalTotal,
-        payment_method: 'upi',
-        items: cartItems,
-        delivery: shipping,
-      });
-
-      toast.success('Order submitted! We will verify your payment and confirm shortly.');
-      navigate(`/receipt?orderId=${placedOrderId}&phone=${shipping.phone}`);
-    } catch (err) {
-      console.error('Payment completion error:', err);
-      toast.error('Something went wrong. Please contact us on WhatsApp.');
     }
   };
 
@@ -595,7 +606,7 @@ export default function Cart() {
               )}
             </div>
 
-            {/* Payment Method - UPI Only */}
+            {/* Payment Method */}
             <div className="space-y-2 mb-4">
               <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider">Payment Method</p>
               <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white bg-neutral-800 text-white">
@@ -604,8 +615,8 @@ export default function Cart() {
                   <path d="M2 10h20"/>
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">UPI Payment</p>
-                  <p className="text-xs text-neutral-400">Pay directly to: 7463812259@ybl</p>
+                  <p className="text-sm font-medium">Secure Online Payment</p>
+                  <p className="text-xs text-neutral-400">UPI, Cards, Wallets, Net Banking</p>
                 </div>
                 <div className="w-4 h-4 rounded-full border-2 border-white flex items-center justify-center">
                   <div className="w-2 h-2 rounded-full bg-white" />
@@ -622,26 +633,22 @@ export default function Cart() {
               Proceed to Payment
             </Button>
             <p className="text-neutral-500 text-xs text-center mt-3">
-              Pay via GPay, PhonePe, Paytm or any UPI app. Money goes directly to our account.
+              Powered by Razorpay. Pay securely via GPay, PhonePe, Paytm, cards, or net banking.
             </p>
           </>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-4">
-              <button 
+            <div className="text-center py-8 space-y-4">
+              <Loader2 size={32} className="animate-spin text-accent mx-auto" />
+              <h2 className="text-lg font-bold text-white">Processing Payment...</h2>
+              <p className="text-neutral-400 text-sm">Complete the payment in the Razorpay window.</p>
+              <button
                 onClick={() => setShowPayment(false)}
-                className="text-neutral-400 hover:text-white transition-colors"
+                className="text-neutral-500 text-xs hover:text-white transition-colors"
               >
-                <ArrowRight size={18} className="rotate-180" />
+                Go back to cart
               </button>
-              <h2 className="text-lg font-bold text-white">Complete Payment</h2>
             </div>
-            <UPIPayment 
-              amount={finalTotal} 
-              orderId={placedOrderId}
-              customerName={isAuthenticated ? profile?.full_name : guestForm.full_name}
-              onPaymentComplete={handlePaymentComplete}
-            />
           </>
         )}
       </motion.div>
