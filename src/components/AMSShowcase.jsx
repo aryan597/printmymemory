@@ -19,7 +19,7 @@ const amsFeatures = [
   {
     icon: Zap,
     title: 'Auto Filament Switch',
-    description: 'Intelligent filament switching with zero waste — perfect for complex prints.',
+    description: 'Intelligent filament switching with zero waste, perfect for complex prints.',
     colors: ['#f97316', '#eab308', '#22c55e', '#06b6d4'],
   },
 ];
@@ -111,7 +111,7 @@ export default function AMSShowcase() {
               ))}
             </div>
             <p className="text-center text-text-muted text-sm mt-8">
-              16 AMS colors — infinite creative possibilities
+              16 AMS colors. Infinite creative possibilities.
             </p>
           </div>
         </motion.div>

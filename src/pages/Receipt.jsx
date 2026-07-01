@@ -95,9 +95,9 @@ export default function Receipt() {
   }
 
   const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
-  const shipping = 0;
+  const shipping = subtotal >= 999 ? 0 : 50;
   const discount = order.discount_amount || 0;
-  const total = order.total_amount || subtotal;
+  const total = order.total_amount || (subtotal + shipping - discount);
   const shippingAddr = order.shipping_address || {};
 
   return (
@@ -110,9 +110,20 @@ export default function Receipt() {
         >
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 pb-6 border-b border-neutral-800">
-            <div>
-              <h1 className="text-2xl font-bold text-white">PrintMyMemory</h1>
-              <p className="text-neutral-400 text-sm">Tax Invoice / Receipt</p>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-lg overflow-hidden bg-transparent">
+                <img
+                  src="/logo.png"
+                  alt="Print My Memory"
+                  className="w-full h-full object-contain"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">PrintMyMemory</h1>
+                <p className="text-neutral-400 text-sm">Tax Invoice / Receipt</p>
+              </div>
             </div>
             <div className="sm:text-right">
               <p className="text-white font-mono text-sm">Order #{order.id.slice(0, 8).toUpperCase()}</p>

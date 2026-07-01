@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShoppingCart, Loader2, Search, SlidersHorizontal, Package, RefreshCw, Eye } from 'lucide-react';
+import { Search, SlidersHorizontal, Loader2, Package, RefreshCw, X, ShoppingCart, Eye, ArrowRight } from 'lucide-react';
 import { CartContext } from '../contexts/CartContext';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { formatPrice } from '../lib/utils';
@@ -22,13 +22,19 @@ export default function Shop() {
     setError(null);
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        supabase.from(TABLES.PRODUCTS).select('*, category:categories(name)').eq('is_active', true).order('created_at', { ascending: false }),
-        supabase.from(TABLES.CATEGORIES).select('*').eq('is_active', true).order('sort_order', { ascending: true }),
+        supabase
+          .from(TABLES.PRODUCTS)
+          .select('*, category:categories(name)')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from(TABLES.CATEGORIES)
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true }),
       ]);
-
       if (productsRes.error) throw productsRes.error;
       if (categoriesRes.error) throw categoriesRes.error;
-
       setProducts(productsRes.data || []);
       setCategories(categoriesRes.data || []);
     } catch (err) {
@@ -40,9 +46,7 @@ export default function Shop() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const handleAddToCart = async (product) => {
     setAddingId(product.id);
@@ -52,7 +56,7 @@ export default function Shop() {
     } catch {
       toast.error('Failed to add to cart');
     } finally {
-      setTimeout(() => setAddingId(null), 500);
+      setTimeout(() => setAddingId(null), 600);
     }
   };
 
@@ -68,184 +72,236 @@ export default function Shop() {
     setSearchQuery('');
   };
 
-  return (
-    <main className="section-padding">
-      <div className="max-w-7xl mx-auto container-padding">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <p className="text-text-muted text-xs font-medium uppercase tracking-wide mb-2">Shop</p>
-          <h1 className="text-headline font-bold text-white">All Products</h1>
-        </motion.div>
+  const hasFilters = activeCategory !== 'All' || searchQuery.trim() !== '';
 
-        {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-10">
-          <div className="relative flex-1" role="search" aria-label="Product search">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" aria-hidden="true" />
+  return (
+    <main className="min-h-screen bg-bg-primary">
+      {/* ── Page header ── */}
+      <div className="pt-28 pb-10 bg-bg-secondary border-b border-border-subtle relative overflow-hidden">
+        <div className="absolute inset-0 dot-grid opacity-50 pointer-events-none" aria-hidden="true" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="section-label mb-4">Shop</div>
+            <h1 className="text-display-sm font-black text-white">All Products</h1>
+            <p className="text-text-muted text-sm mt-2 max-w-sm">
+              {products.length > 0 ? `${products.length} handcrafted products` : 'Handcrafted personalized gifts'}
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ── Filters ── */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-8 sticky top-[96px] z-30 py-3 bg-bg-primary/95 backdrop-blur-xl -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 border-b border-border-subtle/50">
+          {/* Search */}
+          <div className="relative flex-1 max-w-xs" role="search" aria-label="Search products">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
             <input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input rounded-lg pl-10"
+              className="input rounded-xl pl-10 text-sm"
               aria-label="Search products"
               enterKeyHint="search"
             />
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <SlidersHorizontal size={16} className="text-text-muted shrink-0" aria-hidden="true" />
-            <button
-              onClick={() => setActiveCategory('All')}
-              aria-pressed={activeCategory === 'All'}
-              className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                activeCategory === 'All'
-                  ? 'bg-brand-orange text-white'
-                  : 'border border-border-subtle text-text-secondary hover:text-white hover:border-text-secondary'
-              }`}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
+            {searchQuery && (
               <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.name)}
-                aria-pressed={activeCategory === cat.name}
-                className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  activeCategory === cat.name
-                    ? 'bg-brand-orange text-white'
-                    : 'border border-border-subtle text-text-secondary hover:text-white hover:border-text-secondary'
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Category pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-hide flex-1">
+            <SlidersHorizontal size={14} className="text-text-muted shrink-0" aria-hidden="true" />
+            {['All', ...categories.map(c => c.name)].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                aria-pressed={activeCategory === cat}
+                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+                  activeCategory === cat
+                    ? 'bg-accent text-white shadow-glow-orange'
+                    : 'bg-bg-card border border-border-subtle text-text-secondary hover:text-white hover:border-border'
                 }`}
               >
-                {cat.name}
+                {cat}
               </button>
             ))}
+
+            {/* Clear filters */}
+            {hasFilters && (
+              <button
+                onClick={clearFilters}
+                className="ml-1 px-3 py-1.5 rounded-full text-[12px] font-medium text-text-muted hover:text-white border border-border-subtle hover:border-border transition-all duration-200 flex items-center gap-1 shrink-0"
+                aria-label="Clear all filters"
+              >
+                <X size={11} />
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* ── Product grid ── */}
         {loading ? (
-          <div className="flex justify-center py-20" role="status" aria-label="Loading products">
-            <Loader2 size={24} className="animate-spin text-brand-orange" aria-hidden="true" />
+          <div className="flex flex-col items-center justify-center py-28 gap-4" role="status">
+            <Loader2 size={28} className="animate-spin text-accent" />
+            <p className="text-text-muted text-sm">Loading products...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-20">
-            <Package size={40} className="text-text-muted mx-auto mb-4" aria-hidden="true" />
-            <h3 className="text-text-primary font-medium mb-1">Something went wrong</h3>
-            <p className="text-text-secondary text-sm mb-4">{error}</p>
-            <button
-              onClick={loadData}
-              className="btn-primary"
-              aria-label="Retry loading products"
-            >
-              <RefreshCw size={14} aria-hidden="true" /> Try Again
+          <div className="text-center py-28">
+            <Package size={40} className="text-text-muted mx-auto mb-4" />
+            <h3 className="text-text-primary font-semibold mb-2">Something went wrong</h3>
+            <p className="text-text-secondary text-sm mb-6">{error}</p>
+            <button onClick={loadData} className="btn-primary">
+              <RefreshCw size={14} /> Try Again
             </button>
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20">
-            <Package size={40} className="text-text-muted mx-auto mb-4" aria-hidden="true" />
-            <h3 className="text-text-primary font-medium mb-1">No products found</h3>
-            <p className="text-text-secondary text-sm mb-4">
-              {searchQuery ? `No results for "${searchQuery}"` : 'Check back soon or try a different search.'}
+          <div className="text-center py-28">
+            <Package size={40} className="text-text-muted mx-auto mb-4" />
+            <h3 className="text-text-primary font-semibold mb-2">No products found</h3>
+            <p className="text-text-secondary text-sm mb-6">
+              {searchQuery ? `No results for "${searchQuery}"` : 'Nothing here yet. Check back soon.'}
             </p>
-            {(searchQuery || activeCategory !== 'All') && (
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  onClick={clearFilters}
-                  className="btn-secondary"
-                  aria-label="Clear all filters"
-                >
-                  Clear Filters
-                </button>
-                <Link
-                  to="/shop"
-                  className="inline-flex items-center gap-2 text-brand-orange hover:underline text-sm"
-                  aria-label="Browse all products"
-                >
-                  Browse all products
-                </Link>
-              </div>
+            {hasFilters && (
+              <button onClick={clearFilters} className="btn-secondary">
+                Clear filters
+              </button>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" role="list" aria-label="Product list" aria-live="polite">
-            {filteredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="group card-hover overflow-hidden flex flex-col"
-                role="listitem"
-              >
-                <div className="relative aspect-[4/5] overflow-hidden bg-bg-secondary">
-                  <Link to={`/products/${product.id}`} aria-label={`View ${product.name}`}>
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      loading="lazy"
-                      decoding="async"
-                      width={400}
-                      height={500}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/images/products/placeholder.jpg';
-                      }}
-                    />
-                  </Link>
-                  {/* Badges - positioned to not overlap */}
-                  <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between gap-1">
-                    <span className="bg-black/70 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded shrink-0">
-                      {product.category?.name || product.category}
-                    </span>
-                    {product.product_type === 'customised' && (
-                      <span className="bg-brand-orange text-white text-[10px] sm:text-xs px-2 py-0.5 rounded font-medium shrink-0">
-                        Custom
-                      </span>
-                    )}
-                  </div>
-                  {/* Mobile-visible action buttons */}
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
-                    <Link
-                      to={`/products/${product.id}`}
-                      className="flex-1 h-9 bg-white/90 backdrop-blur-sm text-black rounded-lg flex items-center justify-center text-xs font-medium hover:bg-white transition-colors"
-                      aria-label={`View ${product.name} details`}
-                    >
-                      <Eye size={14} className="mr-1" aria-hidden="true" />
-                      View
-                    </Link>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      disabled={addingId === product.id}
-                      aria-label={`Add ${product.name} to cart`}
-                      className="flex-1 h-9 bg-brand-orange text-white rounded-lg flex items-center justify-center text-xs font-medium hover:brightness-110 disabled:opacity-50 transition-colors"
-                    >
-                      {addingId === product.id ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <ShoppingCart size={14} className="mr-1" aria-hidden="true" />}
-                      Add
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4 flex flex-col flex-1">
-                  <Link to={`/products/${product.id}`} aria-label={product.name}>
-                    <h3 className="text-white font-medium text-sm mb-1 group-hover:text-brand-orange transition-colors line-clamp-1">{product.name}</h3>
-                  </Link>
-                  <p className="text-text-muted text-xs mb-3 line-clamp-2 flex-1">{product.description}</p>
-                  <div className="flex items-center justify-between mt-auto">
-                    <span className="text-white font-semibold text-sm">{formatPrice(product.price)}</span>
-                    <button
-                      onClick={() => handleAddToCart(product)}
-                      disabled={addingId === product.id}
-                      aria-label={`Add ${product.name} to cart`}
-                      className="inline-flex items-center gap-1.5 border border-border-subtle hover:border-brand-orange text-text-secondary hover:text-brand-orange text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-                    >
-                      {addingId === product.id ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <ShoppingCart size={12} aria-hidden="true" />}
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <AnimatePresence mode="popLayout">
+            <div
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5"
+              role="list"
+              aria-label="Products"
+              aria-live="polite"
+              aria-atomic="false"
+            >
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.35, delay: index * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                  role="listitem"
+                >
+                  <ShopProductCard
+                    product={product}
+                    addingId={addingId}
+                    onAddToCart={handleAddToCart}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </AnimatePresence>
         )}
       </div>
     </main>
+  );
+}
+
+function ShopProductCard({ product, addingId, onAddToCart }) {
+  const isAdding = addingId === product.id;
+  const isCustomised = product.product_type === 'customised';
+
+  return (
+    <div className="group card-hover overflow-hidden flex flex-col">
+      {/* Image */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-bg-elevated">
+        <Link
+          to={`/products/${product.id}`}
+          aria-label={`View ${product.name}`}
+          tabIndex={-1}
+        >
+          <img
+            src={product.image || '/images/products/placeholder.jpg'}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+            loading="lazy"
+            decoding="async"
+            onError={(e) => { e.target.onerror = null; e.target.src = '/images/products/placeholder.jpg'; }}
+          />
+        </Link>
+
+        {/* Badges */}
+        <div className="absolute top-2.5 inset-x-2.5 flex items-start justify-between gap-1.5">
+          {product.category?.name && (
+            <span className="text-[9px] sm:text-[10px] font-semibold text-white bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded truncate max-w-[70px]">
+              {product.category.name}
+            </span>
+          )}
+          {isCustomised && (
+            <span className="text-[9px] sm:text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded ml-auto shrink-0">
+              Custom
+            </span>
+          )}
+        </div>
+
+        {/* Hover action buttons */}
+        <div className="absolute bottom-2.5 inset-x-2.5 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-250">
+          <Link
+            to={`/products/${product.id}`}
+            className="flex-1 h-8 bg-white/90 backdrop-blur-sm text-black rounded-lg flex items-center justify-center text-[11px] font-semibold hover:bg-white transition-colors gap-1"
+            aria-label={`View ${product.name} details`}
+          >
+            <Eye size={12} />
+            View
+          </Link>
+          <button
+            onClick={() => onAddToCart(product)}
+            disabled={isAdding}
+            aria-label={`Add ${product.name} to cart`}
+            className="flex-1 h-8 bg-accent text-white rounded-lg flex items-center justify-center text-[11px] font-semibold hover:brightness-110 disabled:opacity-60 transition-all gap-1"
+          >
+            {isAdding ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <>
+                <ShoppingCart size={12} />
+                Add
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-3.5 flex flex-col flex-1">
+        <Link to={`/products/${product.id}`}>
+          <h3 className="text-text-primary font-semibold text-[13px] mb-0.5 group-hover:text-accent transition-colors line-clamp-1">
+            {product.name}
+          </h3>
+        </Link>
+        {product.description && (
+          <p className="text-text-muted text-[11px] line-clamp-1 mb-2 flex-1">{product.description}</p>
+        )}
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-border-subtle/50">
+          <span className="text-white font-bold text-[13px]">{formatPrice(product.price)}</span>
+          <button
+            onClick={() => onAddToCart(product)}
+            disabled={isAdding}
+            aria-label={`Add ${product.name} to cart`}
+            className="text-[11px] font-semibold text-accent hover:text-white transition-colors flex items-center gap-1 disabled:opacity-50"
+          >
+            {isAdding ? <Loader2 size={11} className="animate-spin" /> : <ShoppingCart size={11} />}
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, CreditCard, Banknote, MapPin, Home, Briefcase, PlusCircle, MessageCircle, Tag, Check, X } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, MapPin, Home, Briefcase, PlusCircle, MessageCircle, Tag, Check, X } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
-import { openRazorpayCheckout } from '../lib/razorpay';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { sendOrderConfirmationEmail, getWhatsAppOrderLink } from '../lib/notifications';
+import UPIPayment from '../components/UPIPayment';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 import Button from '../components/ui/Button';
@@ -17,11 +17,13 @@ function formatPrice(price) {
 }
 
 export default function Cart() {
-  const { cartItems, cartTotal, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { cartItems, cartTotal, shippingCost, cartCount, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user, isAuthenticated, profile } = useAuth();
   const navigate = useNavigate();
   const [checkingOut, setCheckingOut] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('online');
+  const [showPayment, setShowPayment] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState(null);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [addressesLoading, setAddressesLoading] = useState(false);
@@ -117,7 +119,7 @@ export default function Cart() {
   };
 
   const discountAmount = appliedVoucher ? appliedVoucher.discountAmount : 0;
-  const finalTotal = Math.max(0, cartTotal - discountAmount);
+  const finalTotal = Math.max(0, cartTotal + shippingCost - discountAmount);
 
   const applyVoucher = async () => {
     const code = voucherCode.trim().toUpperCase();
@@ -187,7 +189,7 @@ export default function Cart() {
     toast('Voucher removed', { icon: 'ℹ️' });
   };
 
-  const handleCheckout = async () => {
+  const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
       toast.error('Your cart is empty');
       return;
@@ -205,8 +207,8 @@ export default function Cart() {
       const orderPayload = {
         user_id: isAuthenticated ? user.id : null,
         total_amount: finalTotal,
-        status: 'order_placed',
-        payment_method: paymentMethod,
+        status: 'pending_payment',
+        payment_method: 'upi',
         shipping_address: shipping,
         voucher_code: appliedVoucher?.code || null,
         discount_amount: discountAmount,
@@ -246,110 +248,13 @@ export default function Cart() {
         }
       }
 
-      const hasCustomised = cartItems.some(
-        item => item.product?.product_type === 'customised' || item.product_type === 'customised'
-      );
-      const customerEmail = shipping.email;
-      const customerName = shipping.full_name;
-      const customerPhone = shipping.phone;
+      setPlacedOrderId(orderId);
+      setShowPayment(true);
+      toast.success('Order created! Complete payment to confirm.');
 
-      // COD flow
-      if (paymentMethod === 'cod') {
-        await sendOrderConfirmationEmail({
-          to_email: customerEmail,
-          to_name: customerName,
-          order_id: orderId,
-          total_amount: finalTotal,
-          payment_method: 'cod',
-          items: cartItems,
-          delivery: shipping,
-        });
-
-        await clearCart();
-        toast.success('Order placed! Pay ' + formatPrice(finalTotal) + ' on delivery.');
-
-        if (hasCustomised) {
-          const waLink = getWhatsAppOrderLink({
-            phone: WHATSAPP_NUMBER,
-            order_id: orderId,
-            customer_name: customerName,
-            product_name: cartItems.find(i => i.product?.product_type === 'customised' || i.product_type === 'customised')?.product?.name,
-          });
-          window.open(waLink, '_blank');
-        }
-
-        navigate(`/receipt?orderId=${orderId}&phone=${customerPhone}`);
-        return;
-      }
-
-      // Online flow
-      await openRazorpayCheckout(
-        {
-          amount: finalTotal,
-          name: customerName,
-          email: customerEmail,
-          phone: customerPhone,
-          orderName: hasCustomised ? 'Customised 3D Printed Gift' : '3D Printed Gift',
-        },
-        async (response) => {
-          try {
-            const { error: updateError } = await supabase
-              .from(TABLES.ORDERS)
-              .update({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature || null,
-                razorpay_order_id: response.razorpay_order_id || null,
-                status: 'order_placed',
-                paid_at: new Date().toISOString(),
-              })
-              .eq('id', orderId);
-
-            if (updateError) throw updateError;
-
-            await clearCart();
-            toast.success('Payment successful! Order placed.');
-
-            await sendOrderConfirmationEmail({
-              to_email: customerEmail,
-              to_name: customerName,
-              order_id: orderId,
-              total_amount: finalTotal,
-              payment_method: 'online',
-              items: cartItems,
-              delivery: shipping,
-            });
-
-            if (hasCustomised) {
-              const waLink = getWhatsAppOrderLink({
-                phone: WHATSAPP_NUMBER,
-                order_id: orderId,
-                customer_name: customerName,
-                product_name: cartItems.find(i => i.product?.product_type === 'customised' || i.product_type === 'customised')?.product?.name,
-              });
-              window.open(waLink, '_blank');
-            }
-
-            navigate(`/receipt?orderId=${orderId}&phone=${customerPhone}`);
-          } catch (err) {
-            console.error('Post-payment update failed:', err);
-            toast.error('Payment received but order update failed. Contact support.');
-          }
-        },
-        async (error) => {
-          try {
-            await supabase.from(TABLES.ORDERS).update({ status: 'cancelled' }).eq('id', orderId);
-          } catch (_) { /* ignore */ }
-
-          if (error.message !== 'Payment cancelled') {
-            toast.error(error.message || 'Payment failed');
-          } else {
-            toast('Payment cancelled', { icon: 'ℹ️' });
-          }
-        }
-      );
     } catch (error) {
-      console.error('Checkout error:', error);
-      toast.error(error.message || 'Checkout failed');
+      console.error('Order creation error:', error);
+      toast.error(error.message || 'Failed to create order');
 
       if (orderId) {
         try {
@@ -359,6 +264,43 @@ export default function Cart() {
       }
     } finally {
       setCheckingOut(false);
+    }
+  };
+
+  const handlePaymentComplete = async ({ screenshotUrl, verified } = {}) => {
+    if (!placedOrderId) return;
+
+    try {
+      const shipping = buildShippingAddress();
+
+      // Order stays as pending_payment until admin verifies the screenshot.
+      // Only set paid_at so admin knows when screenshot was submitted.
+      await supabase
+        .from(TABLES.ORDERS)
+        .update({
+          // Keep status as pending_payment — admin will move to order_placed after verifying screenshot
+          payment_screenshot_url: screenshotUrl || null,
+          paid_at: new Date().toISOString(),
+        })
+        .eq('id', placedOrderId);
+
+      await clearCart();
+
+      await sendOrderConfirmationEmail({
+        to_email: shipping.email,
+        to_name: shipping.full_name,
+        order_id: placedOrderId,
+        total_amount: finalTotal,
+        payment_method: 'upi',
+        items: cartItems,
+        delivery: shipping,
+      });
+
+      toast.success('Order submitted! We will verify your payment and confirm shortly.');
+      navigate(`/receipt?orderId=${placedOrderId}&phone=${shipping.phone}`);
+    } catch (err) {
+      console.error('Payment completion error:', err);
+      toast.error('Something went wrong. Please contact us on WhatsApp.');
     }
   };
 
@@ -449,68 +391,72 @@ export default function Cart() {
 
           {/* Order Summary */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6 h-fit">
-            <h2 className="text-lg font-bold text-white mb-4">Order Summary</h2>
-            <div className="space-y-3 mb-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-400">Subtotal</span>
-                <span className="text-white">{formatPrice(cartTotal)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-400">Shipping</span>
-                <span className="text-green-400">Free</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-400">Discount</span>
-                <span className={appliedVoucher ? 'text-green-400' : 'text-white'}>
-                  {appliedVoucher ? `-${formatPrice(discountAmount)}` : '-Rs. 0'}
-                </span>
-              </div>
-              {appliedVoucher && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-brand-orange font-medium">{appliedVoucher.code}</span>
-                  <button onClick={removeVoucher} className="text-neutral-500 hover:text-red-400 transition-colors">
-                    <X size={14} />
-                  </button>
+            {!showPayment ? (
+              <>
+                <h2 className="text-lg font-bold text-white mb-4">Order Summary</h2>
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-400">Subtotal</span>
+                    <span className="text-white">{formatPrice(cartTotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-400">Shipping</span>
+                    <span className={shippingCost === 0 ? 'text-green-400' : 'text-white'}>
+                      {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-400">Discount</span>
+                    <span className={appliedVoucher ? 'text-green-400' : 'text-white'}>
+                      {appliedVoucher ? `-${formatPrice(discountAmount)}` : '-Rs. 0'}
+                    </span>
+                  </div>
+                  {appliedVoucher && (
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-brand-orange font-medium">{appliedVoucher.code}</span>
+                      <button onClick={removeVoucher} className="text-neutral-500 hover:text-red-400 transition-colors">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="border-t border-neutral-800 pt-4 mb-4">
-              <div className="flex justify-between">
-                <span className="text-white font-semibold">Total</span>
-                <span className="text-white font-bold text-xl">{formatPrice(finalTotal)}</span>
-              </div>
-            </div>
+                <div className="border-t border-neutral-800 pt-4 mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-white font-semibold">Total</span>
+                    <span className="text-white font-bold text-xl">{formatPrice(finalTotal)}</span>
+                  </div>
+                </div>
 
-            {/* Voucher Input */}
-            <div className="mb-4">
-              <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Voucher Code</p>
-              {appliedVoucher ? (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-green-500/30 bg-green-500/10">
-                  <Check size={14} className="text-green-400" />
-                  <span className="text-green-400 text-sm font-medium">{appliedVoucher.code} applied</span>
-                  <span className="text-green-400/70 text-xs">(-{appliedVoucher.discountPercent}%)</span>
+                {/* Voucher Input */}
+                <div className="mb-4">
+                  <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Voucher Code</p>
+                  {appliedVoucher ? (
+                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-green-500/30 bg-green-500/10">
+                      <Check size={14} className="text-green-400" />
+                      <span className="text-green-400 text-sm font-medium">{appliedVoucher.code} applied</span>
+                      <span className="text-green-400/70 text-xs">(-{appliedVoucher.discountPercent}%)</span>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter code (e.g. WELCOME10)"
+                        value={voucherCode}
+                        onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                        className="input flex-1 text-sm"
+                        onKeyDown={(e) => e.key === 'Enter' && applyVoucher()}
+                      />
+                      <button
+                        onClick={applyVoucher}
+                        disabled={voucherLoading}
+                        className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                      >
+                        {voucherLoading ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter code (e.g. WELCOME10)"
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                    className="input flex-1 text-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && applyVoucher()}
-                  />
-                  <button
-                    onClick={applyVoucher}
-                    disabled={voucherLoading}
-                    className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
-                  >
-                    {voucherLoading ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="mb-4">
+                <div className="mb-4">
               <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Deliver To</p>
               {isAuthenticated ? (
                 addressesLoading ? (
@@ -649,59 +595,56 @@ export default function Cart() {
               )}
             </div>
 
-            {/* Payment Method */}
+            {/* Payment Method - UPI Only */}
             <div className="space-y-2 mb-4">
               <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider">Payment Method</p>
-              <button
-                onClick={() => setPaymentMethod('online')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
-                  paymentMethod === 'online'
-                    ? 'border-white bg-neutral-800 text-white'
-                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
-                }`}
-              >
-                <CreditCard size={18} className={paymentMethod === 'online' ? 'text-white' : 'text-neutral-500'} />
+              <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white bg-neutral-800 text-white">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/>
+                  <path d="M2 10h20"/>
+                </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Pay Online</p>
-                  <p className="text-xs text-neutral-500">Razorpay - Cards, UPI, Netbanking</p>
+                  <p className="text-sm font-medium">UPI Payment</p>
+                  <p className="text-xs text-neutral-400">Pay directly to: 7463812259@ybl</p>
                 </div>
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'online' ? 'border-white' : 'border-neutral-600'}`}>
-                  {paymentMethod === 'online' && <div className="w-2 h-2 rounded-full bg-white" />}
+                <div className="w-4 h-4 rounded-full border-2 border-white flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-white" />
                 </div>
-              </button>
-              <button
-                onClick={() => setPaymentMethod('cod')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
-                  paymentMethod === 'cod'
-                    ? 'border-white bg-neutral-800 text-white'
-                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
-                }`}
-              >
-                <Banknote size={18} className={paymentMethod === 'cod' ? 'text-white' : 'text-neutral-500'} />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Cash on Delivery</p>
-                  <p className="text-xs text-neutral-500">Pay {formatPrice(finalTotal)} when your order arrives</p>
-                </div>
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'cod' ? 'border-white' : 'border-neutral-600'}`}>
-                  {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-white" />}
-                </div>
-              </button>
+              </div>
             </div>
 
             <Button
-              onClick={handleCheckout}
+              onClick={handlePlaceOrder}
               disabled={checkingOut}
               className="w-full py-3"
             >
               {checkingOut ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
-              {paymentMethod === 'cod' ? 'Place COD Order' : 'Pay with Razorpay'}
+              Proceed to Payment
             </Button>
-            {paymentMethod === 'online' && (
-              <p className="text-neutral-500 text-xs text-center mt-3">
-                Secured by Razorpay. Your payment info is never stored.
-              </p>
-            )}
-          </motion.div>
+            <p className="text-neutral-500 text-xs text-center mt-3">
+              Pay via GPay, PhonePe, Paytm or any UPI app. Money goes directly to our account.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              <button 
+                onClick={() => setShowPayment(false)}
+                className="text-neutral-400 hover:text-white transition-colors"
+              >
+                <ArrowRight size={18} className="rotate-180" />
+              </button>
+              <h2 className="text-lg font-bold text-white">Complete Payment</h2>
+            </div>
+            <UPIPayment 
+              amount={finalTotal} 
+              orderId={placedOrderId}
+              customerName={isAuthenticated ? profile?.full_name : guestForm.full_name}
+              onPaymentComplete={handlePaymentComplete}
+            />
+          </>
+        )}
+      </motion.div>
         </div>
       </div>
     </main>

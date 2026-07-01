@@ -79,10 +79,15 @@ export function CartProvider({ children }) {
     localStorage.removeItem(LOCAL_CART_KEY);
   };
 
+  const SHIPPING_THRESHOLD = 999;
+  const SHIPPING_COST = 50;
+
   const cartTotal = useMemo(() => cartItems.reduce((sum, item) => {
     const price = item.product?.price || item.price || 0;
     return sum + price * item.quantity;
   }, 0), [cartItems]);
+
+  const shippingCost = useMemo(() => cartTotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST, [cartTotal]);
 
   const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
 
@@ -90,6 +95,7 @@ export function CartProvider({ children }) {
     cartItems,
     loading,
     cartTotal,
+    shippingCost,
     cartCount,
     addToCart,
     removeFromCart,

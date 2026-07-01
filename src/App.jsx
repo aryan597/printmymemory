@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { CartProvider } from './contexts/CartContext';
@@ -9,7 +10,8 @@ import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
-import Customize from './pages/Customize';
+// Lazy-load Three.js-heavy pages so they don't bloat the initial bundle
+const Customize = lazy(() => import('./pages/Customize'));
 import Gallery from './pages/Gallery';
 import About from './pages/About';
 import Reviews from './pages/Reviews';
@@ -37,6 +39,11 @@ function App() {
           <Navbar />
           <main id="main-content" className="flex-1" tabIndex={-1}>
             <ErrorBoundary>
+              <Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                </div>
+              }>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/shop" element={<Shop />} />
@@ -57,6 +64,7 @@ function App() {
                 <Route path="/receipt" element={<Receipt />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
             </ErrorBoundary>
           </main>
           <Footer />

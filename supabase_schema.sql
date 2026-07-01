@@ -206,6 +206,7 @@ CREATE TABLE IF NOT EXISTS orders (
   guest_email TEXT,
   guest_phone TEXT,
   total_amount INTEGER NOT NULL,
+  shipping_cost INTEGER DEFAULT 0,
   status TEXT DEFAULT 'order_placed',
   -- Valid statuses:
   -- Customised:  order_placed → pending_photo → design_ready → approved → printing → qc → shipped → delivered

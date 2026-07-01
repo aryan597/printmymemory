@@ -1,81 +1,113 @@
-import { ImageIcon, MessageCircle, PenTool, Printer, Truck } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Image, MessageCircle, PenTool, PackageCheck } from 'lucide-react';
 
 const steps = [
   {
-    number: '1',
-    icon: ImageIcon,
-    title: 'Upload Photo',
-    description: 'Upload a clear photo of your loved one',
+    number: '01',
+    icon: Image,
+    title: 'Upload Your Photo',
+    description: 'Share a clear, high-resolution photo of your loved one. The better the photo, the better the print.',
   },
   {
-    number: '2',
+    number: '02',
     icon: MessageCircle,
-    title: 'Chat on WhatsApp',
-    description: 'Share your photo and discuss your design with us',
+    title: 'Chat with Us on WhatsApp',
+    description: 'Our team contacts you to discuss your design preferences, size, and any customizations.',
   },
   {
-    number: '3',
+    number: '03',
     icon: PenTool,
-    title: 'Get Design Done',
-    description: 'Our experts create the perfect 3D model for you',
+    title: 'We Design & Approve',
+    description: 'Our experts craft the 3D model. You get a preview for approval before we hit print.',
   },
   {
-    number: '4',
-    icon: () => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <path d="m9 12 2 2 4-4"/>
-      </svg>
-    ),
-    title: 'We Print, Ship & Deliver',
-    description: 'High quality 3D printing with premium materials, carefully packed and delivered',
+    number: '04',
+    icon: PackageCheck,
+    title: 'Print, Pack & Deliver',
+    description: 'Premium 3D printing with high-quality materials, carefully packed and delivered across India.',
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="section-padding bg-bg-secondary" aria-label="How it works">
-      <div className="max-w-7xl mx-auto container-padding">
+    <section className="section-padding bg-bg-secondary relative overflow-hidden" aria-label="How it works">
+      {/* Background grid */}
+      <div className="absolute inset-0 line-grid opacity-40 pointer-events-none" aria-hidden="true" />
+
+      <div className="max-w-7xl mx-auto container-padding relative z-10">
+
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-headline font-bold text-white">
-            How It <span className="text-brand-orange">Works</span>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16"
+        >
+          <div className="section-label mx-auto mb-4 w-fit">The Process</div>
+          <h2 className="text-headline font-black text-white">
+            How It Works
           </h2>
-          <p className="text-text-muted text-sm mt-2">Simple steps to create your perfect 3D gift</p>
-        </div>
+          <p className="text-text-muted text-sm mt-3 max-w-md mx-auto leading-relaxed">
+            Four simple steps to turn your photo into a stunning 3D memory.
+          </p>
+        </motion.div>
 
         {/* Steps */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {steps.map((step, index) => (
-            <div
-              key={step.number}
-              className="relative text-center"
-              aria-label={`Step ${step.number}: ${step.title}`}
-            >
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-8 left-[60%] right-0 w-full">
-                  <div className="flex items-center gap-1">
-                    {[...Array(8)].map((_, i) => (
-                      <div key={`dot-${index}-${i}`} className="w-1 h-1 rounded-full bg-white/20" />
-                    ))}
-                  </div>
-                </div>
-              )}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4 relative">
+          {/* Connector line — desktop only */}
+          <div className="hidden lg:block absolute top-10 left-[12.5%] right-[12.5%] h-px pointer-events-none z-0" aria-hidden="true">
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-border-strong to-transparent" />
+          </div>
 
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-bg-card border border-border-subtle mb-4 relative">
-                <step.icon size={22} className="text-brand-orange" />
-                {/* Number badge */}
-                <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-brand-orange text-white text-xs font-bold flex items-center justify-center">
-                  {step.number}
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-20px' }}
+              transition={{ duration: 0.55, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="relative flex flex-col items-center text-center lg:items-center lg:text-center"
+            >
+              {/* Step icon ring */}
+              <div className="relative mb-5 z-10">
+                <div className="w-20 h-20 rounded-2xl bg-bg-card border border-border-subtle flex items-center justify-center shadow-card transition-all duration-300 hover:border-accent/40 hover:shadow-glow-orange group">
+                  <step.icon size={24} className="text-accent" aria-hidden="true" />
+                </div>
+                {/* Step number */}
+                <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-accent text-white text-[11px] font-black flex items-center justify-center shadow-lg">
+                  {step.number.slice(-1)}
                 </div>
               </div>
 
-              <h3 className="text-white font-semibold text-sm mb-1">{step.title}</h3>
-              <p className="text-text-muted text-xs leading-relaxed max-w-[200px] mx-auto">{step.description}</p>
-            </div>
+              {/* Large number watermark */}
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[6rem] font-black text-white/[0.02] select-none pointer-events-none leading-none" aria-hidden="true">
+                {step.number}
+              </div>
+
+              <h3 className="text-white font-bold text-[15px] mb-2 leading-snug">{step.title}</h3>
+              <p className="text-text-muted text-[13px] leading-relaxed max-w-[200px]">{step.description}</p>
+            </motion.div>
           ))}
         </div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-center mt-14"
+        >
+          <a
+            href={`https://wa.me/919471725271?text=Hi! I want to create a personalized 3D gift.`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+          >
+            Start Your Order
+          </a>
+        </motion.div>
       </div>
     </section>
   );

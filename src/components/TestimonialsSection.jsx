@@ -1,207 +1,141 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, Loader2 } from 'lucide-react';
+import { Star, Quote, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { supabase, TABLES } from '../lib/supabaseClient';
 
 const fallbackTestimonials = [
-  {
-    id: 1,
-    name: 'Priya S.',
-    location: 'Mumbai',
-    rating: 5,
-    text: 'The lithophane lamp turned out beyond my expectations. It\'s so beautiful and brings back memories every day.',
-    productImage: '/images/products/lamp.jpg',
-    avatar: '/images/avatars/avatar1.jpg',
-  },
-  {
-    id: 2,
-    name: 'Rahul M.',
-    location: 'Bangalore',
-    rating: 5,
-    text: 'The 3D miniature of my son is so cute! Amazing quality and perfect detailing.',
-    productImage: '/images/products/miniature.jpg',
-    avatar: '/images/avatars/avatar2.jpg',
-  },
-  {
-    id: 3,
-    name: 'Ankit D.',
-    location: 'Delhi',
-    rating: 5,
-    text: 'Got a name plate for my desk and everyone loved it. Super premium finish.',
-    productImage: '/images/products/nameplate.jpg',
-    avatar: '/images/avatars/avatar3.jpg',
-  },
-  {
-    id: 4,
-    name: 'Neha & Karan',
-    location: 'Pune',
-    rating: 5,
-    text: 'Perfect anniversary gift! The couple lamp is just magical.',
-    productImage: '/images/products/couple.jpg',
-    avatar: '/images/avatars/avatar4.jpg',
-  },
+  { id: 1, name: 'Priya S.', location: 'Mumbai', rating: 5, text: 'The lithophane lamp turned out beyond my expectations. It\'s so beautiful and brings back memories every day. Absolutely recommend!' },
+  { id: 2, name: 'Rahul M.', location: 'Bangalore', rating: 5, text: 'The 3D miniature of my son is incredible. Amazing quality, perfect detailing.he was surprised when he saw it!' },
+  { id: 3, name: 'Ankit D.', location: 'Delhi', rating: 5, text: 'Got a name plate for my home desk. Super premium finish. Everyone who visits asks where I got it from.' },
+  { id: 4, name: 'Neha & Karan', location: 'Pune', rating: 5, text: 'Perfect anniversary gift! The couple lamp is just magical. Will order again for sure.' },
+  { id: 5, name: 'Aisha K.', location: 'Hyderabad', rating: 5, text: 'Ordered a custom keychain with my pet\'s face on it. The detail is unreal. Super fast delivery too!' },
+  { id: 6, name: 'Vikram P.', location: 'Chennai', rating: 5, text: 'Ordered for corporate gifting.20 name plates. Consistent quality across all of them. Great communication throughout.' },
 ];
 
+function StarRating({ rating }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          size={12}
+          className={i < rating ? 'text-amber-400 fill-amber-400' : 'text-border-strong'}
+          aria-hidden="true"
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function TestimonialsSection() {
-  const [current, setCurrent] = useState(0);
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(1);
 
-  // Fetch reviews from Supabase
   useEffect(() => {
     let cancelled = false;
-
     async function loadReviews() {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from(TABLES.REVIEWS)
-          .select('*, product:products(name, image)')
+          .select('id, rating, comment, guest_name')
           .eq('is_approved', true)
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(6);
 
         if (!cancelled) {
-          if (data && data.length > 0) {
-            // Map Supabase reviews to testimonial format
-            const mapped = data.map((review, index) => ({
-              id: review.id,
-              name: review.customer_name || 'Happy Customer',
-              location: review.customer_location || 'India',
-              rating: review.rating || 5,
-              text: review.comment || review.review_text || 'Great product!',
-              productImage: review.product?.image || review.product_image || '/images/products/placeholder.jpg',
-              avatar: review.customer_avatar || `/images/avatars/avatar${(index % 4) + 1}.jpg`,
-            }));
-            setTestimonials(mapped);
+          if (data?.length > 0) {
+            setTestimonials(data.map(r => ({
+              id: r.id,
+              name: r.guest_name || 'Happy Customer',
+              location: 'India',
+              rating: r.rating || 5,
+              text: r.comment || 'Great product!',
+            })));
           } else {
             setTestimonials(fallbackTestimonials);
           }
         }
-      } catch (err) {
-        console.error('Failed to load reviews:', err);
-        if (!cancelled) {
-          setTestimonials(fallbackTestimonials);
-        }
+      } catch {
+        if (!cancelled) setTestimonials(fallbackTestimonials);
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
-
     loadReviews();
-    return () => { cancelled = true };
+    return () => { cancelled = true; };
   }, []);
-
-  // Handle responsive visible count
-  useEffect(() => {
-    const handleResize = () => {
-      setVisibleCount(window.innerWidth >= 1024 ? 2 : 1);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const next = () => setCurrent((prev) => (prev + 1) % testimonials.length);
-  const prev = () => setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-
-  const visible = [];
-  for (let i = 0; i < visibleCount; i++) {
-    visible.push(testimonials[(current + i) % testimonials.length]);
-  }
 
   return (
-    <section className="section-padding bg-bg-primary" aria-label="Customer testimonials">
+    <section className="section-padding bg-bg-primary" aria-label="Customer reviews">
       <div className="max-w-7xl mx-auto container-padding">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h2 className="text-headline font-bold text-white">
-            What Our <span className="text-brand-orange">Customers Say</span>
-          </h2>
-        </div>
 
-        {/* Loading state */}
-        {loading ? (
-          <div className="flex justify-center py-16" role="status" aria-label="Loading reviews">
-            <Loader2 size={28} className="animate-spin text-brand-orange" aria-hidden="true" />
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <div className="section-label mx-auto mb-4 w-fit">Reviews</div>
+          <h2 className="text-headline font-black text-white">
+            What Customers Say
+          </h2>
+          {/* Aggregate star row */}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex items-center gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={16} className="text-amber-400 fill-amber-400" aria-hidden="true" />
+              ))}
+            </div>
+            <span className="text-white font-bold text-sm">5.0</span>
+            <span className="text-text-muted text-sm">· Verified reviews</span>
           </div>
-        ) : testimonials.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-text-muted text-sm">No reviews yet. Be the first to share your experience!</p>
+        </motion.div>
+
+        {/* Testimonials grid */}
+        {loading ? (
+          <div className="flex justify-center py-16" role="status">
+            <Loader2 size={24} className="animate-spin text-accent" />
           </div>
         ) : (
-          <>
-            {/* Testimonials */}
-            <div className="relative">
-              <div className="grid lg:grid-cols-2 gap-4">
-                {visible.map((t) => (
-                  <div
-                    key={t.id}
-                    className="bg-bg-card rounded-2xl border border-border-subtle overflow-hidden flex flex-col sm:flex-row"
-                  >
-                    {/* Product image */}
-                    <div className="sm:w-2/5 aspect-square sm:aspect-auto relative bg-bg-secondary">
-                      <img
-                        src={t.productImage}
-                        alt={`Product by ${t.name}`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/images/products/placeholder.jpg';
-                        }}
-                      />
-                    </div>
-                    {/* Content */}
-                    <div className="sm:w-3/5 p-5 flex flex-col justify-center">
-                      <div className="flex items-center gap-1 mb-2">
-                        {[...Array(Math.min(t.rating, 5))].map((_, i) => (
-                          <Star key={`star-${t.id}-${i}`} size={12} className="text-brand-orange fill-brand-orange" />
-                        ))}
-                      </div>
-                      <p className="text-text-secondary text-sm leading-relaxed mb-4">"{t.text}"</p>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-bg-secondary overflow-hidden">
-                          <img
-                            src={t.avatar}
-                            alt={t.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.parentElement.style.background = '#333';
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <p className="text-white text-sm font-medium">{t.name}</p>
-                          <p className="text-text-muted text-xs">{t.location}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {testimonials.slice(0, 6).map((t, i) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-20px' }}
+                transition={{ duration: 0.5, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+                className="card p-6 flex flex-col gap-4 hover:border-border transition-colors duration-200"
+              >
+                {/* Quote icon */}
+                <Quote size={20} className="text-accent/40 shrink-0" aria-hidden="true" />
 
-              {/* Navigation arrows */}
-              <div className="flex justify-center gap-2 mt-6">
-                <button
-                  onClick={prev}
-                  className="w-10 h-10 rounded-full bg-bg-card border border-border-subtle flex items-center justify-center text-text-secondary hover:text-white hover:border-border transition-colors"
-                  aria-label="Previous testimonial"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  onClick={next}
-                  className="w-10 h-10 rounded-full bg-bg-card border border-border-subtle flex items-center justify-center text-text-secondary hover:text-white hover:border-border transition-colors"
-                  aria-label="Next testimonial"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-          </>
+                {/* Text */}
+                <p className="text-text-secondary text-[13px] leading-relaxed flex-1 line-clamp-4">
+                  "{t.text}"
+                </p>
+
+                {/* Footer */}
+                <div className="flex items-end justify-between pt-2 border-t border-border-subtle">
+                  <div>
+                    <p className="text-white font-semibold text-[13px]">{t.name}</p>
+                    <p className="text-text-muted text-[11px] mt-0.5">{t.location}</p>
+                  </div>
+                  <StarRating rating={t.rating} />
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
+
+        {/* View more link */}
+        <div className="text-center mt-10">
+          <a href="/reviews" className="text-text-muted hover:text-white text-sm font-medium transition-colors inline-flex items-center gap-1.5 underline underline-offset-4 decoration-border">
+            Read all reviews
+          </a>
+        </div>
       </div>
     </section>
   );
