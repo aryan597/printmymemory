@@ -1,11 +1,14 @@
-import { useState, useEffect, useRef, useContext, useMemo } from 'react';
+import { useState, useEffect, useRef, useContext, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Share2, Truck, ShieldCheck, ChevronRight, ChevronLeft,
   Minus, Plus, Loader2, Package, Star, Sparkles,
   ShoppingCart, MessageCircle, Send, Clock, ArrowRight,
+  Box, Layers, Check, Ruler, Flame,
 } from 'lucide-react';
+
+const Model3DViewer = lazy(() => import('../components/Model3DViewer'));
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { CartContext } from '../contexts/CartContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -261,6 +264,16 @@ export default function ProductDetail() {
   const isCustomised = product.product_type === 'customised';
   const status = stockStatus(product);
 
+  // Optional attributes configured in admin — only shown when present.
+  const amsColors = Array.isArray(product.ams_colors) ? product.ams_colors : [];
+  const hasAMS = product.is_ams_compatible && amsColors.length > 0;
+  const tags = Array.isArray(product.tags) ? product.tags : [];
+  const sizes = Array.isArray(product.sizes) ? product.sizes.filter((s) => s && (s.size || s.dimensions)) : [];
+  const customerNeeds = Array.isArray(product.customer_needs) ? product.customer_needs.filter(Boolean) : [];
+  const difficultyLabel = product.difficulty_level
+    ? product.difficulty_level.charAt(0).toUpperCase() + product.difficulty_level.slice(1)
+    : null;
+
   return (
     <main className="min-h-screen bg-bg-primary">
       <PageHead
@@ -317,10 +330,25 @@ export default function ProductDetail() {
               />
 
               {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
                 {isCustomised && (
                   <span className="px-3 py-1.5 rounded-full bg-accent/90 text-white text-xs font-semibold backdrop-blur-sm">
                     Customizable
+                  </span>
+                )}
+                {product.is_bestseller && (
+                  <span className="px-3 py-1.5 rounded-full bg-amber-500/90 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
+                    <Flame size={11} /> Bestseller
+                  </span>
+                )}
+                {product.is_featured && (
+                  <span className="px-3 py-1.5 rounded-full bg-purple-600/90 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
+                    <Star size={11} className="fill-white" /> Featured
+                  </span>
+                )}
+                {hasAMS && (
+                  <span className="px-3 py-1.5 rounded-full bg-black/50 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5">
+                    <Layers size={11} /> Multi-Color
                   </span>
                 )}
                 {product.stock_quantity > 0 && product.stock_quantity < 20 && (
@@ -372,6 +400,25 @@ export default function ProductDetail() {
                     <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* 3D model preview */}
+            {product.model_file && (
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center gap-2">
+                  <Box size={15} className="text-accent" />
+                  <h3 className="text-white text-sm font-semibold">3D Preview</h3>
+                </div>
+                <Suspense
+                  fallback={
+                    <div className="aspect-[4/5] rounded-2xl bg-bg-card border border-border-subtle flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                    </div>
+                  }
+                >
+                  <Model3DViewer url={product.model_file} />
+                </Suspense>
               </div>
             )}
           </div>
@@ -460,13 +507,95 @@ export default function ProductDetail() {
                   {product.weight_grams}g
                 </span>
               )}
-              {product.print_time_minutes && (
+              {(product.print_time_hours || product.print_time_minutes) && (
                 <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-xs text-text-secondary flex items-center gap-1">
                   <Clock size={10} />
-                  ~{product.print_time_minutes > 60 ? `${Math.round(product.print_time_minutes / 60)}hrs` : `${product.print_time_minutes}min`}
+                  ~{product.print_time_hours
+                    ? `${product.print_time_hours}hrs`
+                    : product.print_time_minutes > 60
+                      ? `${Math.round(product.print_time_minutes / 60)}hrs`
+                      : `${product.print_time_minutes}min`}
+                </span>
+              )}
+              {difficultyLabel && (
+                <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-xs text-text-secondary">
+                  {difficultyLabel} to make
                 </span>
               )}
             </div>
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((t, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[11px] font-medium text-accent">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* AMS colors */}
+            {hasAMS && (
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-border-subtle">
+                <div className="flex items-center gap-2 mb-3">
+                  <Layers size={14} className="text-accent" />
+                  <p className="text-white text-sm font-semibold">Multi-Color Printing</p>
+                  <span className="text-text-muted text-xs">({amsColors.length} colors)</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {amsColors.map((c, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <span
+                        className="w-6 h-6 rounded-full border border-white/20 shadow-inner"
+                        style={{ backgroundColor: c }}
+                        title={c}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Available sizes */}
+            {sizes.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Ruler size={14} className="text-accent" />
+                  <p className="text-white text-sm font-semibold">Available Sizes</p>
+                </div>
+                <div className="space-y-2">
+                  {sizes.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-bg-card border border-border-subtle">
+                      <div className="min-w-0">
+                        <p className="text-white text-sm font-medium">{s.size || `Option ${i + 1}`}</p>
+                        {s.dimensions && <p className="text-text-muted text-xs">{s.dimensions}</p>}
+                      </div>
+                      {s.price ? (
+                        <span className="text-accent text-sm font-semibold shrink-0">{formatPrice(s.price)}</span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* What we'll need from the customer */}
+            {customerNeeds.length > 0 && (
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-border-subtle">
+                <p className="text-white text-sm font-semibold mb-3">What we'll need from you</p>
+                <ul className="space-y-2">
+                  {customerNeeds.map((need, i) => (
+                    <li key={i} className="flex items-start gap-2.5">
+                      <span className="w-4 h-4 rounded-full bg-accent/15 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check size={10} className="text-accent" />
+                      </span>
+                      <span className="text-text-secondary text-sm leading-snug">{need}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Divider */}
             <div className="border-t border-border-subtle" />
