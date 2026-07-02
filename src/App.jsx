@@ -12,6 +12,7 @@ import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
 // Lazy-load Three.js-heavy pages so they don't bloat the initial bundle
 const Customize = lazy(() => import('./pages/Customize'));
+const Shop3D = lazy(() => import('./pages/Shop3D'));
 import Gallery from './pages/Gallery';
 import About from './pages/About';
 import Reviews from './pages/Reviews';
@@ -47,6 +48,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/shop" element={<Shop />} />
+                <Route path="/shop3d" element={<Shop3D />} />
                 <Route path="/products/:id" element={<ProductDetail />} />
                 <Route path="/customize" element={<Customize />} />
                 <Route path="/gallery" element={<Gallery />} />

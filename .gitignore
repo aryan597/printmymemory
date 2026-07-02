@@ -62,3 +62,11 @@ first_order_invoice.png
 reference_invoice_format.png
 logo_base64.txt
 
+venv/
+.claude/
+*.zip
+search_results*.json
+download_summary*.json
+selected_models*.json
+functional_pizza_results.json
+thing_page.html

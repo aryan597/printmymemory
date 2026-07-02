@@ -1,0 +1,52 @@
+dog-figurine-1.glb | Shiba Inu | Quaternius | CC0 1.0 | https://poly.pizza/m/y4wdQpg767
+dog-figurine-2.glb | Husky | Quaternius | CC0 1.0 | https://poly.pizza/m/wcWiuEqwzq
+cat-figurine-1.glb | Dingus the cat | alwayshasbean | CC-BY 3.0 | https://poly.pizza/m/4dXgbKLHD9
+anime-character-1.glb | Lowpoly Chibi Character | mehreen1919 | CC-BY 3.0 | https://poly.pizza/m/nfrpFnfKh3
+anime-character-2.glb | Chibi Witch | AliceCassie | CC0 1.0 | https://poly.pizza/m/dKexfKQOOl
+trophy-award.glb | Trophy | Casey Tumbers | CC-BY 3.0 | https://poly.pizza/m/6Xu7mttjodo
+planter-vase.glb | Planter & Bushes | J-Toastie | CC-BY 3.0 | https://poly.pizza/m/wn85Xr9lM3
+keychain-charm.glb | magic star wand | Jaxon Minard | CC-BY 3.0 | https://poly.pizza/m/29cV4Y2tzk-
+potted-plant-prop.glb | Fiddle-leaf Plant | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/2ag6_uuqsnb
+cardboard-box-prop.glb | Cardboard Boxes | sirkitree | CC-BY 3.0 | https://poly.pizza/m/bb6XIhUUObg
+knight-figure-1.glb | Knight | Dawid2K | CC-BY 3.0 | https://poly.pizza/m/isC73B8SKq
+wizard-figure-1.glb | Wizardus Maximus | madtrollstudio | CC-BY 3.0 | https://poly.pizza/m/6oDxK0wqyL
+dragon-figure-1.glb | Dragon Rigged | na3ee1 | CC-BY 3.0 | https://poly.pizza/m/WIOTISRjeX
+robot-figure-1.glb | Animated Robot | Quaternius | CC0 1.0 | https://poly.pizza/m/QCm7qe9uNJ
+bird-figurine-1.glb | Parrot | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/dpl7B31PqWX
+rabbit-figurine-1.glb | Cottontail rabbit | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/3vvONbRCuEF
+fish-figurine-1.glb | Fish | Quaternius | CC0 1.0 | https://poly.pizza/m/BEcU9rjiAq
+elephant-figurine-1.glb | Elephant | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/a27MA0rXyyj
+dino-1.glb | T-Rex | Quaternius | CC0 1.0 | https://poly.pizza/m/UYtneO5FpF
+dino-2.glb | Velociraptor | Quaternius | CC0 1.0 | https://poly.pizza/m/cnlGH2UcDd
+dino-3.glb | T-Rex | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/9GyZw9gGPMq
+chess-piece-1.glb | Chess Set | Jarlan Perez | CC-BY 3.0 | https://poly.pizza/m/00f9MZIwA1V
+chess-piece-2.glb | Chess Set | Pia Leung | CC-BY 3.0 | https://poly.pizza/m/bfb3C6hpdi0
+chess-piece-3.glb | Chessboard | peter moore | CC-BY 3.0 | https://poly.pizza/m/21bXFn9QEw9
+retro-car-figurine-1.glb | Toyota AE86 | IvOfficial | CC-BY 3.0 | https://poly.pizza/m/ZEFWmOPSgh
+plane-figurine-1.glb | Airplane | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8VysVKMXN2J
+rocket-figurine-1.glb | Rocketship | Gabriel Valdivia | CC-BY 3.0 | https://poly.pizza/m/a5ChWS6uW0y
+lamp-desk-item-1.glb | Desk Lamp | involuntary tsetse | CC-BY 3.0 | https://poly.pizza/m/0_FDq_UjWHp
+pen-holder-desk-item-1.glb | Mug With Office Tool | CreativeTrio | CC0 1.0 | https://poly.pizza/m/4jSgnM5WWk
+phone-stand-desk-item-1.glb | Phone | Alex Safayan | CC-BY 3.0 | https://poly.pizza/m/1L9oJAw6nY2
+vase-planter-1.glb | Orchid | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/59BuDmuEYIZ
+vase-planter-2.glb | Vase | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/flynTOOHK_z
+vase-planter-3.glb | Eight Vases | Paul Spooner | CC-BY 3.0 | https://poly.pizza/m/083bnosQpkP
+bust-statue-1.glb | Bust | Eric Wilson | CC-BY 3.0 | https://poly.pizza/m/eLjY6Zwl4uw
+bust-statue-2.glb | art statue | Kelli Ray | CC-BY 3.0 | https://poly.pizza/m/b3L5PKB4fsx
+phone-case-1.glb | NotchPhone | Sal Blrm | CC-BY 3.0 | https://poly.pizza/m/ab6XIhUUObg
+phone-case-2.glb | Cell phone | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/bezroX5BmjX
+phone-stand-1.glb | Phone | Alex Safayan | CC-BY 3.0 | https://poly.pizza/m/1L9oJAw6nY2
+phone-stand-2.glb | Rolling Music Speaker Stand | Peter Simcoe | CC-BY 3.0 | https://poly.pizza/m/2QYyKRb68QD
+kitchen-item-1.glb | Measuring Spoons | MilkAndBanana | CC0 1.0 | https://poly.pizza/m/CYDutjpiBg
+kitchen-item-2.glb | Skimmer | MilkAndBanana | CC0 1.0 | https://poly.pizza/m/OqdTZxqppX
+bag-clip-1.glb | Clippy | Jordan Santell | CC-BY 3.0 | https://poly.pizza/m/9wZZUB682Lr
+bottle-opener-1.glb | Hand Saw | CreativeTrio | CC0 1.0 | https://poly.pizza/m/1a46c407-6675-4e40-b3e4-786a4c0ac395
+cable-organizer-1.glb | Headphones | Alex Safayan | CC-BY 3.0 | https://poly.pizza/m/0chwm1mLpRC
+cable-organizer-2.glb | red cable 4 | Jeremy Eyring | CC-BY 3.0 | https://poly.pizza/m/bUn6Ercy0SO
+wall-hook-1.glb | Sword Wall Mount | Quaternius | CC0 1.0 | https://poly.pizza/m/3LyJaWgoJG
+wall-hook-2.glb | Hook and chain | Zacharylll | CC-BY 3.0 | https://poly.pizza/m/dBp9m8k9kTi
+coaster-set-1.glb | Baking tray | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/9b2f0aff-ad9c-446f-b3dd-975ed9b6f795
+toothbrush-holder-1.glb | Mug With Office Tool | CreativeTrio | CC0 1.0 | https://poly.pizza/m/4jSgnM5WWk
+soap-dish-1.glb | Dishrack | Kay Lousberg | CC0 1.0 | https://poly.pizza/m/cyhc2Sj4Uy
+lithophane-lamp-1.glb | Light Icosahedron | Quaternius | CC0 1.0 | https://poly.pizza/m/KGq88JUIJo
+lithophane-lamp-2.glb | Lantern | Nick Slough | CC-BY 3.0 | https://poly.pizza/m/h1HBWwsIGk

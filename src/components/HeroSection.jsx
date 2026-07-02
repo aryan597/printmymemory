@@ -132,6 +132,17 @@ export default function HeroSection() {
                   Browse Products
                   <ArrowRight size={14} aria-hidden="true" />
                 </Link>
+                <Link
+                  to="/shop3d"
+                  className="relative w-full sm:w-auto text-sm inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all"
+                  aria-label="Walk through our 3D shop (beta)"
+                >
+                  <Sparkles size={14} aria-hidden="true" />
+                  Walk Into Our 3D Shop
+                  <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full bg-amber-400 text-black text-[10px] font-bold">
+                    BETA
+                  </span>
+                </Link>
               </div>
 
               {/* Trust badges */}
