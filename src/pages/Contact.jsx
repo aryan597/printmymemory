@@ -186,7 +186,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+                  className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-text-primary py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                   {isSubmitting ? 'Sending...' : 'Send Message'}

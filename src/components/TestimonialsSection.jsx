@@ -78,7 +78,7 @@ export default function TestimonialsSection() {
           className="text-center mb-12"
         >
           <div className="section-label mx-auto mb-4 w-fit">Reviews</div>
-          <h2 className="text-headline font-black text-white">
+          <h2 className="text-headline font-black uppercase text-text-primary">
             What Customers Say
           </h2>
           {/* Aggregate star row */}
@@ -88,7 +88,7 @@ export default function TestimonialsSection() {
                 <Star key={i} size={16} className="text-amber-400 fill-amber-400" aria-hidden="true" />
               ))}
             </div>
-            <span className="text-white font-bold text-sm">5.0</span>
+            <span className="text-text-primary font-bold text-sm">5.0</span>
             <span className="text-text-muted text-sm">· Verified reviews</span>
           </div>
         </motion.div>
@@ -120,7 +120,7 @@ export default function TestimonialsSection() {
                 {/* Footer */}
                 <div className="flex items-end justify-between pt-2 border-t border-border-subtle">
                   <div>
-                    <p className="text-white font-semibold text-[13px]">{t.name}</p>
+                    <p className="text-text-primary font-semibold text-[13px]">{t.name}</p>
                     <p className="text-text-muted text-[11px] mt-0.5">{t.location}</p>
                   </div>
                   <StarRating rating={t.rating} />
@@ -132,7 +132,7 @@ export default function TestimonialsSection() {
 
         {/* View more link */}
         <div className="text-center mt-10">
-          <a href="/reviews" className="text-text-muted hover:text-white text-sm font-medium transition-colors inline-flex items-center gap-1.5 underline underline-offset-4 decoration-border">
+          <a href="/reviews" className="text-text-muted hover:text-text-primary text-sm font-medium transition-colors inline-flex items-center gap-1.5 underline underline-offset-4 decoration-border">
             Read all reviews
           </a>
         </div>

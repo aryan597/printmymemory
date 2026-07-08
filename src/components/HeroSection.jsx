@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Gem, Shield, Clock, Truck } from 'lucide-react';
 import { supabase, TABLES } from '../lib/supabaseClient';
@@ -65,7 +65,6 @@ export default function HeroSection() {
 
   return (
     <>
-      {/* SEO structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -77,71 +76,56 @@ export default function HeroSection() {
         "sameAs": ["https://instagram.com/print.my.memory"]
       })}} />
 
-      <section
-        className="relative min-h-[100dvh] bg-bg-primary overflow-hidden"
-        aria-label="Hero - Personalized 3D Printed Gifts"
-      >
-        {/* Background: dot grid + glow blobs */}
-        <div className="absolute inset-0 dot-grid opacity-60 pointer-events-none" aria-hidden="true" />
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-accent/8 blur-[120px] pointer-events-none" aria-hidden="true" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-600/5 blur-[100px] pointer-events-none" aria-hidden="true" />
+      <section className="relative min-h-[100dvh] bg-bg-primary overflow-hidden" aria-label="Hero - Personalized 3D Printed Gifts">
+        {/* Structural grid backdrop */}
+        <div className="absolute inset-0 line-grid pointer-events-none" aria-hidden="true" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-[1fr_auto] gap-8 lg:gap-12 items-center min-h-[100dvh] pt-24 pb-8 lg:pt-0 lg:pb-0">
+          <div className="grid lg:grid-cols-[1fr_auto] gap-8 lg:gap-12 items-center min-h-[100dvh] pt-28 pb-8 lg:pt-0 lg:pb-0">
 
             {/* ── Left: Copy ── */}
             <div className="flex flex-col items-center text-center lg:items-start lg:text-left max-w-2xl mx-auto lg:mx-0 lg:py-24">
 
-              {/* Label pill */}
               <div className="section-label mb-6">
                 <Sparkles size={11} aria-hidden="true" />
                 Handcrafted in Bangalore, India
               </div>
 
-              {/* Headline */}
-              <h1 className="font-black text-white mb-5 leading-[0.96] tracking-tight text-balance" style={{ fontSize: 'clamp(2.6rem, 6.5vw, 5rem)' }}>
+              <h1 className="font-black uppercase text-text-primary mb-5 leading-[0.9] tracking-tight text-balance" style={{ fontSize: 'clamp(2.6rem, 6.8vw, 5.2rem)' }}>
                 Your Photos,
                 <br />
-                <span className="gradient-text">Now in 3D</span>
+                <span className="text-accent">Now in 3D</span>
               </h1>
 
-              {/* Sub */}
               <p className="text-base sm:text-lg text-text-secondary max-w-md mb-8 leading-relaxed">
                 We turn your cherished photos into stunning 3D printed gifts.
                 Miniatures, lamps, keychains and more, handcrafted in Bangalore.
               </p>
 
-              {/* CTAs */}
               <div className="flex flex-col sm:flex-row items-center gap-3 mb-10 w-full sm:w-auto">
                 <a
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi! I want to order a 3D printed gift.`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-green w-full sm:w-auto text-sm"
+                  className="btn-green w-full sm:w-auto"
                   aria-label="Order on WhatsApp"
                 >
                   <WaIcon />
                   Order on WhatsApp
                   <ArrowRight size={14} aria-hidden="true" />
                 </a>
-                <Link
-                  to="/shop"
-                  className="btn-secondary w-full sm:w-auto text-sm"
-                  aria-label="Browse all products"
-                >
+                <Link to="/shop" className="btn-primary w-full sm:w-auto" aria-label="Browse all products">
                   Browse Products
                   <ArrowRight size={14} aria-hidden="true" />
                 </Link>
                 <Link
                   to="/shop3d"
-                  className="relative w-full sm:w-auto text-sm inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-medium transition-all"
+                  className="btn-secondary relative w-full sm:w-auto"
                   aria-label="Walk through our 3D shop (beta)"
                 >
                   <Sparkles size={14} aria-hidden="true" />
                   Walk Into Our 3D Shop
-                  <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full bg-amber-400 text-black text-[10px] font-bold">
-                    BETA
-                  </span>
+                  <span className="absolute -top-2.5 -right-2.5 px-1.5 py-0.5 bg-accent text-white text-[10px] font-bold border-2 border-border">BETA</span>
                 </Link>
               </div>
 
@@ -149,23 +133,22 @@ export default function HeroSection() {
               <div className="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2.5">
                 {trustBadges.map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-accent/15 flex items-center justify-center">
-                      <Icon size={10} className="text-accent" aria-hidden="true" />
+                    <div className="w-6 h-6 border-2 border-border bg-bg-card flex items-center justify-center">
+                      <Icon size={11} className="text-accent" aria-hidden="true" />
                     </div>
-                    <span className="text-[12px] font-medium text-text-muted">{label}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wide text-text-secondary">{label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* ── Right: Product Image ── */}
+            {/* ── Right: Product Specimen ── */}
             <div className="relative w-full lg:w-[480px] xl:w-[520px] shrink-0 order-first lg:order-last">
-              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-bg-card border border-border-subtle shadow-glow-orange">
+              <div className="relative aspect-[4/5] overflow-hidden bg-bg-card border-2 border-border shadow-glow-orange-lg">
 
-                {/* Images */}
                 {loading ? (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                    <div className="w-8 h-8 border-2 border-accent border-t-transparent animate-spin" />
                   </div>
                 ) : heroImages.length > 0 ? (
                   heroImages.map((img, i) => (
@@ -173,9 +156,7 @@ export default function HeroSection() {
                       key={img.src + i}
                       src={img.src}
                       alt={img.alt}
-                      className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${
-                        i === currentImage ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                      }`}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${i === currentImage ? 'opacity-100' : 'opacity-0'}`}
                       loading={i === 0 ? 'eager' : 'lazy'}
                       fetchPriority={i === 0 ? 'high' : 'auto'}
                       decoding="async"
@@ -191,23 +172,20 @@ export default function HeroSection() {
                   </div>
                 )}
 
-                {/* Bottom gradient */}
-                <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" aria-hidden="true" />
-
-                {/* Price badge — updates with each slide */}
+                {/* Price sticker */}
                 {currentSlide && (
-                  <div className="absolute top-4 right-4 glass px-3.5 py-2.5 rounded-xl shadow-xl border border-white/10 transition-all duration-500">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-white/50 mb-0.5">From</p>
-                    <p key={currentSlide.price} className="text-lg font-black gradient-text leading-none animate-fade-in">
+                  <div className="absolute top-3 right-3 tb-sticker tb-sticker--orange flex-col !items-start !py-1.5">
+                    <span className="text-[8px] tracking-widest opacity-80">FROM</span>
+                    <span key={currentSlide.price} className="font-mono-tb text-base font-bold leading-none animate-fade-in">
                       {formatPrice(currentSlide.price)}
-                    </p>
+                    </span>
                   </div>
                 )}
 
-                {/* Bottom: current product name */}
+                {/* Product name label */}
                 {currentSlide && (
-                  <div className="absolute bottom-12 left-4 right-4">
-                    <p key={currentSlide.alt} className="text-white/70 text-xs font-medium truncate animate-fade-in">
+                  <div className="absolute bottom-0 inset-x-0 bg-bg-primary border-t-2 border-border px-3 py-2">
+                    <p key={currentSlide.alt} className="text-text-primary text-xs font-bold uppercase tracking-wide truncate animate-fade-in">
                       {currentSlide.alt}
                     </p>
                   </div>
@@ -215,7 +193,7 @@ export default function HeroSection() {
 
                 {/* Image dots */}
                 {heroImages.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5" role="tablist" aria-label="Product images">
+                  <div className="absolute bottom-11 left-1/2 -translate-x-1/2 flex gap-1.5" role="tablist" aria-label="Product images">
                     {heroImages.map((_, i) => (
                       <button
                         key={i}
@@ -223,17 +201,12 @@ export default function HeroSection() {
                         aria-selected={i === currentImage}
                         aria-label={`Image ${i + 1}`}
                         onClick={() => setCurrentImage(i)}
-                        className={`h-1.5 rounded-full transition-all duration-400 ${
-                          i === currentImage ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60'
-                        }`}
+                        className={`h-2 border border-border transition-all ${i === currentImage ? 'w-6 bg-accent' : 'w-2 bg-bg-card'}`}
                       />
                     ))}
                   </div>
                 )}
               </div>
-
-              {/* Decorative glow behind image */}
-              <div className="absolute inset-0 rounded-3xl bg-accent/8 blur-3xl scale-110 -z-10 pointer-events-none" aria-hidden="true" />
             </div>
           </div>
         </div>

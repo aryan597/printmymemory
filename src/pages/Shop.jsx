@@ -6,6 +6,7 @@ import { CartContext } from '../contexts/CartContext';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { formatPrice } from '../lib/utils';
 import PageHead from '../components/PageHead';
+import CGTraderModelsSection from '../components/CGTraderModelsSection';
 import toast from 'react-hot-toast';
 
 export default function Shop() {
@@ -92,7 +93,7 @@ export default function Shop() {
             transition={{ duration: 0.5 }}
           >
             <div className="section-label mb-4">Shop</div>
-            <h1 className="text-display-sm font-black text-white">All Products</h1>
+            <h1 className="text-display-sm font-black text-text-primary">All Products</h1>
             <p className="text-text-muted text-sm mt-2 max-w-sm">
               {products.length > 0 ? `${products.length} handcrafted products` : 'Handcrafted personalized gifts'}
             </p>
@@ -102,7 +103,7 @@ export default function Shop() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ── Filters ── */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8 sticky top-[96px] z-30 py-3 bg-bg-primary/95 backdrop-blur-xl -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 border-b border-border-subtle/50">
+        <div className="flex flex-col sm:flex-row gap-3 mb-8 sticky top-[96px] z-30 py-3 bg-bg-primary -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 border-b-2 border-border">
           {/* Search */}
           <div className="relative flex-1 max-w-xs" role="search" aria-label="Search products">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
@@ -134,10 +135,10 @@ export default function Shop() {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 aria-pressed={activeCategory === cat}
-                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+                className={`px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-wide whitespace-nowrap transition-all duration-150 shrink-0 border-2 border-border ${
                   activeCategory === cat
-                    ? 'bg-accent text-white shadow-glow-orange'
-                    : 'bg-bg-card border border-border-subtle text-text-secondary hover:text-white hover:border-border'
+                    ? 'bg-accent text-text-primary'
+                    : 'bg-bg-card text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {cat}
@@ -148,7 +149,7 @@ export default function Shop() {
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="ml-1 px-3 py-1.5 rounded-full text-[12px] font-medium text-text-muted hover:text-white border border-border-subtle hover:border-border transition-all duration-200 flex items-center gap-1 shrink-0"
+                className="ml-1 px-3 py-1.5 text-[12px] font-bold uppercase text-text-muted hover:text-text-primary border-2 border-border transition-all duration-150 flex items-center gap-1 shrink-0"
                 aria-label="Clear all filters"
               >
                 <X size={11} />
@@ -215,6 +216,9 @@ export default function Shop() {
             </div>
           </AnimatePresence>
         )}
+
+        {/* More printable designs — filtered by the same category + search */}
+        <CGTraderModelsSection category={activeCategory} searchQuery={searchQuery} />
       </div>
     </main>
   );
@@ -246,22 +250,18 @@ function ShopProductCard({ product, addingId, onAddToCart }) {
         {/* Badges */}
         <div className="absolute top-2.5 inset-x-2.5 flex items-start justify-between gap-1.5">
           {product.category?.name && (
-            <span className="text-[9px] sm:text-[10px] font-semibold text-white bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded truncate max-w-[70px]">
-              {product.category.name}
-            </span>
+            <span className="tb-sticker truncate max-w-[80px]">{product.category.name}</span>
           )}
           {isCustomised && (
-            <span className="text-[9px] sm:text-[10px] font-bold text-white bg-accent px-2 py-0.5 rounded ml-auto shrink-0">
-              Custom
-            </span>
+            <span className="tb-sticker tb-sticker--orange ml-auto shrink-0">Custom</span>
           )}
         </div>
 
         {/* Hover action buttons */}
-        <div className="absolute bottom-2.5 inset-x-2.5 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-250">
+        <div className="absolute bottom-2.5 inset-x-2.5 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
           <Link
             to={`/products/${product.id}`}
-            className="flex-1 h-8 bg-white/90 backdrop-blur-sm text-black rounded-lg flex items-center justify-center text-[11px] font-semibold hover:bg-white transition-colors gap-1"
+            className="flex-1 h-9 bg-bg-card border-2 border-border text-text-primary flex items-center justify-center text-[11px] font-bold uppercase hover:bg-bg-elevated transition-colors gap-1"
             aria-label={`View ${product.name} details`}
           >
             <Eye size={12} />
@@ -271,7 +271,7 @@ function ShopProductCard({ product, addingId, onAddToCart }) {
             onClick={() => onAddToCart(product)}
             disabled={isAdding}
             aria-label={`Add ${product.name} to cart`}
-            className="flex-1 h-8 bg-accent text-white rounded-lg flex items-center justify-center text-[11px] font-semibold hover:brightness-110 disabled:opacity-60 transition-all gap-1"
+            className="flex-1 h-9 bg-accent text-text-primary border-2 border-border flex items-center justify-center text-[11px] font-bold uppercase hover:brightness-110 disabled:opacity-60 transition-all gap-1"
           >
             {isAdding ? (
               <Loader2 size={12} className="animate-spin" />
@@ -296,12 +296,12 @@ function ShopProductCard({ product, addingId, onAddToCart }) {
           <p className="text-text-muted text-[11px] line-clamp-1 mb-2 flex-1">{product.description}</p>
         )}
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-border-subtle/50">
-          <span className="text-white font-bold text-[13px]">{formatPrice(product.price)}</span>
+          <span className="text-text-primary font-bold text-[13px]">{formatPrice(product.price)}</span>
           <button
             onClick={() => onAddToCart(product)}
             disabled={isAdding}
             aria-label={`Add ${product.name} to cart`}
-            className="text-[11px] font-semibold text-accent hover:text-white transition-colors flex items-center gap-1 disabled:opacity-50"
+            className="text-[11px] font-semibold text-accent hover:text-text-primary transition-colors flex items-center gap-1 disabled:opacity-50"
           >
             {isAdding ? <Loader2 size={11} className="animate-spin" /> : <ShoppingCart size={11} />}
             Add

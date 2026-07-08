@@ -10,6 +10,7 @@ const WHATSAPP = '919471725271';
 const EYE = 1.6;
 const SPEED = 3.2;
 const RADIUS = 0.35;
+const IS_TOUCH = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
 // ---- simple AABB colliders (x1, y1, x2, y2 in Blender floor-plan coords) ----
 const COLLIDERS = [
@@ -73,6 +74,15 @@ function productInfo(rawName) {
   return { label: prettyName(rawName), ...info };
 }
 
+function hitFromIntersections(hits) {
+  for (const h of hits) {
+    if (h.object.userData.productName) return { kind: 'product', name: h.object.userData.productName };
+    if (h.object.userData.kiosk) return { kind: 'kiosk' };
+    if (h.object.isMesh) return null;
+  }
+  return null;
+}
+
 // ---------------- Scene ----------------
 const CENTER = new THREE.Vector2(0, 0);
 
@@ -111,16 +121,12 @@ function ShopScene({ onProductHover, onProductClick, onKioskClick }) {
 
   const raycastCenter = useCallback(() => {
     raycaster.setFromCamera(CENTER, camera);
-    const hits = raycaster.intersectObjects(scene.children, true);
-    for (const h of hits) {
-      if (h.object.userData.productName) return { kind: 'product', name: h.object.userData.productName };
-      if (h.object.userData.kiosk) return { kind: 'kiosk' };
-      if (h.object.isMesh) return null; // something solid blocks the view first
-    }
-    return null;
+    return hitFromIntersections(raycaster.intersectObjects(scene.children, true));
   }, [raycaster, camera, scene]);
 
+  // desktop: click while pointer-locked = raycast from screen center
   useEffect(() => {
+    if (IS_TOUCH) return;
     const onClick = () => {
       if (!document.pointerLockElement) return;
       const hit = raycastCenter();
@@ -133,6 +139,7 @@ function ShopScene({ onProductHover, onProductClick, onKioskClick }) {
 
   useFrame((_, dt) => {
     if (fanRef.current) fanRef.current.rotation.y += dt * 5; // glTF is Y-up
+    if (IS_TOUCH) return;
     hoverTimer.current += dt;
     if (hoverTimer.current > 0.12) {
       hoverTimer.current = 0;
@@ -148,8 +155,125 @@ function ShopScene({ onProductHover, onProductClick, onKioskClick }) {
   return <primitive object={scene} />;
 }
 
+// ---------------- Touch look + tap-to-select ----------------
+function TouchControls({ enabled, onProductClick, onKioskClick }) {
+  const { camera, gl, scene } = useThree();
+  const raycaster = useMemo(() => {
+    const r = new THREE.Raycaster();
+    r.far = 6;
+    return r;
+  }, []);
+
+  useEffect(() => {
+    if (!IS_TOUCH) return;
+    camera.rotation.order = 'YXZ';
+    const el = gl.domElement;
+    let lookId = null;
+    let lastX = 0, lastY = 0, startX = 0, startY = 0, startT = 0, moved = 0;
+
+    const onStart = (e) => {
+      if (!enabled.current) return;
+      for (const t of e.changedTouches) {
+        if (lookId === null) {
+          lookId = t.identifier;
+          lastX = startX = t.clientX;
+          lastY = startY = t.clientY;
+          startT = performance.now();
+          moved = 0;
+        }
+      }
+    };
+    const onMove = (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookId) {
+          const dx = t.clientX - lastX;
+          const dy = t.clientY - lastY;
+          moved += Math.abs(dx) + Math.abs(dy);
+          lastX = t.clientX; lastY = t.clientY;
+          camera.rotation.y -= dx * 0.005;
+          camera.rotation.x = Math.max(-1.3, Math.min(1.3, camera.rotation.x - dy * 0.005));
+          camera.rotation.z = 0;
+        }
+      }
+      e.preventDefault();
+    };
+    const onEnd = (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookId) {
+          const quick = performance.now() - startT < 300 && moved < 12;
+          if (quick && enabled.current) {
+            const rect = el.getBoundingClientRect();
+            const ndc = new THREE.Vector2(
+              ((t.clientX - rect.left) / rect.width) * 2 - 1,
+              -((t.clientY - rect.top) / rect.height) * 2 + 1
+            );
+            raycaster.setFromCamera(ndc, camera);
+            const hit = hitFromIntersections(raycaster.intersectObjects(scene.children, true));
+            if (hit?.kind === 'product') onProductClick(hit.name);
+            else if (hit?.kind === 'kiosk') onKioskClick();
+          }
+          lookId = null;
+        }
+      }
+    };
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, [camera, gl, scene, raycaster, enabled, onProductClick, onKioskClick]);
+
+  return null;
+}
+
+// ---------------- DOM joystick ----------------
+function Joystick({ moveRef }) {
+  const baseRef = useRef(null);
+  const [knob, setKnob] = useState({ x: 0, y: 0 });
+  const R = 44;
+
+  const handle = useCallback((e) => {
+    const base = baseRef.current;
+    if (!base) return;
+    const rect = base.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const t = e.touches[0];
+    let dx = t.clientX - cx;
+    let dy = t.clientY - cy;
+    const len = Math.hypot(dx, dy);
+    if (len > R) { dx = (dx / len) * R; dy = (dy / len) * R; }
+    setKnob({ x: dx, y: dy });
+    moveRef.current = { x: dx / R, y: dy / R };
+    e.preventDefault();
+  }, [moveRef]);
+
+  const reset = useCallback(() => {
+    setKnob({ x: 0, y: 0 });
+    moveRef.current = { x: 0, y: 0 };
+  }, [moveRef]);
+
+  return (
+    <div
+      ref={baseRef}
+      className="absolute bottom-8 left-8 z-20 w-32 h-32 rounded-full bg-white/10 border border-white/25 backdrop-blur-sm touch-none"
+      onTouchStart={handle}
+      onTouchMove={handle}
+      onTouchEnd={reset}
+    >
+      <div
+        className="absolute w-14 h-14 rounded-full bg-white/40 border border-white/50"
+        style={{ left: `calc(50% - 28px + ${knob.x}px)`, top: `calc(50% - 28px + ${knob.y}px)` }}
+      />
+    </div>
+  );
+}
+
 // ---------------- Player movement ----------------
-function Player({ enabled }) {
+function Player({ enabled, moveRef }) {
   const { camera } = useThree();
   const keys = useRef({});
 
@@ -168,14 +292,21 @@ function Player({ enabled }) {
   useFrame((_, dt) => {
     if (!enabled.current) return;
     const k = keys.current;
-    const fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
-    const strafe = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
+    let fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
+    let strafe = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
+    const joy = moveRef.current;
+    if (joy && (joy.x || joy.y)) {
+      fwd = -joy.y;
+      strafe = joy.x;
+    }
     if (!fwd && !strafe) return;
     const dir = new THREE.Vector3();
     camera.getWorldDirection(dir);
     dir.y = 0; dir.normalize();
     const side = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0));
-    const move = dir.multiplyScalar(fwd).add(side.multiplyScalar(strafe)).normalize().multiplyScalar(SPEED * dt);
+    const mag = Math.min(1, Math.hypot(fwd, strafe));
+    const move = dir.multiplyScalar(fwd).add(side.multiplyScalar(strafe));
+    if (move.lengthSq() > 0) move.normalize().multiplyScalar(SPEED * mag * dt);
     const nx = camera.position.x + move.x;
     const nz = camera.position.z + move.z;
     if (!collides(nx, -nz)) {
@@ -236,16 +367,14 @@ function ProductModal({ rawName, onClose }) {
 
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-4xl h-[80%] rounded-2xl bg-[#12121a] border border-white/10 overflow-hidden flex flex-col md:flex-row">
-        {/* 3D viewer */}
-        <div className="flex-1 min-h-[300px] relative">
+      <div className="w-full max-w-4xl h-[85%] rounded-2xl bg-[#12121a] border border-white/10 overflow-hidden flex flex-col md:flex-row">
+        <div className="flex-1 min-h-[220px] relative">
           <ProductViewer rawName={rawName} />
           <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/40 text-xs pointer-events-none">
-            drag to rotate · scroll to zoom
+            drag to rotate · {IS_TOUCH ? 'pinch' : 'scroll'} to zoom
           </p>
         </div>
-        {/* details */}
-        <div className="w-full md:w-80 p-6 flex flex-col text-white border-t md:border-t-0 md:border-l border-white/10">
+        <div className="w-full md:w-80 p-6 flex flex-col text-white border-t md:border-t-0 md:border-l border-white/10 overflow-y-auto">
           <span className="self-start px-2.5 py-1 rounded-full bg-pink-500/15 text-pink-300 text-xs mb-3">
             {info.category}
           </span>
@@ -255,7 +384,7 @@ function ProductModal({ rawName, onClose }) {
             <li>• Printed to order in Bangalore</li>
             <li>• PLA+ / PETG, multi-color AMS available</li>
             <li>• Sizes: 10 cm / 15 cm / custom</li>
-            <li>• Free shipping on orders over ₹999</li>
+            <li>• Flat ₹50 shipping on all orders</li>
           </ul>
           <p className="text-3xl font-bold mb-5">
             From ₹{info.price}
@@ -306,12 +435,16 @@ function LoadingScreen() {
 // ---------------- Page ----------------
 export default function Shop3D() {
   const navigate = useNavigate();
-  const [locked, setLocked] = useState(false);
+  const [locked, setLocked] = useState(false);       // desktop pointer lock
+  const [started, setStarted] = useState(false);     // mobile session
   const [hovered, setHovered] = useState(null);
-  const [selected, setSelected] = useState(null); // raw PRODUCT_ node name
+  const [selected, setSelected] = useState(null);    // raw PRODUCT_ node name
   const [muted, setMuted] = useState(false);
   const enabledRef = useRef(false);
+  const moveRef = useRef({ x: 0, y: 0 });
   const audioRef = useRef(null);
+
+  const active = IS_TOUCH ? started : locked;
 
   const hour = new Date().getHours();
   const isNight = hour >= 19 || hour < 6;
@@ -326,19 +459,25 @@ export default function Shop3D() {
   }, []);
 
   useEffect(() => {
-    enabledRef.current = locked && !selected;
+    enabledRef.current = active && !selected;
     const a = audioRef.current;
     if (!a) return;
-    if (locked && !muted) a.play().catch(() => {});
-    else if (!locked && !selected) a.pause();
-  }, [locked, muted, selected]);
+    if (active && !muted) a.play().catch(() => {});
+    else if (!active && !selected) a.pause();
+  }, [active, muted, selected]);
+
+  const onKiosk = useCallback(() => {
+    document.exitPointerLock?.();
+    navigate('/orders');
+  }, [navigate]);
 
   const skyColor = isNight ? '#070a18' : '#87b5d9';
 
   return (
     <div className="relative w-full" style={{ height: 'calc(100vh - 64px)' }}>
       <Canvas
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}
+        gl={{ antialias: !IS_TOUCH, toneMapping: THREE.ACESFilmicToneMapping }}
+        dpr={IS_TOUCH ? [1, 1.5] : undefined}
         camera={{ fov: 70, near: 0.1, far: 80 }}
       >
         <color attach="background" args={[skyColor]} />
@@ -356,19 +495,21 @@ export default function Shop3D() {
           <pointLight key={`s${i}`} position={[x, 4.2, z]} intensity={20} distance={12} decay={2} color="#ffcc88" />
         ))}
         <Suspense fallback={null}>
-          <ShopScene
-            onProductHover={setHovered}
-            onProductClick={setSelected}
-            onKioskClick={() => { document.exitPointerLock?.(); navigate('/orders'); }}
-          />
+          <ShopScene onProductHover={setHovered} onProductClick={setSelected} onKioskClick={onKiosk} />
         </Suspense>
-        <Player enabled={enabledRef} />
-        {!selected && <PointerLockControls onLock={() => setLocked(true)} onUnlock={() => setLocked(false)} />}
-        <EffectComposer>
-          <N8AO aoRadius={0.4} intensity={2.5} distanceFalloff={1} />
-          <Bloom luminanceThreshold={1.2} intensity={0.5} mipmapBlur />
-          <Vignette eskil={false} offset={0.15} darkness={0.7} />
-        </EffectComposer>
+        <Player enabled={enabledRef} moveRef={moveRef} />
+        {IS_TOUCH ? (
+          <TouchControls enabled={enabledRef} onProductClick={setSelected} onKioskClick={onKiosk} />
+        ) : (
+          !selected && <PointerLockControls onLock={() => setLocked(true)} onUnlock={() => setLocked(false)} />
+        )}
+        {!IS_TOUCH && (
+          <EffectComposer>
+            <N8AO aoRadius={0.4} intensity={2.5} distanceFalloff={1} />
+            <Bloom luminanceThreshold={1.2} intensity={0.5} mipmapBlur />
+            <Vignette eskil={false} offset={0.15} darkness={0.7} />
+          </EffectComposer>
+        )}
       </Canvas>
 
       <LoadingScreen />
@@ -379,34 +520,56 @@ export default function Shop3D() {
         Print My Memory · 3D Shop
       </div>
 
-      {locked && !selected && (
+      {/* crosshair (desktop) */}
+      {!IS_TOUCH && locked && !selected && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
           <div className={`w-1.5 h-1.5 rounded-full ${hovered ? 'bg-pink-400 scale-150' : 'bg-white/70'} transition-transform`} />
         </div>
       )}
 
-      {locked && hovered && !selected && (
+      {!IS_TOUCH && locked && hovered && !selected && (
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full bg-black/70 text-white text-sm pointer-events-none">
           {hovered} — click to view
         </div>
       )}
 
-      {!locked && !selected && (
+      {/* joystick (mobile, while playing) */}
+      {IS_TOUCH && active && !selected && <Joystick moveRef={moveRef} />}
+
+      {/* enter overlay */}
+      {!active && !selected && (
         <div
           className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 cursor-pointer"
-          onClick={(e) => e.currentTarget.parentElement.querySelector('canvas')?.requestPointerLock?.()}
+          onClick={(e) => {
+            if (IS_TOUCH) setStarted(true);
+            else e.currentTarget.parentElement.querySelector('canvas')?.requestPointerLock?.();
+          }}
         >
           <p className="text-3xl md:text-5xl text-pink-400 italic mb-4" style={{ fontFamily: 'cursive' }}>
             Print My Memory
           </p>
           {isClosed && (
-            <p className="text-amber-300 mb-3 text-sm">
+            <p className="text-amber-300 mb-3 text-sm px-6 text-center">
               Psst… it&apos;s past midnight, we&apos;re technically closed. But come on in.
             </p>
           )}
-          <p className="text-white/80">Click to enter the shop</p>
-          <p className="text-white/40 text-sm mt-2">WASD / arrows to walk · mouse to look · Esc to leave</p>
+          <p className="text-white/80">{IS_TOUCH ? 'Tap to enter the shop' : 'Click to enter the shop'}</p>
+          <p className="text-white/40 text-sm mt-2 px-6 text-center">
+            {IS_TOUCH
+              ? 'joystick to walk · drag to look around · tap a product to view it'
+              : 'WASD / arrows to walk · mouse to look · Esc to leave'}
+          </p>
         </div>
+      )}
+
+      {/* mobile exit button */}
+      {IS_TOUCH && active && !selected && (
+        <button
+          className="absolute top-4 right-4 z-20 px-3 py-1.5 rounded-full bg-black/60 text-white/80 text-xs"
+          onClick={() => setStarted(false)}
+        >
+          ✕ Exit
+        </button>
       )}
 
       {selected && <ProductModal rawName={selected} onClose={() => setSelected(null)} />}
@@ -415,7 +578,7 @@ export default function Shop3D() {
         className="absolute bottom-6 right-6 z-20 px-3 py-2 rounded-full bg-black/60 text-white/80 text-sm"
         onClick={() => setMuted((m) => !m)}
       >
-        {muted ? '🔇 Sound off' : '🔊 Sound on'}
+        {muted ? '🔇' : '🔊'}
       </button>
     </div>
   );

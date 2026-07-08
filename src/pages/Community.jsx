@@ -95,7 +95,7 @@ export default function Community() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                  className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-text-primary px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
                 >
                   {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
                   Share Post

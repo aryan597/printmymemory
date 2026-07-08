@@ -1,30 +1,30 @@
 import { motion } from 'framer-motion';
-import { Image, MessageCircle, PenTool, PackageCheck } from 'lucide-react';
+import { MessageSquare, Sparkles, Printer, Truck } from 'lucide-react';
 
 const steps = [
   {
     number: '01',
-    icon: Image,
-    title: 'Upload Your Photo',
-    description: 'Share a clear, high-resolution photo of your loved one. The better the photo, the better the print.',
+    icon: MessageSquare,
+    title: 'Tell us your idea',
+    description: 'Describe it or drop a photo in the chat. Our AI concierge figures out exactly what you want to print.',
   },
   {
     number: '02',
-    icon: MessageCircle,
-    title: 'Chat with Us on WhatsApp',
-    description: 'Our team contacts you to discuss your design preferences, size, and any customizations.',
+    icon: Sparkles,
+    title: 'We find or design it',
+    description: 'From our own catalogue, our library of print-ready designs, or custom-made just for you. You always see it first.',
   },
   {
     number: '03',
-    icon: PenTool,
-    title: 'We Design & Approve',
-    description: 'Our experts craft the 3D model. You get a preview for approval before we hit print.',
+    icon: Printer,
+    title: 'We 3D print it',
+    description: 'Precision-printed and hand-finished in our Bangalore studio with premium materials.',
   },
   {
     number: '04',
-    icon: PackageCheck,
-    title: 'Print, Pack & Deliver',
-    description: 'Premium 3D printing with high-quality materials, carefully packed and delivered across India.',
+    icon: Truck,
+    title: 'Delivered to your door',
+    description: 'Securely packed and shipped across India, usually within 48 hours. Prepaid, no surprises.',
   },
 ];
 
@@ -45,7 +45,7 @@ export default function HowItWorks() {
           className="text-center mb-16"
         >
           <div className="section-label mx-auto mb-4 w-fit">The Process</div>
-          <h2 className="text-headline font-black text-white">
+          <h2 className="text-headline font-black uppercase text-text-primary">
             How It Works
           </h2>
           <p className="text-text-muted text-sm mt-3 max-w-md mx-auto leading-relaxed">
@@ -71,21 +71,21 @@ export default function HowItWorks() {
             >
               {/* Step icon ring */}
               <div className="relative mb-5 z-10">
-                <div className="w-20 h-20 rounded-2xl bg-bg-card border border-border-subtle flex items-center justify-center shadow-card transition-all duration-300 hover:border-accent/40 hover:shadow-glow-orange group">
+                <div className="w-20 h-20 bg-bg-card border-2 border-border flex items-center justify-center tb-shadow">
                   <step.icon size={24} className="text-accent" aria-hidden="true" />
                 </div>
                 {/* Step number */}
-                <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-accent text-white text-[11px] font-black flex items-center justify-center shadow-lg">
+                <div className="absolute -top-2.5 -right-2.5 w-8 h-8 bg-accent text-white text-[12px] font-black flex items-center justify-center border-2 border-border">
                   {step.number.slice(-1)}
                 </div>
               </div>
 
               {/* Large number watermark */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[6rem] font-black text-white/[0.02] select-none pointer-events-none leading-none" aria-hidden="true">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-[6rem] font-black text-text-primary/[0.04] select-none pointer-events-none leading-none" aria-hidden="true">
                 {step.number}
               </div>
 
-              <h3 className="text-white font-bold text-[15px] mb-2 leading-snug">{step.title}</h3>
+              <h3 className="text-text-primary font-bold uppercase text-[15px] mb-2 leading-snug">{step.title}</h3>
               <p className="text-text-muted text-[13px] leading-relaxed max-w-[200px]">{step.description}</p>
             </motion.div>
           ))}

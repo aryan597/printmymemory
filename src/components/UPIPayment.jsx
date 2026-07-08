@@ -135,7 +135,7 @@ export default function UPIPayment({ amount, orderId, onPaymentComplete, custome
             <img src={screenshotPreview} alt="Payment screenshot" className="w-full max-h-48 object-contain bg-bg-elevated" />
             <button
               onClick={() => { setScreenshot(null); setScreenshotPreview(null); }}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+              className="absolute top-2 right-2 w-7 h-7 bg-bg-elevated border-2 border-border flex items-center justify-center text-text-primary hover:bg-bg-card transition-colors"
               aria-label="Remove screenshot"
             >
               <X size={14} />

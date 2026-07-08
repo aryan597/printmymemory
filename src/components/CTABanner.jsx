@@ -12,10 +12,8 @@ const WaIcon = () => (
 
 export default function CTABanner() {
   return (
-    <section className="py-20 sm:py-24 bg-bg-secondary relative overflow-hidden" aria-label="Order call to action">
-      {/* Orange glow blobs */}
-      <div className="absolute top-0 left-1/3 w-[500px] h-[300px] bg-accent/10 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
-      <div className="absolute bottom-0 right-1/3 w-[400px] h-[250px] bg-purple-600/6 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
+    <section className="py-20 sm:py-24 bg-bg-secondary relative overflow-hidden border-y-2 border-border" aria-label="Order call to action">
+      <div className="absolute inset-0 line-grid pointer-events-none" aria-hidden="true" />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <motion.div
@@ -27,9 +25,9 @@ export default function CTABanner() {
           {/* Emoji accent */}
           <div className="text-4xl mb-6" aria-hidden="true">🎁</div>
 
-          <h2 className="text-display-sm font-black text-white mb-4 text-balance">
+          <h2 className="text-display-sm font-black uppercase text-text-primary mb-4 text-balance">
             Ready to Create Your
-            <span className="gradient-text"> Memory?</span>
+            <span className="text-accent"> Memory?</span>
           </h2>
 
           <p className="text-text-secondary text-base sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
@@ -58,7 +56,7 @@ export default function CTABanner() {
 
           {/* Micro-trust */}
           <p className="mt-8 text-text-muted text-xs">
-            ✓ No advance payment · ✓ Preview before printing · ✓ Ships within 48 hours
+            ✓ Secure prepaid checkout · ✓ Preview before printing · ✓ Ships within 48 hours
           </p>
         </motion.div>
       </div>

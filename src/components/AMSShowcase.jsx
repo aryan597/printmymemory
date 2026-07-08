@@ -42,19 +42,18 @@ export default function AMSShowcase() {
 
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden" aria-label="Multi-color 3D printing showcase">
-      <div className="absolute inset-0 grid-pattern opacity-20" aria-hidden="true" />
-      
-      {/* Animated color orbs */}
-      <div 
-        className="absolute top-10 left-1/4 w-64 h-64 rounded-full blur-[100px] opacity-20 transition-colors duration-1000"
-        style={{ backgroundColor: demoColors[activeColorIndex] }}
-        aria-hidden="true"
-      />
-      <div 
-        className="absolute bottom-10 right-1/4 w-64 h-64 rounded-full blur-[100px] opacity-20 transition-colors duration-1000"
-        style={{ backgroundColor: demoColors[(activeColorIndex + 4) % demoColors.length] }}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 dot-grid opacity-40" aria-hidden="true" />
+
+      {/* Cycling color spec bar (tactile, hard-edged) */}
+      <div className="absolute top-0 inset-x-0 h-1.5 flex" aria-hidden="true">
+        {demoColors.map((c, i) => (
+          <div
+            key={i}
+            className="flex-1 transition-opacity duration-1000"
+            style={{ backgroundColor: c, opacity: i === activeColorIndex ? 1 : 0.35 }}
+          />
+        ))}
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Header */}

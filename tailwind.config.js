@@ -1,64 +1,81 @@
 /** @type {import('tailwindcss').Config} */
+
+// Clean, premium dark theme. Colors reference --c-* channel triplets defined in
+// index.css so /alpha modifiers work. Single dark theme (no light/dark toggle).
+const ink = 'rgb(var(--c-ink) / <alpha-value>)';
+const paper = 'rgb(var(--c-paper) / <alpha-value>)';
+const surface = 'rgb(var(--c-surface) / <alpha-value>)';
+const surface2 = 'rgb(var(--c-surface-2) / <alpha-value>)';
+const orange = 'rgb(var(--c-orange) / <alpha-value>)';
+
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
         brand: {
-          black: '#08080A',
-          orange: '#F05500',
-          'orange-light': '#FF7A35',
-          cream: '#F5F5F0',
-          gold: '#D4A017',
+          black: paper,
+          orange: orange,
+          'orange-light': orange,
+          cream: paper,
+          gold: orange,
         },
         bg: {
-          primary: '#08080A',
-          secondary: '#0E0E12',
-          card: '#13131A',
-          elevated: '#1A1A22',
-          dark: '#08080A',
+          primary: paper,
+          secondary: surface2,
+          card: surface,
+          elevated: surface2,
+          dark: paper,
         },
         surface: {
-          white: '#ffffff',
-          cream: '#F5F5F0',
-          dark: '#13131A',
-          elevated: '#1A1A22',
+          white: surface,
+          cream: paper,
+          dark: surface,
+          elevated: surface2,
         },
         text: {
-          primary: '#F4F4F5',
-          secondary: '#A1A1AA',
-          muted: '#6B6B78',
-          inverse: '#08080A',
+          primary: ink,
+          secondary: 'rgb(var(--c-ink-soft) / <alpha-value>)',
+          muted: 'rgb(var(--c-ink-faint) / <alpha-value>)',
+          inverse: paper,
         },
         accent: {
-          orange: '#F05500',
-          'orange-light': '#FF7A35',
-          blue: '#3B82F6',
-          pink: '#EC4899',
-          gold: '#D4A017',
-          DEFAULT: '#F05500',
+          orange: orange,
+          'orange-light': orange,
+          blue: orange,
+          pink: orange,
+          gold: orange,
+          DEFAULT: orange,
         },
         border: {
-          subtle: '#1C1C24',
-          DEFAULT: '#2A2A36',
-          strong: '#3E3E4E',
+          subtle: 'rgb(var(--c-line-soft) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--c-line) / <alpha-value>)',
+          strong: 'rgb(var(--c-line-strong) / <alpha-value>)',
         },
       },
       fontFamily: {
         sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
         display: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        mono: ['Space Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {
-        'display': ['clamp(2.8rem, 7vw, 5.5rem)', { lineHeight: '1.0', letterSpacing: '-0.03em' }],
-        'display-sm': ['clamp(2rem, 4vw, 3.25rem)', { lineHeight: '1.05', letterSpacing: '-0.025em' }],
-        'headline': ['clamp(1.5rem, 3vw, 2.25rem)', { lineHeight: '1.1', letterSpacing: '-0.015em' }],
+        'display': ['clamp(2.8rem, 7vw, 5.5rem)', { lineHeight: '1.02', letterSpacing: '-0.035em' }],
+        'display-sm': ['clamp(2rem, 4vw, 3.25rem)', { lineHeight: '1.06', letterSpacing: '-0.03em' }],
+        'headline': ['clamp(1.5rem, 3vw, 2.25rem)', { lineHeight: '1.12', letterSpacing: '-0.02em' }],
         'subhead': ['clamp(1rem, 1.5vw, 1.2rem)', { lineHeight: '1.6' }],
       },
+      // Rounded, soft — de-boxed
       borderRadius: {
-        'xl': '0.75rem',
-        '2xl': '1rem',
-        '3xl': '1.5rem',
-        '4xl': '2rem',
+        'none': '0',
+        'sm': '0.5rem',
+        DEFAULT: '0.625rem',
+        'md': '0.625rem',
+        'lg': '0.75rem',
+        'xl': '1rem',
+        '2xl': '1.25rem',
+        '3xl': '1.75rem',
+        '4xl': '2.25rem',
+        'full': '9999px',
       },
       animation: {
         'marquee': 'marquee 35s linear infinite',
@@ -90,12 +107,13 @@ export default {
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
+      // Soft, subtle elevation
       boxShadow: {
-        'glow-orange': '0 0 40px rgba(240, 85, 0, 0.2)',
-        'glow-orange-lg': '0 0 80px rgba(240, 85, 0, 0.15)',
-        'card': '0 1px 2px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.3)',
-        'card-hover': '0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4)',
-        'inner-glow': 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        'glow-orange': '0 8px 30px -8px rgb(var(--c-orange) / 0.28)',
+        'glow-orange-lg': '0 24px 70px -20px rgb(var(--c-orange) / 0.22)',
+        'card': '0 1px 2px 0 rgb(0 0 0 / 0.4), 0 6px 20px -6px rgb(0 0 0 / 0.35)',
+        'card-hover': '0 12px 36px -8px rgb(0 0 0 / 0.5)',
+        'inner-glow': 'inset 0 1px 0 0 rgb(255 255 255 / 0.05)',
       },
     },
   },

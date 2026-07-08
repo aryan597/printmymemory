@@ -53,6 +53,7 @@ Deno.serve(async (req: Request) => {
 
     const body = await req.json();
     const { prompt, imageBase64, imageMediaType, debug } = body;
+    const history = Array.isArray(body.history) ? body.history : [];
 
     if (!prompt && !imageBase64) {
       return new Response(JSON.stringify({ error: 'prompt or image required' }), {
@@ -111,33 +112,45 @@ ${JSON.stringify(productCatalog.map(p => ({ id: p.id, name: p.name, description:
 HOW TO BEHAVE:
 - You are "PrintMyMemory" speaking directly. Use "we" not "they". Example: "We can definitely make that for you!"
 - Be warm, enthusiastic, and specific. Repeat back what the customer asked so they know you understood. For example if they say "keychain with Aryan on it", say something like "A custom keychain with 'Aryan' engraved on it? We'd love to make that for you!"
-- If a product matches, mention it naturally with the price. Don't just list it, weave it into a helpful suggestion.
-- If the idea is 3D printable but we don't have an exact product for it, say we can custom-make it and invite them to chat with us on WhatsApp to discuss details, materials, and pricing.
-- If the customer sends an image, describe what you see and suggest what we could create from it.
+- This is a CONVERSATION. Read the earlier turns. Do not repeat questions you already asked. Build on what the customer already told you.
+- When the request is vague, ask ONE friendly clarifying question to move it forward (who is it for, size, colour, quantity, a photo, or the text to engrave). Ask only what you still need.
+- YOUR JOB IS TO FIND THEM SOMETHING TO PRINT, not to defer. Always point to concrete products or designs. WhatsApp is the LAST step to finalise a bespoke order, never your first answer.
+- Match EVERY catalog product that could fit (up to 3, best first) by comparing the request to product NAMES and DESCRIPTIONS. Near-name matches count: if they say "customized lamp" and a product is named "Customized Lamp", that IS a match and must be included. Do not miss obvious matches.
+- ALWAYS provide 2 to 4 short, generic, object-focused searchKeywords for the thing they want (e.g. "lithophane lamp photo", "dog figurine", "hexagon shelf") so we can pull matching printable designs from our design library. Give keywords even when you also matched a catalog product.
+- If the idea is 3D printable but nothing in the catalog fits, that is fine. Reassure them we can print it, and rely on the searchKeywords to surface designs. Only mention WhatsApp once options have been shown and the piece is genuinely custom.
+- If the customer sends an image, describe what you see and suggest what we could create from it, plus searchKeywords for it.
 - Keep replies to 2-4 sentences. No em dashes. Use periods and commas only.
 - Sound human. Don't say "I'm an AI" or "based on our catalog". Just talk naturally.
 
 RESPOND WITH ONLY THIS JSON (no markdown, no code fences, no extra text):
-{"reply":"your message","matchedProduct":{"id":NUMBER,"name":"NAME"},"nextAction":"upload_photo|enter_text|pick_color|add_to_cart|chat_whatsapp","confidence":"high|medium|low"}
+{"reply":"your message","productIds":[NUMBERS],"searchKeywords":"2 to 4 words","nextAction":"show_products|ask_clarify|chat_whatsapp","confidence":"high|medium|low"}
 
-Set matchedProduct to null only if we truly cannot help at all (non-3D-printing request).
-Use nextAction "chat_whatsapp" when the request is something we can do but need to discuss further on WhatsApp.`;
+productIds: catalog product ids that fit, 0 to 3, best first. Empty array if none fit.
+searchKeywords: always fill this for any printable request (object-focused words).
+nextAction: "show_products" when you have products or designs to show (the default), "ask_clarify" when you asked a question and need their answer, "chat_whatsapp" only for a finalised bespoke handoff.`;
 
-    // --- Build request parts ---
-    const parts: any[] = [{ text: `${systemPrompt}\n\nCUSTOMER MESSAGE: ${prompt || 'I uploaded an image. What can you make from this?'}` }];
-
-    if (imageBase64 && imageMediaType) {
-      parts.push({
-        inline_data: { mime_type: imageMediaType, data: imageBase64 },
-      });
+    // --- Build multi-turn contents (system_instruction + history + current) ---
+    const contents: any[] = [];
+    for (const m of history) {
+      const text = m?.text ?? m?.content;
+      if (!text) continue;
+      const role = (m.role === 'model' || m.role === 'ai' || m.role === 'assistant') ? 'model' : 'user';
+      contents.push({ role, parts: [{ text: String(text) }] });
     }
+
+    const currentParts: any[] = [{ text: prompt || 'I uploaded an image. What can you make from this?' }];
+    if (imageBase64 && imageMediaType) {
+      currentParts.push({ inline_data: { mime_type: imageMediaType, data: imageBase64 } });
+    }
+    contents.push({ role: 'user', parts: currentParts });
 
     // --- Call Gemini ---
     const geminiRes = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts }],
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents,
         generationConfig: {
           temperature: 0.7,
           maxOutputTokens: 1024,
@@ -169,25 +182,32 @@ Use nextAction "chat_whatsapp" when the request is something we can do but need 
       return new Response(
         JSON.stringify({
           reply: fallbackReply,
+          products: [],
           matchedProduct: null,
-          nextAction: 'chat_whatsapp',
+          searchKeywords: (prompt || '').split(/\s+/).slice(0, 4).join(' '),
+          nextAction: 'show_products',
           confidence: 'low',
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
-    // --- Enrich matched product with full data ---
-    let enrichedProduct = null;
-    if (parsed.matchedProduct?.id) {
-      enrichedProduct = productCatalog.find((p) => p.id === parsed.matchedProduct.id) ?? null;
-    }
+    // --- Enrich matched products (up to 3) with full data ---
+    const ids = Array.isArray(parsed.productIds)
+      ? parsed.productIds
+      : (parsed.matchedProduct?.id ? [parsed.matchedProduct.id] : []);
+    const matched = ids
+      .map((id: any) => productCatalog.find((p) => p.id === Number(id)))
+      .filter(Boolean)
+      .slice(0, 3);
 
     return new Response(
       JSON.stringify({
         reply: parsed.reply,
-        matchedProduct: enrichedProduct,
-        nextAction: parsed.nextAction ?? 'none',
+        products: matched,
+        matchedProduct: matched[0] ?? null, // back-compat
+        searchKeywords: parsed.searchKeywords ?? '',
+        nextAction: parsed.nextAction ?? 'show_products',
         confidence: parsed.confidence ?? 'low',
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

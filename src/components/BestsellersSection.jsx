@@ -52,7 +52,7 @@ export default function BestsellersSection() {
               <Sparkles size={10} />
               Our Products
             </div>
-            <h2 className="text-headline font-black text-white text-balance">
+            <h2 className="text-headline font-black uppercase text-text-primary text-balance">
               Bestselling 3D Gifts
             </h2>
             <p className="text-text-muted text-sm mt-2 max-w-sm">
@@ -126,40 +126,33 @@ function ProductCard({ product, tall = false }) {
         <img
           src={image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
           loading="lazy"
           decoding="async"
           onError={(e) => { e.target.onerror = null; e.target.src = '/images/products/placeholder.jpg'; }}
         />
 
-        {/* Gradient bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" aria-hidden="true" />
-
         {/* Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between" aria-hidden="true">
           {product.category?.name && (
-            <span className="text-[10px] font-semibold text-white/90 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-md">
-              {product.category.name}
-            </span>
+            <span className="tb-sticker">{product.category.name}</span>
           )}
           {isCustomised && (
-            <span className="text-[10px] font-bold text-white bg-accent px-2 py-1 rounded-md ml-auto">
-              Custom
-            </span>
+            <span className="tb-sticker tb-sticker--orange ml-auto">Custom</span>
           )}
         </div>
+      </div>
 
-        {/* Bottom info */}
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <h3 className="text-white font-bold text-sm mb-1 group-hover:text-accent/90 transition-colors line-clamp-1">
+      {/* Info bar */}
+      <div className="p-3.5 border-t-2 border-border flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="text-text-primary font-bold text-sm group-hover:text-accent transition-colors line-clamp-1">
             {product.name}
           </h3>
-          <div className="flex items-center justify-between">
-            <span className="text-white/90 font-bold text-sm">{formatPrice(price)}</span>
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 text-[11px] font-bold text-white bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
-              View <ArrowRight size={10} />
-            </div>
-          </div>
+          <span className="text-text-primary font-mono-tb font-bold text-sm">{formatPrice(price)}</span>
+        </div>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 text-[11px] font-bold uppercase text-white bg-accent px-2.5 py-1.5 border-2 border-border shrink-0">
+          View <ArrowRight size={10} />
         </div>
       </div>
     </Link>

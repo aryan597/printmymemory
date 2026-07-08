@@ -13,7 +13,7 @@ import Button from '../components/ui/Button';
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919471725271';
 
 function formatPrice(price) {
-  return 'Rs. ' + Number(price).toLocaleString('en-IN');
+  return '₹' + Number(price).toLocaleString('en-IN');
 }
 
 export default function Cart() {
@@ -232,7 +232,7 @@ export default function Cart() {
         order_id: orderId,
         product_id: item.product_id || item.product?.id || item.id,
         quantity: item.quantity,
-        price: item.product?.price || item.price || 0,
+        price: item.unit_price ?? item.product?.price ?? item.price ?? 0,
         custom_image: item.custom_image || null,
       }));
 
@@ -324,14 +324,11 @@ export default function Cart() {
           className="text-center"
         >
           <div className="w-20 h-20 card rounded-full flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag size={32} className="text-neutral-500" />
+            <ShoppingBag size={32} className="text-text-muted" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Your cart is empty</h2>
-          <p className="text-neutral-400 text-sm mb-6">Add some amazing 3D gifts to get started!</p>
-          <Link
-            to="/shop"
-            className="inline-flex items-center gap-2 bg-white hover:bg-neutral-200 text-black px-6 py-3 rounded-full font-semibold transition-all"
-          >
+          <h2 className="text-xl font-bold text-text-primary mb-2">Your cart is empty</h2>
+          <p className="text-text-secondary text-sm mb-6">Add some amazing 3D gifts to get started!</p>
+          <Link to="/shop" className="btn-primary">
             Browse Products <ArrowRight size={16} />
           </Link>
         </motion.div>
@@ -343,7 +340,7 @@ export default function Cart() {
     <main className="section-padding">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Shopping Cart ({cartCount})</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Shopping Cart ({cartCount})</h1>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -351,7 +348,7 @@ export default function Cart() {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item, index) => {
               const product = item.product || item;
-              const price = product.price || 0;
+              const price = item.unit_price ?? product.price ?? 0;
               return (
                 <motion.div
                   key={item.id || item.product_id}
@@ -360,7 +357,7 @@ export default function Cart() {
                   transition={{ delay: index * 0.05 }}
                   className="card p-4 flex gap-4"
                 >
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-neutral-900 shrink-0">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-bg-elevated shrink-0">
                     <img
                       src={product.image || '/images/products/model1.jpeg'}
                       alt={product.name}
@@ -368,22 +365,30 @@ export default function Cart() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-semibold text-sm truncate">{product.name}</h3>
-                    <p className="text-white font-bold mt-1">{formatPrice(price)}</p>
+                    <h3 className="text-text-primary font-semibold text-sm truncate">{product.name}</h3>
+                    <p className="text-text-primary font-bold mt-1">{formatPrice(price)}</p>
                     {item.custom_image && (
-                      <p className="text-neutral-500 text-xs mt-1">Custom photo attached</p>
+                      <p className="text-text-muted text-xs mt-1">✓ Custom photo attached</p>
+                    )}
+                    {item.customization_values && (
+                      <div className="mt-1 text-text-muted text-[11px] space-y-0.5">
+                        {Object.entries(item.customization_values)
+                          .filter(([, v]) => v && typeof v === 'string' && !v.startsWith('data:'))
+                          .slice(0, 4)
+                          .map(([k, v]) => <p key={k} className="truncate">• {v}</p>)}
+                      </div>
                     )}
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => updateQuantity(item.id || item.product_id, item.quantity - 1)}
-                        className="w-7 h-7 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white hover:border-neutral-600 transition-colors"
+                        className="w-7 h-7 bg-bg-elevated border border-border rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-border transition-colors"
                       >
                         <Minus size={12} />
                       </button>
-                      <span className="text-white text-sm font-medium w-6 text-center">{item.quantity}</span>
+                      <span className="text-text-primary text-sm font-medium w-6 text-center">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id || item.product_id, item.quantity + 1)}
-                        className="w-7 h-7 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white hover:border-neutral-600 transition-colors"
+                        className="w-7 h-7 bg-bg-elevated border border-border rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-border transition-colors"
                       >
                         <Plus size={12} />
                       </button>
@@ -391,7 +396,7 @@ export default function Cart() {
                   </div>
                   <button
                     onClick={() => removeFromCart(item.id || item.product_id)}
-                    className="text-neutral-500 hover:text-red-400 transition-colors self-start"
+                    className="text-text-muted hover:text-red-400 transition-colors self-start"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -404,43 +409,43 @@ export default function Cart() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6 h-fit">
             {!showPayment ? (
               <>
-                <h2 className="text-lg font-bold text-white mb-4">Order Summary</h2>
+                <h2 className="text-lg font-bold text-text-primary mb-4">Order Summary</h2>
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
-                    <span className="text-neutral-400">Subtotal</span>
-                    <span className="text-white">{formatPrice(cartTotal)}</span>
+                    <span className="text-text-secondary">Subtotal</span>
+                    <span className="text-text-primary">{formatPrice(cartTotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-neutral-400">Shipping</span>
-                    <span className={shippingCost === 0 ? 'text-green-400' : 'text-white'}>
+                    <span className="text-text-secondary">Shipping</span>
+                    <span className={shippingCost === 0 ? 'text-green-400' : 'text-text-primary'}>
                       {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-neutral-400">Discount</span>
-                    <span className={appliedVoucher ? 'text-green-400' : 'text-white'}>
+                    <span className="text-text-secondary">Discount</span>
+                    <span className={appliedVoucher ? 'text-green-400' : 'text-text-primary'}>
                       {appliedVoucher ? `-${formatPrice(discountAmount)}` : '-Rs. 0'}
                     </span>
                   </div>
                   {appliedVoucher && (
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-brand-orange font-medium">{appliedVoucher.code}</span>
-                      <button onClick={removeVoucher} className="text-neutral-500 hover:text-red-400 transition-colors">
+                      <button onClick={removeVoucher} className="text-text-muted hover:text-red-400 transition-colors">
                         <X size={14} />
                       </button>
                     </div>
                   )}
                 </div>
-                <div className="border-t border-neutral-800 pt-4 mb-4">
+                <div className="border-t border-border pt-4 mb-4">
                   <div className="flex justify-between">
-                    <span className="text-white font-semibold">Total</span>
-                    <span className="text-white font-bold text-xl">{formatPrice(finalTotal)}</span>
+                    <span className="text-text-primary font-semibold">Total</span>
+                    <span className="text-text-primary font-bold text-xl">{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
 
                 {/* Voucher Input */}
                 <div className="mb-4">
-                  <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Voucher Code</p>
+                  <p className="text-text-secondary text-xs font-medium uppercase tracking-wider mb-2">Voucher Code</p>
                   {appliedVoucher ? (
                     <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-green-500/30 bg-green-500/10">
                       <Check size={14} className="text-green-400" />
@@ -460,7 +465,7 @@ export default function Cart() {
                       <button
                         onClick={applyVoucher}
                         disabled={voucherLoading}
-                        className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                        className="px-4 py-2 rounded-xl bg-bg-card hover:bg-bg-elevated text-text-primary text-sm font-medium transition-colors disabled:opacity-50"
                       >
                         {voucherLoading ? <Loader2 size={14} className="animate-spin" /> : <Tag size={14} />}
                       </button>
@@ -468,17 +473,17 @@ export default function Cart() {
                   )}
                 </div>
                 <div className="mb-4">
-              <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider mb-2">Deliver To</p>
+              <p className="text-text-secondary text-xs font-medium uppercase tracking-wider mb-2">Deliver To</p>
               {isAuthenticated ? (
                 addressesLoading ? (
-                  <div className="flex items-center gap-2 text-neutral-500 text-sm py-3">
+                  <div className="flex items-center gap-2 text-text-muted text-sm py-3">
                     <Loader2 size={14} className="animate-spin" /> Loading addresses...
                   </div>
                 ) : addresses.length === 0 ? (
                   <div className="card rounded-xl p-4 text-center">
-                    <MapPin size={20} className="text-neutral-500 mx-auto mb-2" />
-                    <p className="text-neutral-400 text-sm">No delivery address saved</p>
-                    <Link to="/profile" className="text-white text-xs hover:underline inline-flex items-center gap-1 mt-1">
+                    <MapPin size={20} className="text-text-muted mx-auto mb-2" />
+                    <p className="text-text-secondary text-sm">No delivery address saved</p>
+                    <Link to="/profile" className="text-text-primary text-xs hover:underline inline-flex items-center gap-1 mt-1">
                       <PlusCircle size={12} /> Add address
                     </Link>
                   </div>
@@ -493,24 +498,24 @@ export default function Cart() {
                           onClick={() => setSelectedAddressId(addr.id)}
                           className={`w-full flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
                             isSelected
-                              ? 'border-white bg-neutral-800'
-                              : 'border-neutral-800 bg-neutral-900 hover:border-neutral-600'
+                              ? 'border-accent bg-bg-card'
+                              : 'border-border bg-bg-elevated hover:border-border'
                           }`}
                         >
-                          <Icon size={14} className={`mt-0.5 shrink-0 ${isSelected ? 'text-white' : 'text-neutral-500'}`} />
+                          <Icon size={14} className={`mt-0.5 shrink-0 ${isSelected ? 'text-text-primary' : 'text-text-muted'}`} />
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-neutral-300'}`}>
-                              {addr.label}{addr.is_default && <span className="text-neutral-500 font-normal ml-1">· Default</span>}
+                            <p className={`text-xs font-medium ${isSelected ? 'text-text-primary' : 'text-text-secondary'}`}>
+                              {addr.label}{addr.is_default && <span className="text-text-muted font-normal ml-1">· Default</span>}
                             </p>
-                            <p className="text-neutral-400 text-xs mt-0.5 truncate">
+                            <p className="text-text-secondary text-xs mt-0.5 truncate">
                               {addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ''}
                             </p>
-                            <p className="text-neutral-500 text-[10px]">
+                            <p className="text-text-muted text-[10px]">
                               {addr.city}{addr.state ? `, ${addr.state}` : ''} {addr.postcode}
                             </p>
                           </div>
                           {isSelected && (
-                            <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0 mt-0.5">
+                            <div className="w-4 h-4 rounded-full bg-accent flex items-center justify-center shrink-0 mt-0.5">
                               <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             </div>
                           )}
@@ -608,18 +613,18 @@ export default function Cart() {
 
             {/* Payment Method */}
             <div className="space-y-2 mb-4">
-              <p className="text-neutral-400 text-xs font-medium uppercase tracking-wider">Payment Method</p>
-              <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white bg-neutral-800 text-white">
+              <p className="text-text-secondary text-xs font-medium uppercase tracking-wider">Payment Method</p>
+              <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-accent bg-bg-card text-text-primary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="5" width="20" height="14" rx="2"/>
                   <path d="M2 10h20"/>
                 </svg>
                 <div className="flex-1">
                   <p className="text-sm font-medium">Secure Online Payment</p>
-                  <p className="text-xs text-neutral-400">UPI, Cards, Wallets, Net Banking</p>
+                  <p className="text-xs text-text-secondary">UPI, Cards, Wallets, Net Banking</p>
                 </div>
-                <div className="w-4 h-4 rounded-full border-2 border-white flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-white" />
+                <div className="w-4 h-4 rounded-full border-2 border-accent flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-accent" />
                 </div>
               </div>
             </div>
@@ -632,7 +637,7 @@ export default function Cart() {
               {checkingOut ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
               Proceed to Payment
             </Button>
-            <p className="text-neutral-500 text-xs text-center mt-3">
+            <p className="text-text-muted text-xs text-center mt-3">
               Powered by Razorpay. Pay securely via GPay, PhonePe, Paytm, cards, or net banking.
             </p>
           </>
@@ -640,11 +645,11 @@ export default function Cart() {
           <>
             <div className="text-center py-8 space-y-4">
               <Loader2 size={32} className="animate-spin text-accent mx-auto" />
-              <h2 className="text-lg font-bold text-white">Processing Payment...</h2>
-              <p className="text-neutral-400 text-sm">Complete the payment in the Razorpay window.</p>
+              <h2 className="text-lg font-bold text-text-primary">Processing Payment...</h2>
+              <p className="text-text-secondary text-sm">Complete the payment in the Razorpay window.</p>
               <button
                 onClick={() => setShowPayment(false)}
-                className="text-neutral-500 text-xs hover:text-white transition-colors"
+                className="text-text-muted text-xs hover:text-text-primary transition-colors"
               >
                 Go back to cart
               </button>

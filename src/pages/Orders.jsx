@@ -39,13 +39,13 @@ function OrderCard({ order, onClick, phone }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card p-5 cursor-pointer hover:border-neutral-600 transition-colors"
+      className="card p-5 cursor-pointer hover:border-accent transition-colors"
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-neutral-500 text-xs">Order ID</p>
-          <p className="text-white font-mono text-sm">#{order.id.slice(0, 8).toUpperCase()}</p>
+          <p className="text-text-muted text-xs">Order ID</p>
+          <p className="text-text-primary font-mono text-sm">#{order.id.slice(0, 8).toUpperCase()}</p>
         </div>
         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${status.bg}`}>
           <StatusIcon size={14} className={status.color} />
@@ -57,16 +57,16 @@ function OrderCard({ order, onClick, phone }) {
         <div className="flex items-center justify-between relative">
           {steps.map((step, i) => (
             <div key={step} className="flex flex-col items-center flex-1 relative">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold z-10 ${
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold z-10 border-2 border-border ${
                 i <= currentStepIndex && order.status !== 'cancelled'
-                  ? 'bg-white text-black'
-                  : 'bg-neutral-800 text-neutral-500'
+                  ? 'bg-accent text-white'
+                  : 'bg-bg-card text-text-muted'
               }`}>
                 {i < currentStepIndex ? <CheckCircle size={10} /> : i + 1}
               </div>
               {i < steps.length - 1 && (
                 <div className={`absolute top-3 left-1/2 w-full h-0.5 ${
-                  i < currentStepIndex ? 'bg-white/40' : 'bg-neutral-800'
+                  i < currentStepIndex ? 'bg-accent/50' : 'bg-bg-card'
                 }`} />
               )}
             </div>
@@ -74,33 +74,33 @@ function OrderCard({ order, onClick, phone }) {
         </div>
         <div className="flex justify-between mt-1">
           {steps.map((step) => (
-            <span key={step} className="text-[9px] text-neutral-500 text-center flex-1">
+            <span key={step} className="text-[9px] text-text-muted text-center flex-1">
               {statusConfig[step]?.label}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
+      <div className="flex items-center justify-between pt-4 border-t border-border">
         <div>
-          <p className="text-neutral-500 text-xs">Total Amount</p>
-          <p className="text-white font-bold">{formatPrice(order.total_amount)}</p>
+          <p className="text-text-muted text-xs">Total Amount</p>
+          <p className="text-text-primary font-bold">{formatPrice(order.total_amount)}</p>
         </div>
         <div className="text-right">
-          <p className="text-neutral-500 text-xs">Date</p>
-          <p className="text-white text-sm">{new Date(order.created_at).toLocaleDateString()}</p>
+          <p className="text-text-muted text-xs">Date</p>
+          <p className="text-text-primary text-sm">{new Date(order.created_at).toLocaleDateString()}</p>
         </div>
       </div>
 
       {isCustomised && (
-        <div className="mt-3 text-xs text-neutral-400">
+        <div className="mt-3 text-xs text-text-secondary">
           Customised order: photo/design details will be coordinated over WhatsApp.
         </div>
       )}
-      <div className="mt-4 pt-3 border-t border-neutral-800">
+      <div className="mt-4 pt-3 border-t border-border">
         <Link
           to={`/receipt?orderId=${order.id}${phone ? `&phone=${phone.replace(/\D/g, '')}` : ''}`}
-          className="inline-flex items-center gap-1.5 text-xs text-white hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs text-text-primary hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           <Printer size={12} /> Print receipt / packing slip
@@ -202,7 +202,7 @@ export default function Orders() {
   if (loading) {
     return (
       <main className="section-padding flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-white" />
+        <Loader2 size={32} className="animate-spin text-text-primary" />
       </main>
     );
   }
@@ -213,14 +213,14 @@ export default function Orders() {
       <main className="section-padding">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Track Your Order</h1>
-            <p className="text-neutral-400 text-sm mt-1">Enter your order ID and phone number to see the latest status.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">Track Your Order</h1>
+            <p className="text-text-secondary text-sm mt-1">Enter your order ID and phone number to see the latest status.</p>
           </motion.div>
 
           <form onSubmit={handleLookup} className="card p-5 mb-6">
             <div className="grid sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-xs text-neutral-500 mb-1">Order ID</label>
+                <label className="block text-xs text-text-muted mb-1">Order ID</label>
                 <input
                   type="text"
                   value={lookupId}
@@ -231,7 +231,7 @@ export default function Orders() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-neutral-500 mb-1">Phone number</label>
+                <label className="block text-xs text-text-muted mb-1">Phone number</label>
                 <input
                   type="tel"
                   value={lookupPhone}
@@ -250,7 +250,7 @@ export default function Orders() {
 
           {guestLoading && (
             <div className="flex justify-center py-10">
-              <Loader2 size={24} className="animate-spin text-white" />
+              <Loader2 size={24} className="animate-spin text-text-primary" />
             </div>
           )}
 
@@ -258,26 +258,26 @@ export default function Orders() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <OrderCard order={guestOrder} onClick={() => {}} phone={lookupPhone} />
               <div className="card p-5 mt-4">
-                <h3 className="text-white font-semibold mb-3">Items</h3>
+                <h3 className="text-text-primary font-semibold mb-3">Items</h3>
                 <div className="space-y-3">
                   {guestOrder.items?.map((item) => (
                     <div key={item.id} className="flex items-center gap-3">
                       <img
                         src={item.product?.image || '/images/products/model1.jpeg'}
                         alt={item.product?.name}
-                        className="w-14 h-14 rounded-lg object-cover bg-neutral-900"
+                        className="w-14 h-14 rounded-lg object-cover bg-bg-elevated"
                       />
                       <div className="flex-1">
-                        <p className="text-white text-sm font-medium">{item.product?.name || 'Product'}</p>
-                        <p className="text-neutral-500 text-xs">Qty: {item.quantity}</p>
+                        <p className="text-text-primary text-sm font-medium">{item.product?.name || 'Product'}</p>
+                        <p className="text-text-muted text-xs">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-white text-sm font-medium">{formatPrice(item.price * item.quantity)}</p>
+                      <p className="text-text-primary text-sm font-medium">{formatPrice(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-neutral-800 mt-4 pt-4">
-                  <p className="text-neutral-400 text-sm">Shipping to</p>
-                  <p className="text-white text-sm mt-1">
+                <div className="border-t border-border mt-4 pt-4">
+                  <p className="text-text-secondary text-sm">Shipping to</p>
+                  <p className="text-text-primary text-sm mt-1">
                     {guestOrder.shipping_address?.full_name}<br />
                     {guestOrder.shipping_address?.address_line1}
                     {guestOrder.shipping_address?.address_line2 ? `, ${guestOrder.shipping_address.address_line2}` : ''}
@@ -290,8 +290,8 @@ export default function Orders() {
           )}
 
           {!guestOrder && !guestLoading && (
-            <p className="text-neutral-500 text-sm text-center py-6">
-              Have an account? <Link to="/login" className="text-white hover:underline">Sign in</Link> to see all your orders.
+            <p className="text-text-muted text-sm text-center py-6">
+              Have an account? <Link to="/login" className="text-text-primary hover:underline">Sign in</Link> to see all your orders.
             </p>
           )}
         </div>
@@ -303,10 +303,10 @@ export default function Orders() {
     return (
       <main className="section-padding flex flex-col items-center justify-center min-h-[60vh]">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-          <ShoppingBag size={48} className="text-neutral-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">No orders yet</h2>
-          <p className="text-neutral-400 text-sm mb-6">Start shopping to see your orders here</p>
-          <Link to="/shop" className="bg-white hover:bg-neutral-200 text-black px-6 py-3 rounded-full font-semibold transition-all">
+          <ShoppingBag size={48} className="text-text-muted mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-text-primary mb-2">No orders yet</h2>
+          <p className="text-text-secondary text-sm mb-6">Start shopping to see your orders here</p>
+          <Link to="/shop" className="btn-primary">
             Browse Products
           </Link>
         </motion.div>
@@ -318,8 +318,8 @@ export default function Orders() {
     <main className="py-12 sm:py-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">My Orders</h1>
-          <p className="text-neutral-400 text-sm mt-1">Track and manage your orders</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">My Orders</h1>
+          <p className="text-text-secondary text-sm mt-1">Track and manage your orders</p>
         </motion.div>
 
         <div className="space-y-4">

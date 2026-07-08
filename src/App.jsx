@@ -3,10 +3,10 @@ import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import WhatsAppButton from './components/WhatsAppButton';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -26,10 +26,13 @@ import ReturnRefund from './pages/ReturnRefund';
 import FAQ from './pages/FAQ';
 import BulkOrders from './pages/BulkOrders';
 import Receipt from './pages/Receipt';
+import StyleGuide from './pages/StyleGuide';
+import PrintIdea from './pages/PrintIdea';
 import NotFound from './pages/NotFound';
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <CartProvider>
         <div className="min-h-screen bg-bg-primary text-text-primary flex flex-col">
@@ -50,6 +53,7 @@ function App() {
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/shop3d" element={<Shop3D />} />
                 <Route path="/products/:id" element={<ProductDetail />} />
+                <Route path="/idea/:source/:id" element={<PrintIdea />} />
                 <Route path="/customize" element={<Customize />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/about" element={<About />} />
@@ -64,13 +68,13 @@ function App() {
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/bulk-orders" element={<BulkOrders />} />
                 <Route path="/receipt" element={<Receipt />} />
+                <Route path="/style" element={<StyleGuide />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>
             </ErrorBoundary>
           </main>
           <Footer />
-          <WhatsAppButton />
           <Toaster
             position="top-right"
             toastOptions={{
@@ -85,6 +89,7 @@ function App() {
         </div>
       </CartProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

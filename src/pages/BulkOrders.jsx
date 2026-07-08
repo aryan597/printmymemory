@@ -186,7 +186,7 @@ export default function BulkOrders() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                className="w-full bg-accent hover:bg-accent-hover disabled:opacity-60 text-text-primary py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
               >
                 <MessageCircle size={16} />
                 Send via WhatsApp

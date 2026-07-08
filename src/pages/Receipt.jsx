@@ -81,7 +81,7 @@ export default function Receipt() {
   if (loading) {
     return (
       <main className="py-20 flex items-center justify-center min-h-[60vh]">
-        <Loader2 size={32} className="animate-spin text-white" />
+        <Loader2 size={32} className="animate-spin text-text-primary" />
       </main>
     );
   }
@@ -89,13 +89,13 @@ export default function Receipt() {
   if (!order) {
     return (
       <main className="py-20 text-center">
-        <p className="text-neutral-400">Receipt not found.</p>
+        <p className="text-text-secondary">Receipt not found.</p>
       </main>
     );
   }
 
   const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
-  const shipping = subtotal >= 999 ? 0 : 50;
+  const shipping = 50;
   const discount = order.discount_amount || 0;
   const total = order.total_amount || (subtotal + shipping - discount);
   const shippingAddr = order.shipping_address || {};
@@ -109,7 +109,7 @@ export default function Receipt() {
           className="card p-6 sm:p-10 print:shadow-none print:border-none"
         >
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 pb-6 border-b border-neutral-800">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 pb-6 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg overflow-hidden bg-transparent">
                 <img
@@ -121,34 +121,34 @@ export default function Receipt() {
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">PrintMyMemory</h1>
-                <p className="text-neutral-400 text-sm">Tax Invoice / Receipt</p>
+                <h1 className="text-2xl font-bold text-text-primary">PrintMyMemory</h1>
+                <p className="text-text-secondary text-sm">Tax Invoice / Receipt</p>
               </div>
             </div>
             <div className="sm:text-right">
-              <p className="text-white font-mono text-sm">Order #{order.id.slice(0, 8).toUpperCase()}</p>
-              <p className="text-neutral-400 text-sm">{formatDate(order.created_at)}</p>
-              <p className="text-neutral-500 text-xs mt-1">Payment: {(order.payment_method || 'online').toUpperCase()}</p>
+              <p className="text-text-primary font-mono text-sm">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+              <p className="text-text-secondary text-sm">{formatDate(order.created_at)}</p>
+              <p className="text-text-muted text-xs mt-1">Payment: {(order.payment_method || 'online').toUpperCase()}</p>
             </div>
           </div>
 
           {/* Addresses */}
           <div className="grid sm:grid-cols-2 gap-6 mb-8">
             <div>
-              <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">From</h3>
-              <p className="text-white text-sm font-medium">PrintMyMemory</p>
-              <p className="text-neutral-400 text-sm">Bangalore, India</p>
-              <p className="text-neutral-500 text-sm flex items-center gap-1.5 mt-1">
+              <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">From</h3>
+              <p className="text-text-primary text-sm font-medium">PrintMyMemory</p>
+              <p className="text-text-secondary text-sm">Bangalore, India</p>
+              <p className="text-text-muted text-sm flex items-center gap-1.5 mt-1">
                 <Phone size={12} /> +91-94717-25271
               </p>
-              <p className="text-neutral-500 text-sm flex items-center gap-1.5">
+              <p className="text-text-muted text-sm flex items-center gap-1.5">
                 <Mail size={12} /> printmymemory120626@gmail.com
               </p>
             </div>
             <div>
-              <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Ship To</h3>
-              <p className="text-white text-sm font-medium">{shippingAddr.full_name || order.guest_name || '-'}</p>
-              <p className="text-neutral-400 text-sm flex items-start gap-1.5">
+              <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Ship To</h3>
+              <p className="text-text-primary text-sm font-medium">{shippingAddr.full_name || order.guest_name || '-'}</p>
+              <p className="text-text-secondary text-sm flex items-start gap-1.5">
                 <MapPin size={14} className="mt-0.5 shrink-0" />
                 <span>
                   {shippingAddr.address_line1 || '-'}<br />
@@ -156,8 +156,8 @@ export default function Receipt() {
                   {shippingAddr.city}{shippingAddr.city && shippingAddr.state ? ', ' : ''}{shippingAddr.state} {shippingAddr.postcode}
                 </span>
               </p>
-              <p className="text-neutral-500 text-sm mt-1">Phone: {shippingAddr.phone || order.guest_phone || '-'}</p>
-              <p className="text-neutral-500 text-sm">Email: {shippingAddr.email || order.guest_email || '-'}</p>
+              <p className="text-text-muted text-sm mt-1">Phone: {shippingAddr.phone || order.guest_phone || '-'}</p>
+              <p className="text-text-muted text-sm">Email: {shippingAddr.email || order.guest_email || '-'}</p>
             </div>
           </div>
 
@@ -165,25 +165,25 @@ export default function Receipt() {
           <div className="mb-8">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-neutral-800 text-left">
-                  <th className="pb-2 text-neutral-500 font-medium">Item</th>
-                  <th className="pb-2 text-neutral-500 font-medium text-right">Qty</th>
-                  <th className="pb-2 text-neutral-500 font-medium text-right">Price</th>
-                  <th className="pb-2 text-neutral-500 font-medium text-right">Total</th>
+                <tr className="border-b border-border text-left">
+                  <th className="pb-2 text-text-muted font-medium">Item</th>
+                  <th className="pb-2 text-text-muted font-medium text-right">Qty</th>
+                  <th className="pb-2 text-text-muted font-medium text-right">Price</th>
+                  <th className="pb-2 text-text-muted font-medium text-right">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className="border-b border-neutral-800/50">
-                    <td className="py-3 text-white">
+                  <tr key={item.id} className="border-b border-border/50">
+                    <td className="py-3 text-text-primary">
                       {item.product?.name || 'Product'}
                       {item.custom_image && (
-                        <span className="block text-neutral-500 text-xs">Custom photo</span>
+                        <span className="block text-text-muted text-xs">Custom photo</span>
                       )}
                     </td>
-                    <td className="py-3 text-white text-right">{item.quantity}</td>
-                    <td className="py-3 text-white text-right">{formatPrice(item.price)}</td>
-                    <td className="py-3 text-white text-right">{formatPrice(item.price * item.quantity)}</td>
+                    <td className="py-3 text-text-primary text-right">{item.quantity}</td>
+                    <td className="py-3 text-text-primary text-right">{formatPrice(item.price)}</td>
+                    <td className="py-3 text-text-primary text-right">{formatPrice(item.price * item.quantity)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -193,21 +193,21 @@ export default function Receipt() {
           {/* Totals */}
           <div className="flex justify-end mb-8">
             <div className="w-full sm:w-64 space-y-2 text-sm">
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-text-secondary">
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-neutral-400">
+              <div className="flex justify-between text-text-secondary">
                 <span>Shipping</span>
                 <span>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-neutral-400">
+                <div className="flex justify-between text-text-secondary">
                   <span>Discount {order.voucher_code && <span className="text-brand-orange text-xs">({order.voucher_code})</span>}</span>
                   <span>-{formatPrice(discount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-white font-bold text-base pt-2 border-t border-neutral-800">
+              <div className="flex justify-between text-text-primary font-bold text-base pt-2 border-t border-border">
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
               </div>
@@ -215,13 +215,13 @@ export default function Receipt() {
           </div>
 
           {/* Footer */}
-          <div className="border-t border-neutral-800 pt-6 text-center">
-            <p className="text-neutral-400 text-sm mb-1">Thank you for shopping with PrintMyMemory!</p>
-            <p className="text-neutral-500 text-xs">
+          <div className="border-t border-border pt-6 text-center">
+            <p className="text-text-secondary text-sm mb-1">Thank you for shopping with PrintMyMemory!</p>
+            <p className="text-text-muted text-xs">
               Questions? Reach us on WhatsApp at +91-94717-25271 or email printmymemory120626@gmail.com
             </p>
             {order.payment_method === 'cod' && (
-              <p className="text-white text-sm font-medium mt-3">
+              <p className="text-text-primary text-sm font-medium mt-3">
                 Please keep {formatPrice(total)} ready as Cash on Delivery.
               </p>
             )}
@@ -231,7 +231,7 @@ export default function Receipt() {
           <div className="mt-8 flex justify-center print:hidden">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 bg-white hover:bg-neutral-200 text-black px-6 py-3 rounded-full font-semibold transition-all"
+              className="btn-primary"
             >
               <Printer size={18} /> Print Receipt / Packing Slip
             </button>

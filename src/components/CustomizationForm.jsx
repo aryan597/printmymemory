@@ -227,7 +227,7 @@ function CheckboxField({ field, value, onChange }) {
             onClick={() => toggle(opt.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               selected.includes(opt.value)
-                ? 'bg-gradient-brand text-white shadow-glow'
+                ? 'bg-accent text-white border-2 border-border tb-shadow-sm'
                 : 'bg-bg-primary border border-border-subtle text-text-secondary hover:border-border-hover'
             }`}
             aria-pressed={selected.includes(opt.value)}
@@ -253,7 +253,7 @@ function RadioField({ field, value, onChange }) {
             onClick={() => onChange(opt.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               value === opt.value
-                ? 'bg-gradient-brand text-white shadow-glow'
+                ? 'bg-accent text-white border-2 border-border tb-shadow-sm'
                 : 'bg-bg-primary border border-border-subtle text-text-secondary hover:border-border-hover'
             }`}
             aria-checked={value === opt.value}

@@ -30,9 +30,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [location]);
+  useEffect(() => { setIsMobileMenuOpen(false); }, [location]);
 
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
@@ -46,57 +44,38 @@ export default function Navbar() {
     <nav
       role="navigation"
       aria-label="Main navigation"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
-          ? 'bg-bg-primary/95 backdrop-blur-2xl border-b border-border-subtle shadow-xl shadow-black/40'
-          : 'bg-transparent'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-bg-primary/85 backdrop-blur-xl border-b border-border-subtle' : 'bg-transparent'
       }`}
     >
       {/* Announcement bar */}
-      <div className="bg-accent announcement-bar">
-        <div className="text-center py-2 px-4">
-          <span className="text-[11px] sm:text-xs font-semibold text-white tracking-wide">
-            🎁 Use code <span className="underline underline-offset-2">WELCOME10</span> for 10% off your first order
-          </span>
-        </div>
+      <div className="announcement-bar bg-bg-secondary/90 backdrop-blur-md border-b border-border-subtle">
+        <p className="text-center text-[11.5px] py-1.5 px-4 text-text-secondary">
+          Flat ₹50 shipping · Use code <span className="text-accent font-bold tracking-wide">WELCOME10</span> for 10% off your first order
+        </p>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-[62px]">
+        <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 shrink-0 group"
-            aria-label="Print My Memory - Home"
-          >
-            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
-              <img
-                src="/logo.png"
-                alt=""
-                className="w-full h-full object-contain"
-                loading="eager"
-                decoding="async"
-              />
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 group" aria-label="Print My Memory - Home">
+            <div className="w-9 h-9 overflow-hidden shrink-0 rounded-lg bg-bg-card border border-border-subtle flex items-center justify-center">
+              <img src="/logo.png" alt="" className="w-full h-full object-contain" loading="eager" decoding="async" />
             </div>
-            <div className="hidden sm:flex flex-col leading-tight">
-              <span className="font-bold text-[13px] tracking-tight text-white group-hover:text-accent transition-colors duration-200">Print My Memory</span>
-              <span className="text-[9px] text-text-muted font-medium tracking-wide">Bangalore · Handcrafted 3D Gifts</span>
-            </div>
+            <span className="hidden sm:block font-bold text-[15px] tracking-tight text-text-primary">Print My Memory</span>
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center" role="menubar">
+          <div className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2" role="menubar">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.path}
                 role="menuitem"
                 aria-current={isActive(link.path) ? 'page' : undefined}
-                className={`px-4 py-2 mx-0.5 text-[13px] font-medium rounded-lg transition-all duration-200 ${
-                  isActive(link.path)
-                    ? 'text-white bg-white/8'
-                    : 'text-text-secondary hover:text-white hover:bg-white/5'
+                className={`px-3.5 py-2 text-[13.5px] font-medium rounded-lg transition-colors ${
+                  isActive(link.path) ? 'text-text-primary' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {link.name}
@@ -106,34 +85,20 @@ export default function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1.5">
-            {/* WhatsApp CTA */}
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-green-600 hover:bg-green-500 text-white text-[12px] font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-green-900/25"
-              aria-label="Order on WhatsApp"
-            >
-              <WaIcon />
-              Order Now
-            </a>
-
-            {/* Track orders */}
             <Link
               to="/orders"
-              className="flex items-center justify-center w-9 h-9 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all duration-200"
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card transition-all"
               aria-label="Track my orders"
             >
-              <Package size={17} strokeWidth={1.8} />
+              <Package size={18} strokeWidth={1.75} />
             </Link>
 
-            {/* Cart */}
             <Link
               to="/cart"
-              className="relative flex items-center justify-center w-9 h-9 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all duration-200"
+              className="relative flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card transition-all"
               aria-label={`Cart${cartCount > 0 ? ` · ${cartCount} items` : ''}`}
             >
-              <ShoppingCart size={17} strokeWidth={1.8} />
+              <ShoppingCart size={18} strokeWidth={1.75} />
               {cartCount > 0 && (
                 <span
                   className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none"
@@ -145,15 +110,25 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Mobile menu toggle */}
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary hidden md:inline-flex !px-4 !py-2 !text-[13px] ml-1"
+              aria-label="Order on WhatsApp"
+            >
+              <WaIcon />
+              Order Now
+            </a>
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all duration-200"
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-text-secondary hover:text-text-primary hover:bg-bg-card transition-all"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
             >
-              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
@@ -163,48 +138,37 @@ export default function Navbar() {
       <div
         id="mobile-menu"
         className={`lg:hidden fixed inset-0 z-40 bg-bg-primary transition-all duration-300 ease-out ${
-          isMobileMenuOpen
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 -translate-y-4 pointer-events-none'
+          isMobileMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
         }`}
-        style={{ top: '96px' }}
+        style={{ top: '92px' }}
         aria-hidden={!isMobileMenuOpen}
       >
-        <div className="px-4 pt-2 pb-10 flex flex-col gap-1 border-t border-border-subtle">
-          {navLinks.map((link, i) => (
+        <div className="px-4 pt-4 pb-10 flex flex-col gap-1.5 border-t border-border-subtle">
+          {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
               aria-current={isActive(link.path) ? 'page' : undefined}
-              className={`flex items-center gap-3 px-4 py-4 rounded-xl text-base font-medium transition-all duration-200 ${
-                isActive(link.path)
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-text-secondary hover:bg-white/5 hover:text-white'
+              className={`flex items-center px-4 py-3.5 text-base font-medium rounded-xl transition-colors ${
+                isActive(link.path) ? 'bg-bg-card text-text-primary' : 'text-text-secondary hover:bg-bg-card hover:text-text-primary'
               }`}
-              style={{ animationDelay: `${i * 50}ms` }}
             >
               {link.name}
             </Link>
           ))}
 
-          {/* Divider */}
-          <div className="my-3 border-t border-border-subtle" />
-
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-green-600 hover:bg-green-500 text-white font-semibold text-sm transition-colors"
+            className="btn-primary w-full py-3.5 mt-3"
           >
             <WaIcon />
             Order on WhatsApp
           </a>
 
-          <Link
-            to="/orders"
-            className="flex items-center justify-center gap-2 w-full py-4 rounded-xl border border-border text-text-secondary hover:text-white hover:border-border-strong font-medium text-sm transition-colors"
-          >
-            <Package size={15} strokeWidth={1.8} />
+          <Link to="/orders" className="btn-secondary w-full py-3.5">
+            <Package size={16} strokeWidth={1.75} />
             Track My Order
           </Link>
         </div>

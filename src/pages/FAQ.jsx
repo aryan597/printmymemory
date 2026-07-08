@@ -21,7 +21,7 @@ const faqs = [
   {
     icon: CreditCard,
     question: 'Do you offer Cash on Delivery (COD)?',
-    answer: 'Yes, COD is available for most products. For highly customised orders, we may ask for a partial prepayment to cover material and print time. We also accept UPI, Cards, and all major wallets via Razorpay.',
+    answer: 'No. All orders are 100% prepaid — we do not offer Cash on Delivery. You can pay securely via UPI, cards, and all major wallets through Razorpay. Payment is always taken upfront before we start printing.',
   },
   {
     icon: Truck,
@@ -118,7 +118,7 @@ export default function FAQ() {
               href="https://wa.me/919471725271"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-whatsapp text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 bg-whatsapp text-text-primary px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
             >
               WhatsApp Us
             </a>

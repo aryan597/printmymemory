@@ -5,10 +5,11 @@ import {
   Share2, Truck, ShieldCheck, ChevronRight, ChevronLeft,
   Minus, Plus, Loader2, Package, Star, Sparkles,
   ShoppingCart, MessageCircle, Send, Clock, ArrowRight,
-  Box, Layers, Check, Ruler, Flame,
+  Box, Layers, Check, Ruler, Flame, Maximize2,
 } from 'lucide-react';
 
 const Model3DViewer = lazy(() => import('../components/Model3DViewer'));
+import CustomizationForm from '../components/CustomizationForm';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { CartContext } from '../contexts/CartContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -56,6 +57,7 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [adjustedPrice, setAdjustedPrice] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [related, setRelated] = useState([]);
@@ -161,6 +163,13 @@ export default function ProductDetail() {
     return ['/images/products/placeholder.jpg'];
   }, [product]);
 
+  // Unified media: photos + an interactive 3D slide (if a model file exists).
+  const media = useMemo(() => {
+    const list = images.map((url) => ({ type: 'image', url }));
+    if (product?.model_file) list.push({ type: '3d', url: product.model_file });
+    return list;
+  }, [images, product]);
+
   const handleQuantity = (delta) => {
     setQuantity((q) => Math.max(1, Math.min(q + delta, product?.stock_quantity || 99)));
   };
@@ -174,6 +183,29 @@ export default function ProductDetail() {
       if (buyNow) navigate('/cart');
     } catch {
       toast.error('Failed to add to cart');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Customised products: order only after the customization options are filled.
+  const handleCustomizedOrder = async (values) => {
+    if (!product) return;
+    setAdding(true);
+    try {
+      // photo_upload fields store a data URL — use it as the custom image.
+      const photo = Object.values(values || {}).find(
+        (v) => typeof v === 'string' && v.startsWith('data:image')
+      );
+      await addToCart(product, quantity, {
+        customizationValues: values,
+        customImage: photo || null,
+        unitPrice: adjustedPrice ?? product.price,
+      });
+      toast.success('Added to cart with your customizations');
+      navigate('/cart');
+    } catch {
+      toast.error('Could not add to cart');
     } finally {
       setAdding(false);
     }
@@ -255,7 +287,7 @@ export default function ProductDetail() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-4">
         <Package size={48} className="text-text-muted mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">{error || 'Product not found'}</h2>
+        <h2 className="text-xl font-bold text-text-primary mb-2">{error || 'Product not found'}</h2>
         <Link to="/shop" className="btn-primary mt-4">Browse Products</Link>
       </main>
     );
@@ -286,9 +318,9 @@ export default function ProductDetail() {
       {/* ── Breadcrumb ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-4">
         <nav className="flex items-center gap-1.5 text-xs text-text-muted" aria-label="Breadcrumb">
-          <Link to="/" className="hover:text-white transition-colors">Home</Link>
+          <Link to="/" className="hover:text-text-primary transition-colors">Home</Link>
           <ChevronRight size={12} />
-          <Link to="/shop" className="hover:text-white transition-colors">Shop</Link>
+          <Link to="/shop" className="hover:text-text-primary transition-colors">Shop</Link>
           {product.category?.name && (
             <>
               <ChevronRight size={12} />
@@ -296,7 +328,7 @@ export default function ProductDetail() {
             </>
           )}
           <ChevronRight size={12} />
-          <span className="text-white truncate max-w-[200px]">{product.name}</span>
+          <span className="text-text-primary truncate max-w-[200px]">{product.name}</span>
         </nav>
       </div>
 
@@ -306,119 +338,82 @@ export default function ProductDetail() {
 
           {/* ── Left: Image Gallery ── */}
           <div className="space-y-3">
-            {/* Main image */}
-            <div
-              ref={imageRef}
-              className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-bg-card border border-border-subtle cursor-crosshair"
-              onMouseMove={(e) => {
-                const rect = imageRef.current.getBoundingClientRect();
-                setZoom({
-                  active: true,
-                  x: ((e.clientX - rect.left) / rect.width) * 100,
-                  y: ((e.clientY - rect.top) / rect.height) * 100,
-                });
-              }}
-              onMouseLeave={() => setZoom({ active: false, x: 50, y: 50 })}
-            >
-              <img
-                src={images[activeImage]}
-                alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-300"
-                style={zoom.active ? { transform: 'scale(2)', transformOrigin: `${zoom.x}% ${zoom.y}%` } : {}}
-                loading="eager"
-                onError={e => { e.target.onerror = null; e.target.src = '/images/products/placeholder.jpg'; }}
-              />
-
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
-                {isCustomised && (
-                  <span className="px-3 py-1.5 rounded-full bg-accent/90 text-white text-xs font-semibold backdrop-blur-sm">
-                    Customizable
-                  </span>
-                )}
-                {product.is_bestseller && (
-                  <span className="px-3 py-1.5 rounded-full bg-amber-500/90 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
-                    <Flame size={11} /> Bestseller
-                  </span>
-                )}
-                {product.is_featured && (
-                  <span className="px-3 py-1.5 rounded-full bg-purple-600/90 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1">
-                    <Star size={11} className="fill-white" /> Featured
-                  </span>
-                )}
-                {hasAMS && (
-                  <span className="px-3 py-1.5 rounded-full bg-black/50 text-white text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5">
-                    <Layers size={11} /> Multi-Color
-                  </span>
-                )}
-                {product.stock_quantity > 0 && product.stock_quantity < 20 && (
-                  <span className="px-3 py-1.5 rounded-full bg-amber-500/90 text-white text-xs font-semibold backdrop-blur-sm">
-                    Only {product.stock_quantity} left
-                  </span>
-                )}
-              </div>
-
-              {/* Image navigation arrows */}
-              {images.length > 1 && (
+            {/* Main media frame (photos + interactive 3D slide) */}
+            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-bg-card border border-border-subtle">
+              {media[activeImage]?.type === '3d' ? (
+                <Suspense fallback={
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                  </div>
+                }>
+                  <div className="w-full h-full [&>div]:!h-full [&>div]:!aspect-auto [&>div]:!border-0 [&>div]:!rounded-none">
+                    <Model3DViewer url={media[activeImage].url} />
+                  </div>
+                </Suspense>
+              ) : (
                 <>
+                  <img
+                    src={media[activeImage]?.url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                    onError={e => { e.target.onerror = null; e.target.src = '/images/products/placeholder.jpg'; }}
+                  />
+                  {/* Zoom → open full photo in a new tab (no jumpy hover-zoom) */}
                   <button
-                    onClick={() => setActiveImage(i => (i - 1 + images.length) % images.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                    aria-label="Previous image"
+                    onClick={() => window.open(media[activeImage]?.url, '_blank', 'noopener')}
+                    className="absolute bottom-4 right-4 w-9 h-9 rounded-full glass flex items-center justify-center text-text-primary/80 hover:text-text-primary transition-colors"
+                    aria-label="Open full photo in a new tab" title="Open full photo"
                   >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <button
-                    onClick={() => setActiveImage(i => (i + 1) % images.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight size={18} />
+                    <Maximize2 size={16} />
                   </button>
                 </>
               )}
 
-              {/* Image counter */}
-              {images.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full glass text-white/80 text-xs font-medium">
-                  {activeImage + 1} / {images.length}
-                </div>
+              {/* Badges */}
+              <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
+                {isCustomised && <span className="tb-sticker tb-sticker--orange">Customizable</span>}
+                {product.is_bestseller && <span className="tb-sticker tb-sticker--ink"><Flame size={11} /> Bestseller</span>}
+                {product.is_featured && <span className="tb-sticker tb-sticker--ink"><Star size={11} className="fill-current" /> Featured</span>}
+                {hasAMS && <span className="tb-sticker"><Layers size={11} /> Multi-Color</span>}
+                {product.stock_quantity > 0 && product.stock_quantity < 20 && <span className="tb-sticker">Only {product.stock_quantity} left</span>}
+              </div>
+
+              {/* Nav arrows */}
+              {media.length > 1 && (
+                <>
+                  <button onClick={() => setActiveImage(i => (i - 1 + media.length) % media.length)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center text-text-primary/70 hover:text-text-primary transition-colors" aria-label="Previous">
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button onClick={() => setActiveImage(i => (i + 1) % media.length)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full glass flex items-center justify-center text-text-primary/70 hover:text-text-primary transition-colors" aria-label="Next">
+                    <ChevronRight size={18} />
+                  </button>
+                </>
               )}
             </div>
 
-            {/* Thumbnails */}
-            {images.length > 1 && (
+            {/* Thumbnails (photos + 3D) */}
+            {media.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {images.map((img, i) => (
-                  <button
-                    key={`thumb-${i}`}
-                    onClick={() => setActiveImage(i)}
-                    className={`w-16 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
-                      i === activeImage ? 'border-accent ring-1 ring-accent/30' : 'border-border-subtle hover:border-white/30'
+                {media.map((m, i) => (
+                  <button key={`thumb-${i}`} onClick={() => setActiveImage(i)}
+                    className={`w-16 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all flex items-center justify-center bg-bg-elevated ${
+                      i === activeImage ? 'border-accent ring-1 ring-accent/30' : 'border-border-subtle hover:border-border'
                     }`}
+                    aria-label={m.type === '3d' ? 'View 3D model' : `View photo ${i + 1}`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    {m.type === '3d' ? (
+                      <span className="flex flex-col items-center gap-0.5">
+                        <Box size={16} className="text-accent" />
+                        <span className="text-[8px] font-bold text-text-secondary">3D</span>
+                      </span>
+                    ) : (
+                      <img src={m.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    )}
                   </button>
                 ))}
-              </div>
-            )}
-
-            {/* 3D model preview */}
-            {product.model_file && (
-              <div className="space-y-2 pt-1">
-                <div className="flex items-center gap-2">
-                  <Box size={15} className="text-accent" />
-                  <h3 className="text-white text-sm font-semibold">3D Preview</h3>
-                </div>
-                <Suspense
-                  fallback={
-                    <div className="aspect-[4/5] rounded-2xl bg-bg-card border border-border-subtle flex items-center justify-center">
-                      <div className="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-                    </div>
-                  }
-                >
-                  <Model3DViewer url={product.model_file} />
-                </Suspense>
               </div>
             )}
           </div>
@@ -432,7 +427,7 @@ export default function ProductDetail() {
               )}
               <button
                 onClick={handleShare}
-                className="w-8 h-8 rounded-lg bg-white/5 border border-border-subtle flex items-center justify-center text-text-muted hover:text-white transition-colors"
+                className="w-8 h-8 rounded-lg bg-bg-elevated border border-border-subtle flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
                 aria-label="Share"
               >
                 <Share2 size={14} />
@@ -440,7 +435,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-text-primary leading-tight">{product.name}</h1>
 
             {/* Rating */}
             {reviews.length > 0 && (
@@ -454,7 +449,7 @@ export default function ProductDetail() {
                     />
                   ))}
                 </div>
-                <span className="text-white text-sm font-semibold">{avgRating}</span>
+                <span className="text-text-primary text-sm font-semibold">{avgRating}</span>
                 <span className="text-text-muted text-sm">({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
               </div>
             )}
@@ -498,17 +493,17 @@ export default function ProductDetail() {
             {/* Specs chips */}
             <div className="flex flex-wrap gap-2">
               {product.material && (
-                <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-xs text-text-secondary">
+                <span className="px-3 py-1.5 rounded-lg bg-bg-elevated border border-border-subtle text-xs text-text-secondary">
                   {product.material}
                 </span>
               )}
               {product.weight_grams && (
-                <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-xs text-text-secondary">
+                <span className="px-3 py-1.5 rounded-lg bg-bg-elevated border border-border-subtle text-xs text-text-secondary">
                   {product.weight_grams}g
                 </span>
               )}
               {(product.print_time_hours || product.print_time_minutes) && (
-                <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-xs text-text-secondary flex items-center gap-1">
+                <span className="px-3 py-1.5 rounded-lg bg-bg-elevated border border-border-subtle text-xs text-text-secondary flex items-center gap-1">
                   <Clock size={10} />
                   ~{product.print_time_hours
                     ? `${product.print_time_hours}hrs`
@@ -518,7 +513,7 @@ export default function ProductDetail() {
                 </span>
               )}
               {difficultyLabel && (
-                <span className="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-xs text-text-secondary">
+                <span className="px-3 py-1.5 rounded-lg bg-bg-elevated border border-border-subtle text-xs text-text-secondary">
                   {difficultyLabel} to make
                 </span>
               )}
@@ -537,10 +532,10 @@ export default function ProductDetail() {
 
             {/* AMS colors */}
             {hasAMS && (
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-border-subtle">
+              <div className="p-4 rounded-2xl bg-bg-card border border-border-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <Layers size={14} className="text-accent" />
-                  <p className="text-white text-sm font-semibold">Multi-Color Printing</p>
+                  <p className="text-text-primary text-sm font-semibold">Multi-Color Printing</p>
                   <span className="text-text-muted text-xs">({amsColors.length} colors)</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -562,13 +557,13 @@ export default function ProductDetail() {
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
                   <Ruler size={14} className="text-accent" />
-                  <p className="text-white text-sm font-semibold">Available Sizes</p>
+                  <p className="text-text-primary text-sm font-semibold">Available Sizes</p>
                 </div>
                 <div className="space-y-2">
                   {sizes.map((s, i) => (
                     <div key={i} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-bg-card border border-border-subtle">
                       <div className="min-w-0">
-                        <p className="text-white text-sm font-medium">{s.size || `Option ${i + 1}`}</p>
+                        <p className="text-text-primary text-sm font-medium">{s.size || `Option ${i + 1}`}</p>
                         {s.dimensions && <p className="text-text-muted text-xs">{s.dimensions}</p>}
                       </div>
                       {s.price ? (
@@ -582,8 +577,8 @@ export default function ProductDetail() {
 
             {/* What we'll need from the customer */}
             {customerNeeds.length > 0 && (
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-border-subtle">
-                <p className="text-white text-sm font-semibold mb-3">What we'll need from you</p>
+              <div className="p-4 rounded-2xl bg-bg-card border border-border-subtle">
+                <p className="text-text-primary text-sm font-semibold mb-3">What we'll need from you</p>
                 <ul className="space-y-2">
                   {customerNeeds.map((need, i) => (
                     <li key={i} className="flex items-start gap-2.5">
@@ -607,78 +602,77 @@ export default function ProductDetail() {
                 <button
                   onClick={() => handleQuantity(-1)}
                   disabled={quantity <= 1}
-                  className="w-10 h-10 flex items-center justify-center text-white hover:bg-white/5 disabled:opacity-30 rounded-l-xl transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-bg-elevated disabled:opacity-30 rounded-l-xl transition-colors"
                 >
                   <Minus size={14} />
                 </button>
-                <span className="w-10 text-center text-white font-bold text-sm">{quantity}</span>
+                <span className="w-10 text-center text-text-primary font-bold text-sm">{quantity}</span>
                 <button
                   onClick={() => handleQuantity(1)}
                   disabled={product.stock_quantity ? quantity >= product.stock_quantity : false}
-                  className="w-10 h-10 flex items-center justify-center text-white hover:bg-white/5 disabled:opacity-30 rounded-r-xl transition-colors"
+                  className="w-10 h-10 flex items-center justify-center text-text-primary hover:bg-bg-elevated disabled:opacity-30 rounded-r-xl transition-colors"
                 >
                   <Plus size={14} />
                 </button>
               </div>
               <span className="text-text-muted text-xs">
-                Total: <span className="text-white font-semibold">{formatPrice(product.price * quantity)}</span>
+                Total: <span className="text-text-primary font-semibold">{formatPrice(product.price * quantity)}</span>
               </span>
             </div>
 
-            {/* Action buttons */}
-            <div className="space-y-2.5">
-              <button
-                onClick={() => handleAddToCart(true)}
-                disabled={adding || !status.available}
-                className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold"
-              >
-                {adding ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
-                Buy Now
-              </button>
-
-              <button
-                onClick={() => handleAddToCart(false)}
-                disabled={adding || !status.available}
-                className="btn-secondary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold"
-              >
-                Add to Cart
-              </button>
-
-              {isCustomised && (
-                <Link
-                  to={`/customize?productId=${product.id}`}
-                  className="w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold rounded-xl border border-accent/30 text-accent hover:bg-accent/5 transition-colors"
-                >
-                  <Sparkles size={16} />
-                  Customize This Gift
-                </Link>
-              )}
-
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-green w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold"
-              >
-                <WaIcon size={15} />
-                Order on WhatsApp
-              </a>
-            </div>
+            {/* Order area */}
+            {isCustomised ? (
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles size={15} className="text-accent" />
+                    <p className="text-text-primary text-sm font-semibold">Personalise your order</p>
+                  </div>
+                  {/* Renders this product's admin-defined options, live price, and
+                      "Confirm" → adds to cart with the customization values. */}
+                  <CustomizationForm
+                    productId={product.id}
+                    onPriceChange={setAdjustedPrice}
+                    onSubmit={handleCustomizedOrder}
+                  />
+                </div>
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                  className="btn-green w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
+                  <WaIcon size={15} /> Prefer to talk? Order on WhatsApp
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <button onClick={() => handleAddToCart(true)} disabled={adding || !status.available}
+                  className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
+                  {adding ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
+                  Buy Now
+                </button>
+                <button onClick={() => handleAddToCart(false)} disabled={adding || !status.available}
+                  className="btn-secondary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
+                  Add to Cart
+                </button>
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                  className="btn-green w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
+                  <WaIcon size={15} /> Order on WhatsApp
+                </a>
+              </div>
+            )}
 
             {/* Trust row */}
             <div className="grid grid-cols-2 gap-2.5">
               {[
-                { icon: Truck, title: 'Free Shipping', sub: 'Orders above ₹999' },
+                { icon: Truck, title: 'Flat ₹50 Shipping', sub: 'On every order' },
                 { icon: ShieldCheck, title: 'Quality Assured', sub: 'Hand-finished prints' },
                 { icon: Clock, title: 'Ships in 48hrs', sub: 'Fast turnaround' },
                 { icon: Package, title: 'Secure Packaging', sub: 'Foam-wrapped delivery' },
               ].map(({ icon: Icon, title, sub }) => (
-                <div key={title} className="flex items-center gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-border-subtle">
+                <div key={title} className="flex items-center gap-2.5 p-3 rounded-xl bg-bg-card border border-border-subtle">
                   <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                     <Icon size={14} className="text-accent" />
                   </div>
                   <div>
-                    <p className="text-white text-[11px] font-semibold leading-tight">{title}</p>
+                    <p className="text-text-primary text-[11px] font-semibold leading-tight">{title}</p>
                     <p className="text-text-muted text-[10px]">{sub}</p>
                   </div>
                 </div>
@@ -692,7 +686,7 @@ export default function ProductDetail() {
           <div className="grid lg:grid-cols-[340px_1fr] gap-10">
             {/* Review form */}
             <div>
-              <h3 className="text-lg font-bold text-white mb-4">Write a Review</h3>
+              <h3 className="text-lg font-bold text-text-primary mb-4">Write a Review</h3>
               <div className="p-5 rounded-2xl bg-bg-card border border-border-subtle space-y-4">
                 <div>
                   <label className="text-text-muted text-xs font-medium mb-1.5 block">Name</label>
@@ -700,7 +694,7 @@ export default function ProductDetail() {
                     type="text"
                     value={reviewForm.name}
                     onChange={(e) => setReviewForm((f) => ({ ...f, name: e.target.value }))}
-                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50"
+                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-4 py-2.5 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50"
                     placeholder="Your name"
                   />
                 </div>
@@ -710,7 +704,7 @@ export default function ProductDetail() {
                     type="email"
                     value={reviewForm.email}
                     onChange={(e) => setReviewForm((f) => ({ ...f, email: e.target.value }))}
-                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50"
+                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-4 py-2.5 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -736,7 +730,7 @@ export default function ProductDetail() {
                   <textarea
                     value={reviewForm.comment}
                     onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
-                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50 resize-none h-24"
+                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-4 py-2.5 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50 resize-none h-24"
                     placeholder="Share your experience..."
                   />
                 </div>
@@ -754,7 +748,7 @@ export default function ProductDetail() {
             {/* Reviews list */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-white">Customer Reviews</h3>
+                <h3 className="text-lg font-bold text-text-primary">Customer Reviews</h3>
                 {reviews.length > 0 && (
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-0.5">
@@ -762,7 +756,7 @@ export default function ProductDetail() {
                         <Star key={star} size={12} className={star <= Math.round(avgRating) ? 'text-amber-400 fill-amber-400' : 'text-text-muted'} />
                       ))}
                     </div>
-                    <span className="text-white text-sm font-semibold">{avgRating}</span>
+                    <span className="text-text-primary text-sm font-semibold">{avgRating}</span>
                     <span className="text-text-muted text-xs">({reviews.length})</span>
                   </div>
                 )}
@@ -786,7 +780,7 @@ export default function ProductDetail() {
                           {(review.guest_name || 'U').charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold">{review.guest_name || 'Verified Buyer'}</p>
+                          <p className="text-text-primary text-sm font-semibold">{review.guest_name || 'Verified Buyer'}</p>
                           <div className="flex items-center gap-1.5">
                             <div className="flex gap-0.5">
                               {[1, 2, 3, 4, 5].map((i) => (
@@ -810,7 +804,7 @@ export default function ProductDetail() {
         {related.length > 0 && (
           <div className="mt-16 pt-10 border-t border-border-subtle">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">You May Also Like</h2>
+              <h2 className="text-xl font-bold text-text-primary">You May Also Like</h2>
               <Link to="/shop" className="text-accent text-sm font-medium flex items-center gap-1 hover:underline">
                 View all <ArrowRight size={13} />
               </Link>
@@ -832,7 +826,7 @@ export default function ProductDetail() {
                     />
                   </div>
                   <div className="p-3">
-                    <p className="text-white text-sm font-semibold line-clamp-1">{item.name}</p>
+                    <p className="text-text-primary text-sm font-semibold line-clamp-1">{item.name}</p>
                     <p className="gradient-text text-sm font-bold mt-0.5">{formatPrice(item.price)}</p>
                   </div>
                 </Link>

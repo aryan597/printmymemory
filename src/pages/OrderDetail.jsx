@@ -210,7 +210,7 @@ export default function OrderDetail() {
       <main className="section-padding flex flex-col items-center justify-center min-h-[60vh]">
         <Package size={48} className="text-text-muted mx-auto mb-4" />
         <h2 className="text-xl font-bold text-text-primary mb-2">Please sign in</h2>
-        <Link to="/login" className="bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-xl font-semibold transition-all mt-4">Sign In</Link>
+        <Link to="/login" className="bg-accent hover:bg-accent-hover text-text-primary px-6 py-3 rounded-xl font-semibold transition-all mt-4">Sign In</Link>
       </main>
     );
   }
@@ -445,7 +445,7 @@ export default function OrderDetail() {
                 <button
                   onClick={handleApproveDesign}
                   disabled={approving}
-                  className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  className="bg-accent hover:bg-accent-hover disabled:opacity-60 text-text-primary px-5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   {approving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                   Approve Design

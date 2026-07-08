@@ -110,7 +110,7 @@ export default function Model3DViewer({ url }) {
   }
 
   return (
-    <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gradient-to-b from-bg-card to-bg-elevated border border-border-subtle">
+    <div className="relative aspect-[4/5] overflow-hidden bg-bg-card border-2 border-border">
       <ViewerErrorBoundary fallback={<DownloadCard url={url} />}>
         <Canvas camera={{ position: [0, 0, 120], fov: 45 }} dpr={[1, 2]}>
           <ambientLight intensity={0.75} />
@@ -132,7 +132,7 @@ export default function Model3DViewer({ url }) {
               </Center>
             </Bounds>
           </Suspense>
-          <OrbitControls makeDefault enablePan={false} autoRotate autoRotateSpeed={1.6} minDistance={10} maxDistance={600} />
+          <OrbitControls makeDefault enablePan={false} minDistance={10} maxDistance={600} />
         </Canvas>
       </ViewerErrorBoundary>
 

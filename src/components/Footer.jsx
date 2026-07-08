@@ -44,7 +44,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-bg-secondary border-t border-border-subtle" role="contentinfo">
+    <footer className="bg-bg-secondary border-t-2 border-border" role="contentinfo">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
@@ -55,7 +55,7 @@ export default function Footer() {
                 <img src="/logo.png" alt="Print My Memory" className="w-full h-full object-contain" loading="lazy" />
               </div>
               <div>
-                <div className="font-bold text-[13px] text-white tracking-tight">Print My Memory</div>
+                <div className="font-bold text-[13px] text-text-primary tracking-tight">Print My Memory</div>
                 <div className="text-[9px] text-text-muted font-medium tracking-wide mt-0.5">Where Memories Take Shape</div>
               </div>
             </div>
@@ -77,7 +77,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="w-9 h-9 rounded-lg bg-bg-card border border-border-subtle flex items-center justify-center text-text-muted hover:text-white hover:border-border transition-all duration-200"
+                  className="w-9 h-9 rounded-lg bg-bg-card border border-border-subtle flex items-center justify-center text-text-muted hover:text-text-primary hover:border-border transition-all duration-200"
                 >
                   {s.icon}
                 </a>
@@ -87,11 +87,11 @@ export default function Footer() {
 
           {/* ── Shop ── */}
           <div>
-            <h4 className="text-white font-semibold text-[13px] mb-5 tracking-wide">Shop</h4>
+            <h4 className="text-text-primary font-semibold text-[13px] mb-5 tracking-wide">Shop</h4>
             <ul className="space-y-3">
               {footerLinks.shop.map(item => (
                 <li key={item.label}>
-                  <Link to={item.path} className="text-text-muted hover:text-white text-[13px] transition-colors duration-150">
+                  <Link to={item.path} className="text-text-muted hover:text-text-primary text-[13px] transition-colors duration-150">
                     {item.label}
                   </Link>
                 </li>
@@ -101,11 +101,11 @@ export default function Footer() {
 
           {/* ── Support ── */}
           <div>
-            <h4 className="text-white font-semibold text-[13px] mb-5 tracking-wide">Support</h4>
+            <h4 className="text-text-primary font-semibold text-[13px] mb-5 tracking-wide">Support</h4>
             <ul className="space-y-3">
               {footerLinks.support.map(item => (
                 <li key={item.label}>
-                  <Link to={item.path} className="text-text-muted hover:text-white text-[13px] transition-colors duration-150">
+                  <Link to={item.path} className="text-text-muted hover:text-text-primary text-[13px] transition-colors duration-150">
                     {item.label}
                   </Link>
                 </li>
@@ -115,10 +115,10 @@ export default function Footer() {
 
           {/* ── Contact ── */}
           <div>
-            <h4 className="text-white font-semibold text-[13px] mb-5 tracking-wide">Contact</h4>
+            <h4 className="text-text-primary font-semibold text-[13px] mb-5 tracking-wide">Contact</h4>
             <ul className="space-y-4 mb-6">
               <li>
-                <a href="tel:+919471725271" className="flex items-start gap-2.5 text-text-muted hover:text-white transition-colors text-[13px] group">
+                <a href="tel:+919471725271" className="flex items-start gap-2.5 text-text-muted hover:text-text-primary transition-colors text-[13px] group">
                   <svg className="shrink-0 mt-0.5 group-hover:text-accent transition-colors" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                   </svg>
@@ -126,7 +126,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:printmymemory120626@gmail.com" className="flex items-start gap-2.5 text-text-muted hover:text-white transition-colors text-[13px] group">
+                <a href="mailto:printmymemory120626@gmail.com" className="flex items-start gap-2.5 text-text-muted hover:text-text-primary transition-colors text-[13px] group">
                   <svg className="shrink-0 mt-0.5 group-hover:text-accent transition-colors" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <rect width="20" height="16" x="2" y="4" rx="2"/>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
@@ -144,7 +144,7 @@ export default function Footer() {
             </ul>
 
             {/* Newsletter */}
-            <h4 className="text-white font-semibold text-[13px] mb-3 tracking-wide">Stay Updated</h4>
+            <h4 className="text-text-primary font-semibold text-[13px] mb-3 tracking-wide">Stay Updated</h4>
             <form
               className="flex gap-2"
               onSubmit={(e) => e.preventDefault()}
@@ -158,7 +158,7 @@ export default function Footer() {
               />
               <button
                 type="submit"
-                className="bg-accent hover:brightness-110 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0"
+                className="bg-accent hover:brightness-110 text-white px-4 py-2.5 border-2 border-border text-xs font-bold transition-all shrink-0"
               >
                 →
               </button>
@@ -174,9 +174,9 @@ export default function Footer() {
             © {year} Print My Memory. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-[12px] text-text-muted">
-            <Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping</Link>
-            <Link to="/return-refund" className="hover:text-white transition-colors">Returns</Link>
-            <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
+            <Link to="/shipping-policy" className="hover:text-text-primary transition-colors">Shipping</Link>
+            <Link to="/return-refund" className="hover:text-text-primary transition-colors">Returns</Link>
+            <Link to="/faq" className="hover:text-text-primary transition-colors">FAQ</Link>
           </div>
           <div className="flex items-center gap-2">
             {['GPay', 'PhonePe', 'Paytm', 'UPI', 'VISA', 'MC'].map(m => (
