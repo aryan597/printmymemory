@@ -75,8 +75,13 @@ export function CartProvider({ children }) {
     }
   };
 
+  // Match a single line by the same key the UI passes (item.id, falling back to
+  // product_id). Using one consistent key avoids nuking sibling lines that share
+  // a product_id — e.g. two customised versions of the same product.
+  const lineKey = (item) => item.id ?? item.product_id;
+
   const removeFromCart = async (itemId) => {
-    setCartItems(prev => prev.filter(item => item.id !== itemId && item.product_id !== itemId));
+    setCartItems(prev => prev.filter(item => lineKey(item) !== itemId));
   };
 
   const updateQuantity = async (itemId, quantity) => {
@@ -86,7 +91,7 @@ export function CartProvider({ children }) {
     }
     setCartItems(prev =>
       prev.map(item =>
-        (item.id === itemId || item.product_id === itemId) ? { ...item, quantity } : item
+        lineKey(item) === itemId ? { ...item, quantity } : item
       )
     );
   };

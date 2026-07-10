@@ -17,6 +17,65 @@ const FIELD_COMPONENTS = {
   radio: RadioField,
 };
 
+/**
+ * Sensible customization options shown when a product has no admin-defined
+ * config rows. Every field is optional, so the customer can always add to
+ * cart, and any details they do give flow through to the order.
+ */
+function buildDefaultConfigs(product) {
+  const configs = [];
+  const isCustomised = product?.product_type === 'customised';
+
+  // Photo + name are made-to-order details, so only for customised pieces.
+  if (isCustomised) {
+    configs.push({
+      id: 'default_photo',
+      field_key: 'reference_photo',
+      field_type: 'photo_upload',
+      field_label: 'Reference photo (optional)',
+      is_required: false,
+      sort_order: 1,
+    });
+    configs.push({
+      id: 'default_text',
+      field_key: 'personalization_text',
+      field_type: 'text',
+      field_label: 'Name or text to include (optional)',
+      field_placeholder: 'e.g. Happy Anniversary, Aryan',
+      is_required: false,
+      sort_order: 2,
+    });
+  }
+
+  // Colour — offered on every product, using the colours set on the product
+  // itself (products.ams_colors). Falls back to the standard AMS palette.
+  const amsColors = Array.isArray(product?.ams_colors)
+    ? product.ams_colors.filter((c) => typeof c === 'string')
+    : [];
+  configs.push({
+    id: 'default_color',
+    field_key: 'color',
+    field_type: 'ams_color',
+    field_label: 'Choose your print colour',
+    options: amsColors,
+    is_required: false,
+    sort_order: 3,
+  });
+
+  // Special instructions — available on every product.
+  configs.push({
+    id: 'default_notes',
+    field_key: 'notes',
+    field_type: 'textarea',
+    field_label: 'Special instructions (optional)',
+    field_placeholder: 'Anything else we should know about your order?',
+    is_required: false,
+    sort_order: 4,
+  });
+
+  return configs;
+}
+
 function PhotoUploadField({ field, value, onChange }) {
   const [preview, setPreview] = useState(value || null);
   const MAX_FILE_SIZE_MB = 10;
@@ -180,10 +239,33 @@ function ColorPickerField({ field, value, onChange }) {
 }
 
 function AMSColorField({ field, value, onChange }) {
+  // Use the specific colours set on the product (hex strings) when available,
+  // otherwise fall back to the full AMS palette.
+  const productColors = Array.isArray(field.options)
+    ? field.options.filter((c) => typeof c === 'string')
+    : [];
+
   return (
     <div className="space-y-2">
       <label className="text-text-secondary text-sm font-medium">{field.field_label}{field.is_required && <span className="text-error">*</span>}</label>
-      <AMSColorPicker selectedColor={value} onSelect={onChange} />
+      {productColors.length > 0 ? (
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={field.field_label}>
+          {productColors.map((hex) => (
+            <button
+              key={hex}
+              type="button"
+              onClick={() => onChange(hex)}
+              className="w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
+              style={{ backgroundColor: hex, borderColor: value === hex ? '#f8fafc' : 'transparent' }}
+              aria-label={`Select colour ${hex}`}
+              aria-checked={value === hex}
+              role="radio"
+            />
+          ))}
+        </div>
+      ) : (
+        <AMSColorPicker selectedColor={value} onSelect={onChange} />
+      )}
     </div>
   );
 }
@@ -267,7 +349,7 @@ function RadioField({ field, value, onChange }) {
   );
 }
 
-export default function CustomizationForm({ productId, onSubmit, onPriceChange }) {
+export default function CustomizationForm({ productId, product, onSubmit, onPriceChange }) {
   const [configs, setConfigs] = useState([]);
   const [values, setValues] = useState({});
   const [loading, setLoading] = useState(true);
@@ -294,10 +376,13 @@ export default function CustomizationForm({ productId, onSubmit, onPriceChange }
 
         if (!cancelled) {
           if (error) throw error;
-          setConfigs(data || []);
+          // Fall back to built-in options when the product has no admin config,
+          // so every product is still customizable and can be added to cart.
+          setConfigs(data && data.length > 0 ? data : buildDefaultConfigs(product));
         }
       } catch (err) {
         console.error('Failed to load customization config:', err);
+        if (!cancelled) setConfigs(buildDefaultConfigs(product));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -459,7 +544,7 @@ export default function CustomizationForm({ productId, onSubmit, onPriceChange }
         className="w-full btn-primary btn-gradient-shimmer py-3 rounded-xl font-semibold"
         aria-label="Confirm customizations"
       >
-        <Check size={18} aria-hidden="true" /> Confirm Customizations
+        <Check size={18} aria-hidden="true" /> Add to Cart
       </button>
     </div>
   );

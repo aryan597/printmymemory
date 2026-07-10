@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef, useContext, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useContext, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   Share2, Truck, ShieldCheck, ChevronRight, ChevronLeft,
-  Minus, Plus, Loader2, Package, Star, Sparkles,
-  ShoppingCart, MessageCircle, Send, Clock, ArrowRight,
-  Box, Layers, Check, Ruler, Flame, Maximize2,
+  Minus, Plus, Loader2, Package, Star,
+  Send, Clock, ArrowRight,
+  Box, Layers, Check, Ruler, Flame, Maximize2, Upload, ShoppingCart,
 } from 'lucide-react';
 
 const Model3DViewer = lazy(() => import('../components/Model3DViewer'));
-import CustomizationForm from '../components/CustomizationForm';
 import { supabase, TABLES } from '../lib/supabaseClient';
 import { CartContext } from '../contexts/CartContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -57,14 +55,17 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
-  const [adjustedPrice, setAdjustedPrice] = useState(null);
+  // Inline customization selections (driven by the product's own data)
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [instructions, setInstructions] = useState('');
+  const [refPhoto, setRefPhoto] = useState(null); // data URL
+  const [personalText, setPersonalText] = useState('');
   const [activeImage, setActiveImage] = useState(0);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [related, setRelated] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  const imageRef = useRef(null);
-  const [zoom, setZoom] = useState({ active: false, x: 50, y: 50 });
 
   const [reviewForm, setReviewForm] = useState({ name: '', email: '', rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -133,7 +134,7 @@ export default function ProductDetail() {
       if (current.category_id) query = query.eq('category_id', current.category_id);
       const { data } = await query;
       setRelated(data || []);
-    } catch (err) {
+    } catch {
       setRelated([]);
     }
   };
@@ -174,41 +175,44 @@ export default function ProductDetail() {
     setQuantity((q) => Math.max(1, Math.min(q + delta, product?.stock_quantity || 99)));
   };
 
+  // Gather the inline selections into a customization payload (or null).
+  const buildCustomization = () => {
+    const values = {};
+    if (selectedColor) values.color = selectedColor;
+    if (selectedSize) values.size = selectedSize.size || selectedSize.dimensions;
+    if (instructions.trim()) values.instructions = instructions.trim();
+    if (isCustomised && personalText.trim()) values.personalization_text = personalText.trim();
+    if (isCustomised && refPhoto) values.reference_photo = refPhoto;
+    return Object.keys(values).length > 0 ? values : null;
+  };
+
   const handleAddToCart = async (buyNow = false) => {
     if (!product) return;
     setAdding(true);
     try {
-      await addToCart(product, quantity);
-      toast.success(`${product.name} added to cart`);
-      if (buyNow) navigate('/cart');
-    } catch {
-      toast.error('Failed to add to cart');
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  // Customised products: order only after the customization options are filled.
-  const handleCustomizedOrder = async (values) => {
-    if (!product) return;
-    setAdding(true);
-    try {
-      // photo_upload fields store a data URL — use it as the custom image.
-      const photo = Object.values(values || {}).find(
-        (v) => typeof v === 'string' && v.startsWith('data:image')
-      );
+      const values = buildCustomization();
+      const unitPrice = (selectedSize && selectedSize.price > 0) ? selectedSize.price : product.price;
       await addToCart(product, quantity, {
         customizationValues: values,
-        customImage: photo || null,
-        unitPrice: adjustedPrice ?? product.price,
+        customImage: refPhoto || null,
+        unitPrice,
       });
-      toast.success('Added to cart with your customizations');
-      navigate('/cart');
+      toast.success(`${product.name} added to cart`);
+      if (buyNow) navigate('/cart');
     } catch {
       toast.error('Could not add to cart');
     } finally {
       setAdding(false);
     }
+  };
+
+  const handlePhotoSelect = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please upload an image file'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10 MB'); return; }
+    const reader = new FileReader();
+    reader.onloadend = () => setRefPhoto(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const handleShare = async () => {
@@ -301,13 +305,42 @@ export default function ProductDetail() {
   const hasAMS = product.is_ams_compatible && amsColors.length > 0;
   const tags = Array.isArray(product.tags) ? product.tags : [];
   const sizes = Array.isArray(product.sizes) ? product.sizes.filter((s) => s && (s.size || s.dimensions)) : [];
+  const effectivePrice = (selectedSize && selectedSize.price > 0) ? selectedSize.price : product.price;
   const customerNeeds = Array.isArray(product.customer_needs) ? product.customer_needs.filter(Boolean) : [];
   const difficultyLabel = product.difficulty_level
     ? product.difficulty_level.charAt(0).toUpperCase() + product.difficulty_level.slice(1)
     : null;
 
+  // JSON-LD Structured Data
+  const jsonLd = {
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: product.name,
+    image: images,
+    description: product.description || `${product.name}. Custom 3D printed gift from PrintMyMemory.`,
+    sku: `PMM-${product.id}`,
+    offers: {
+      '@type': 'Offer',
+      url: window.location.href,
+      priceCurrency: 'INR',
+      price: product.price,
+      availability: status.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+  };
+  if (reviews.length > 0) {
+    jsonLd.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: avgRating,
+      reviewCount: reviews.length,
+    };
+  }
+
   return (
     <main className="min-h-screen bg-bg-primary">
+      {/* Inject JSON-LD */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       <PageHead
         title={product.name}
         description={product.description?.slice(0, 160) || `${product.name}. Custom 3D printed gift from PrintMyMemory.`}
@@ -530,23 +563,30 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* AMS colors */}
+            {/* Colour selection (from the product's own colours) */}
             {hasAMS && (
               <div className="p-4 rounded-2xl bg-bg-card border border-border-subtle">
                 <div className="flex items-center gap-2 mb-3">
                   <Layers size={14} className="text-accent" />
-                  <p className="text-text-primary text-sm font-semibold">Multi-Color Printing</p>
-                  <span className="text-text-muted text-xs">({amsColors.length} colors)</span>
+                  <p className="text-text-primary text-sm font-semibold">Choose your colour</p>
+                  <span className="text-text-muted text-xs">({amsColors.length} options)</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {amsColors.map((c, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <span
-                        className="w-6 h-6 rounded-full border border-white/20 shadow-inner"
-                        style={{ backgroundColor: c }}
-                        title={c}
-                      />
-                    </div>
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSelectedColor(selectedColor === c ? null : c)}
+                      className="w-8 h-8 rounded-full border-2 transition-all hover:scale-110 relative"
+                      style={{ backgroundColor: c, borderColor: selectedColor === c ? '#f8fafc' : 'transparent' }}
+                      title={c}
+                      aria-label={`Choose colour ${c}`}
+                      aria-pressed={selectedColor === c}
+                    >
+                      {selectedColor === c && (
+                        <Check size={14} className="absolute inset-0 m-auto text-white drop-shadow" />
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -560,17 +600,31 @@ export default function ProductDetail() {
                   <p className="text-text-primary text-sm font-semibold">Available Sizes</p>
                 </div>
                 <div className="space-y-2">
-                  {sizes.map((s, i) => (
-                    <div key={i} className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-bg-card border border-border-subtle">
-                      <div className="min-w-0">
-                        <p className="text-text-primary text-sm font-medium">{s.size || `Option ${i + 1}`}</p>
-                        {s.dimensions && <p className="text-text-muted text-xs">{s.dimensions}</p>}
-                      </div>
-                      {s.price ? (
-                        <span className="text-accent text-sm font-semibold shrink-0">{formatPrice(s.price)}</span>
-                      ) : null}
-                    </div>
-                  ))}
+                  {sizes.map((s, i) => {
+                    const isSel = selectedSize === s;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setSelectedSize(isSel ? null : s)}
+                        aria-pressed={isSel}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-left transition-colors ${
+                          isSel ? 'border-accent bg-accent/10' : 'border-border-subtle bg-bg-card hover:border-border-hover'
+                        }`}
+                      >
+                        <div className="min-w-0 flex items-center gap-2">
+                          {isSel && <Check size={13} className="text-accent shrink-0" />}
+                          <div className="min-w-0">
+                            <p className="text-text-primary text-sm font-medium">{s.size || `Option ${i + 1}`}</p>
+                            {s.dimensions && <p className="text-text-muted text-xs">{s.dimensions}</p>}
+                          </div>
+                        </div>
+                        {s.price ? (
+                          <span className="text-accent text-sm font-semibold shrink-0">{formatPrice(s.price)}</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -591,6 +645,49 @@ export default function ProductDetail() {
                 </ul>
               </div>
             )}
+
+            {/* Photo + name — made-to-order pieces only */}
+            {isCustomised && (
+              <div className="p-4 rounded-2xl bg-bg-card border border-border-subtle space-y-3">
+                <label className="text-text-primary text-sm font-semibold block">Add your photo (optional)</label>
+                {refPhoto ? (
+                  <div className="flex items-center gap-3">
+                    <img src={refPhoto} alt="Your upload" className="w-16 h-16 rounded-xl object-cover border border-border-subtle" />
+                    <button onClick={() => setRefPhoto(null)} className="text-text-muted text-xs hover:text-text-primary transition-colors">
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-bg-elevated border border-border-subtle text-text-secondary text-sm cursor-pointer hover:border-border-hover transition-colors">
+                    <Upload size={15} className="text-accent" />
+                    Upload a reference photo
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoSelect(e.target.files?.[0])} />
+                  </label>
+                )}
+                <div>
+                  <label className="text-text-secondary text-xs font-medium mb-1.5 block">Name or text to include</label>
+                  <input
+                    type="text"
+                    value={personalText}
+                    onChange={(e) => setPersonalText(e.target.value)}
+                    placeholder="e.g. Happy Anniversary, Aryan"
+                    className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-3.5 py-2.5 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Special instructions — every product */}
+            <div className="p-4 rounded-2xl bg-bg-card border border-border-subtle">
+              <label className="text-text-primary text-sm font-semibold mb-2 block">Special instructions (optional)</label>
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="Anything else we should know about your order?"
+                rows={2}
+                className="w-full bg-bg-elevated border border-border-subtle rounded-xl px-3.5 py-2.5 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-accent/50 resize-none"
+              />
+            </div>
 
             {/* Divider */}
             <div className="border-t border-border-subtle" />
@@ -616,45 +713,36 @@ export default function ProductDetail() {
                 </button>
               </div>
               <span className="text-text-muted text-xs">
-                Total: <span className="text-text-primary font-semibold">{formatPrice(product.price * quantity)}</span>
+                Total: <span className="text-text-primary font-semibold">{formatPrice(effectivePrice * quantity)}</span>
               </span>
             </div>
 
             {/* Order area */}
-            {isCustomised ? (
-              <div className="space-y-3">
-                <div className="rounded-2xl border border-accent/25 bg-accent/[0.04] p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles size={15} className="text-accent" />
-                    <p className="text-text-primary text-sm font-semibold">Personalise your order</p>
-                  </div>
-                  {/* Renders this product's admin-defined options, live price, and
-                      "Confirm" → adds to cart with the customization values. */}
-                  <CustomizationForm
-                    productId={product.id}
-                    onPriceChange={setAdjustedPrice}
-                    onSubmit={handleCustomizedOrder}
-                  />
-                </div>
-                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                  className="btn-green w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
-                  <WaIcon size={15} /> Prefer to talk? Order on WhatsApp
-                </a>
-              </div>
-            ) : (
+            {status.available ? (
               <div className="space-y-2.5">
-                <button onClick={() => handleAddToCart(true)} disabled={adding || !status.available}
+                <button onClick={() => handleAddToCart(true)} disabled={adding}
                   className="btn-primary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
                   {adding ? <Loader2 size={16} className="animate-spin" /> : <ShoppingCart size={16} />}
                   Buy Now
                 </button>
-                <button onClick={() => handleAddToCart(false)} disabled={adding || !status.available}
+                <button onClick={() => handleAddToCart(false)} disabled={adding}
                   className="btn-secondary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
                   Add to Cart
                 </button>
                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
                   className="btn-green w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
                   <WaIcon size={15} /> Order on WhatsApp
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <button disabled
+                  className="btn-secondary w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold opacity-60 cursor-not-allowed">
+                  Out of stock
+                </button>
+                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
+                  className="btn-green w-full py-3.5 flex items-center justify-center gap-2 text-sm font-bold">
+                  <WaIcon size={15} /> Ask about availability on WhatsApp
                 </a>
               </div>
             )}

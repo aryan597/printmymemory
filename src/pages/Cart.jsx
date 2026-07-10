@@ -1,19 +1,36 @@
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, MapPin, Home, Briefcase, PlusCircle, MessageCircle, Tag, Check, X } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, ArrowRight, Loader2, MapPin, Home, Briefcase, PlusCircle, Tag, Check, X } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { supabase, TABLES } from '../lib/supabaseClient';
-import { sendOrderConfirmationEmail, getWhatsAppOrderLink } from '../lib/notifications';
-import { openRazorpayCheckout } from '../lib/razorpay';
+import { sendOrderConfirmationEmail } from '../lib/notifications';
+import UPIPayment from '../components/UPIPayment';
 import toast from 'react-hot-toast';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Button from '../components/ui/Button';
-
-const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919471725271';
 
 function formatPrice(price) {
   return '₹' + Number(price).toLocaleString('en-IN');
+}
+
+/**
+ * Turn a cart item's customization_values into a readable summary for the
+ * print queue (stored on order_items.ai_printing_instructions).
+ */
+function summarizeCustomization(values) {
+  if (!values || typeof values !== 'object') return null;
+  const lines = [];
+  for (const [key, val] of Object.entries(values)) {
+    if (val == null || val === '') continue;
+    if (typeof val === 'string' && val.startsWith('data:image')) {
+      lines.push('Reference photo: uploaded');
+      continue;
+    }
+    const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    lines.push(`${label}: ${Array.isArray(val) ? val.join(', ') : val}`);
+  }
+  return lines.length > 0 ? lines.join('\n') : null;
 }
 
 export default function Cart() {
@@ -22,8 +39,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const [checkingOut, setCheckingOut] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
-  const [placedOrderId, setPlacedOrderId] = useState(null);
+  const [paymentRef, setPaymentRef] = useState(null); // client-side ref for the UPI note; real order is created after payment
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [addressesLoading, setAddressesLoading] = useState(false);
@@ -67,7 +83,7 @@ export default function Cart() {
       const defaultAddr = data?.find(a => a.is_default);
       if (defaultAddr) setSelectedAddressId(defaultAddr.id);
       else if (data?.[0]) setSelectedAddressId(data[0].id);
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
     finally { setAddressesLoading(false); }
   };
 
@@ -118,8 +134,34 @@ export default function Cart() {
     return Object.keys(errors).length === 0;
   };
 
-  const discountAmount = appliedVoucher ? appliedVoucher.discountAmount : 0;
+  // Discount is derived LIVE from the current subtotal, so it recalculates
+  // whenever cart contents change (add/remove/qty). Never store a frozen amount.
+  const discountAmount = useMemo(() => {
+    if (!appliedVoucher) return 0;
+    if (appliedVoucher.minOrderAmount && cartTotal < appliedVoucher.minOrderAmount) return 0;
+    let d = Math.round((cartTotal * appliedVoucher.discountPercent) / 100);
+    if (appliedVoucher.maxDiscountAmount && d > appliedVoucher.maxDiscountAmount) {
+      d = appliedVoucher.maxDiscountAmount;
+    }
+    return Math.min(d, cartTotal);
+  }, [appliedVoucher, cartTotal]);
+
   const finalTotal = Math.max(0, cartTotal + shippingCost - discountAmount);
+
+  // If the cart drops below the voucher's minimum after an edit, remove it.
+  useEffect(() => {
+    if (
+      appliedVoucher &&
+      appliedVoucher.minOrderAmount &&
+      cartTotal < appliedVoucher.minOrderAmount
+    ) {
+      toast.error(
+        `Voucher ${appliedVoucher.code} removed — order is below the ${formatPrice(appliedVoucher.minOrderAmount)} minimum`
+      );
+      setAppliedVoucher(null);
+      setVoucherCode('');
+    }
+  }, [cartTotal, appliedVoucher]);
 
   const applyVoucher = async () => {
     const code = voucherCode.trim().toUpperCase();
@@ -163,16 +205,20 @@ export default function Cart() {
         return;
       }
 
-      // Calculate discount
+      // Store the voucher RULE; the actual discount is derived live from the
+      // current subtotal (see discountAmount useMemo) so it stays correct as
+      // the cart changes.
       let discount = Math.round((cartTotal * data.discount_percent) / 100);
       if (data.max_discount_amount && discount > data.max_discount_amount) {
         discount = data.max_discount_amount;
       }
+      discount = Math.min(discount, cartTotal);
 
       setAppliedVoucher({
         code: data.code,
         discountPercent: data.discount_percent,
-        discountAmount: discount,
+        maxDiscountAmount: data.max_discount_amount ?? null,
+        minOrderAmount: data.min_order_amount ?? null,
       });
       toast.success(`${data.code} applied! You saved ${formatPrice(discount)}`);
     } catch (err) {
@@ -189,7 +235,10 @@ export default function Cart() {
     toast('Voucher removed', { icon: 'ℹ️' });
   };
 
-  const handlePlaceOrder = async () => {
+  // Validate the delivery details and open the payment step. The order is NOT
+  // created here — it is only written to the database once the customer submits
+  // their UTR (see createOrderAfterPayment), so we never store unpaid orders.
+  const handlePlaceOrder = () => {
     if (cartItems.length === 0) {
       toast.error('Your cart is empty');
       return;
@@ -198,121 +247,107 @@ export default function Cart() {
       toast.error('Please fill in all delivery details');
       return;
     }
+    setPaymentRef(`PMM${Date.now().toString(36).toUpperCase()}`);
+    setShowPayment(true);
+  };
 
-    setCheckingOut(true);
-    let orderId = null;
+  // Called after the customer has paid and entered their UTR. This is the ONLY
+  // place an order row is created. Throws on failure so the payment component
+  // can surface a WhatsApp fallback (the customer has already paid).
+  const createOrderAfterPayment = async ({ utr }) => {
+    const shipping = buildShippingAddress();
+    // Also stash the UTR inside the shipping_address JSONB so it is never lost,
+    // even if the dedicated orders.utr_number column has not been migrated yet.
+    const shippingWithUtr = { ...shipping, utr_number: utr };
+    const orderPayload = {
+      user_id: isAuthenticated ? user.id : null,
+      total_amount: finalTotal,
+      status: 'pending_payment',
+      payment_method: 'phonepe_upi',
+      shipping_address: shippingWithUtr,
+      voucher_code: appliedVoucher?.code || null,
+      discount_amount: discountAmount,
+    };
+    if (!isAuthenticated) {
+      orderPayload.guest_name = shipping.full_name;
+      orderPayload.guest_email = shipping.email;
+      orderPayload.guest_phone = shipping.phone;
+    }
 
-    try {
-      const shipping = buildShippingAddress();
-      const orderPayload = {
-        user_id: isAuthenticated ? user.id : null,
-        total_amount: finalTotal,
-        status: 'pending_payment',
-        payment_method: 'razorpay',
-        shipping_address: shipping,
-        voucher_code: appliedVoucher?.code || null,
-        discount_amount: discountAmount,
-      };
-      if (!isAuthenticated) {
-        orderPayload.guest_name = shipping.full_name;
-        orderPayload.guest_email = shipping.email;
-        orderPayload.guest_phone = shipping.phone;
-      }
-
-      const { data: orderData, error: orderError } = await supabase
+    // Prefer the dedicated utr_number column, but tolerate it being absent from
+    // the live schema (PGRST204) so a paid order is never lost.
+    let orderData, orderError;
+    ({ data: orderData, error: orderError } = await supabase
+      .from(TABLES.ORDERS)
+      .insert({ ...orderPayload, utr_number: utr })
+      .select()
+      .single());
+    if (orderError?.code === 'PGRST204') {
+      console.warn('orders.utr_number column missing — run the migration. UTR stored in shipping_address for now.');
+      ({ data: orderData, error: orderError } = await supabase
         .from(TABLES.ORDERS)
         .insert(orderPayload)
         .select()
-        .single();
+        .single());
+    }
+    if (orderError) throw orderError;
+    const orderId = orderData.id;
 
-      if (orderError) throw orderError;
-      orderId = orderData.id;
-
-      const orderItems = cartItems.map(item => ({
+    const baseItems = cartItems.map(item => {
+      const unitPrice = item.unit_price ?? item.product?.price ?? item.price ?? 0;
+      return {
         order_id: orderId,
         product_id: item.product_id || item.product?.id || item.id,
         quantity: item.quantity,
-        price: item.unit_price ?? item.product?.price ?? item.price ?? 0,
+        price: unitPrice,
         custom_image: item.custom_image || null,
-      }));
+      };
+    });
+    // Optional columns (only present once the migration is applied).
+    const richItems = baseItems.map((it, i) => ({
+      ...it,
+      ai_printing_instructions: summarizeCustomization(cartItems[i].customization_values),
+      agreed_price: it.price,
+    }));
 
-      const { error: itemsError } = await supabase.from(TABLES.ORDER_ITEMS).insert(orderItems);
-      if (itemsError) throw itemsError;
-
-      // Increment voucher usage count if voucher was applied
-      if (appliedVoucher) {
-        try {
-          await supabase.rpc('increment_voucher_usage', { code: appliedVoucher.code });
-        } catch (vErr) {
-          console.debug('Voucher usage increment failed:', vErr);
-        }
-      }
-
-      setPlacedOrderId(orderId);
-
-      // Open Razorpay checkout (supports GPay, PhonePe, Paytm, UPI, cards, wallets)
-      await openRazorpayCheckout(
-        {
-          amount: finalTotal,
-          name: shipping.full_name,
-          email: shipping.email,
-          phone: shipping.phone,
-          orderName: `PrintMyMemory Order #${orderId.slice(0, 8).toUpperCase()}`,
-        },
-        // onSuccess
-        async (response) => {
-          try {
-            await supabase
-              .from(TABLES.ORDERS)
-              .update({
-                status: 'order_placed',
-                payment_method: 'razorpay',
-                razorpay_payment_id: response.razorpay_payment_id,
-                paid_at: new Date().toISOString(),
-              })
-              .eq('id', orderId);
-
-            await clearCart();
-
-            await sendOrderConfirmationEmail({
-              to_email: shipping.email,
-              to_name: shipping.full_name,
-              order_id: orderId,
-              total_amount: finalTotal,
-              payment_method: 'razorpay',
-              items: cartItems,
-              delivery: shipping,
-            });
-
-            toast.success('Payment successful! Order confirmed.');
-            navigate(`/receipt?orderId=${orderId}&phone=${shipping.phone}`);
-          } catch (err) {
-            console.error('Post-payment error:', err);
-            toast.error('Payment received but order update failed. Please contact us on WhatsApp.');
-          }
-        },
-        // onError
-        async (err) => {
-          console.error('Payment failed/cancelled:', err);
-          toast.error('Payment was not completed. Your order has been saved, you can retry.');
-          setShowPayment(false);
-          setCheckingOut(false);
-        }
-      );
-
-    } catch (error) {
-      console.error('Order creation error:', error);
-      toast.error(error.message || 'Failed to create order');
-
-      if (orderId) {
-        try {
-          await supabase.from(TABLES.ORDER_ITEMS).delete().eq('order_id', orderId);
-          await supabase.from(TABLES.ORDERS).delete().eq('id', orderId);
-        } catch (_) { /* ignore */ }
-      }
-    } finally {
-      setCheckingOut(false);
+    let itemsError;
+    ({ error: itemsError } = await supabase.from(TABLES.ORDER_ITEMS).insert(richItems));
+    if (itemsError?.code === 'PGRST204') {
+      console.warn('order_items customization columns missing — run the migration. Inserting base line items.');
+      ({ error: itemsError } = await supabase.from(TABLES.ORDER_ITEMS).insert(baseItems));
     }
+    if (itemsError) {
+      // Roll back the order so we don't leave a headless order behind.
+      await supabase.from(TABLES.ORDERS).delete().eq('id', orderId);
+      throw itemsError;
+    }
+
+    if (appliedVoucher) {
+      try {
+        await supabase.rpc('increment_voucher_usage', { code: appliedVoucher.code });
+      } catch (vErr) {
+        console.debug('Voucher usage increment failed:', vErr);
+      }
+    }
+
+    // Best-effort confirmation email — never block the order on email failure.
+    try {
+      await sendOrderConfirmationEmail({
+        to_email: shipping.email,
+        to_name: shipping.full_name,
+        order_id: orderId,
+        total_amount: finalTotal,
+        payment_method: 'phonepe_upi',
+        items: cartItems,
+        delivery: shipping,
+      });
+    } catch (emailErr) {
+      console.error('Confirmation email failed:', emailErr);
+    }
+
+    await clearCart();
+    toast.success('Order placed! We will verify your payment shortly.');
+    navigate(`/receipt?orderId=${orderId}&phone=${shipping.phone}`);
   };
 
   if (cartItems.length === 0) {
@@ -638,22 +673,31 @@ export default function Cart() {
               Proceed to Payment
             </Button>
             <p className="text-text-muted text-xs text-center mt-3">
-              Powered by Razorpay. Pay securely via GPay, PhonePe, Paytm, cards, or net banking.
+              Powered by PhonePe. Pay securely via any UPI app.
             </p>
           </>
         ) : (
           <>
-            <div className="text-center py-8 space-y-4">
-              <Loader2 size={32} className="animate-spin text-accent mx-auto" />
-              <h2 className="text-lg font-bold text-text-primary">Processing Payment...</h2>
-              <p className="text-text-secondary text-sm">Complete the payment in the Razorpay window.</p>
+          <div className="card p-4 sm:p-6 border-accent/20">
+            {showPayment && paymentRef && (
+              <UPIPayment
+                amount={finalTotal}
+                orderId={paymentRef}
+                onPaymentComplete={createOrderAfterPayment}
+              />
+            )}
+            <div className="mt-6 text-center">
               <button
-                onClick={() => setShowPayment(false)}
+                onClick={() => {
+                  setShowPayment(false);
+                  setCheckingOut(false);
+                }}
                 className="text-text-muted text-xs hover:text-text-primary transition-colors"
               >
                 Go back to cart
               </button>
             </div>
+          </div>
           </>
         )}
       </motion.div>
