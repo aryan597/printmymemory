@@ -84,17 +84,9 @@ function DownloadCard({ url, note, embedded }) {
         <Box size={26} className="text-accent" />
       </div>
       <div>
-        <p className="text-white text-sm font-semibold">3D model available</p>
+        <p className="text-white text-sm font-semibold">Interactive preview not available</p>
         <p className="text-text-muted text-xs mt-0.5 break-all">{note || name}</p>
       </div>
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn-secondary inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold"
-      >
-        <Download size={13} /> Download
-      </a>
     </div>
   );
 }
@@ -136,19 +128,10 @@ export default function Model3DViewer({ url }) {
         </Canvas>
       </ViewerErrorBoundary>
 
-      {/* Hint + download */}
+      {/* Hint */}
       <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full glass text-white/80 text-[11px] font-medium pointer-events-none">
         <Rotate3d size={12} /> Drag to rotate
       </div>
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute top-3 right-3 w-8 h-8 rounded-lg glass flex items-center justify-center text-white/70 hover:text-white transition-colors"
-        title="Download 3D file"
-      >
-        <Download size={14} />
-      </a>
     </div>
   );
 }

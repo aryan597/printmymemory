@@ -43,6 +43,15 @@ export default function PageHead({
     setMeta('property', 'twitter:description', description);
     setMeta('property', 'twitter:image', image);
 
+    // Canonical link
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', url);
+
     if (noIndex) {
       setMeta('name', 'robots', 'noindex, nofollow');
     } else {

@@ -229,6 +229,7 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_phone TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'online';
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS razorpay_signature TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS utr_number TEXT;
 ALTER TABLE orders ALTER COLUMN user_id DROP NOT NULL;
 
 -- Authenticated users see their own orders; guests use the lookup function
@@ -720,3 +721,18 @@ BEGIN
   WHERE vouchers.code = code;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================================
+-- 18. PROVENANCE COLUMNS (For marketplace/AI concierge)
+-- ============================================================
+ALTER TABLE products ADD COLUMN IF NOT EXISTS source TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS source_url TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS license TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS attribution TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS model_file TEXT;
+
+
+-- Add AI columns to order_items
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS ai_printing_instructions TEXT;
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS agreed_price INTEGER;
+

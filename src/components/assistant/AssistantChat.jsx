@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, Paperclip, X, Loader2, ArrowRight } from 'lucide-react';
 import { formatPrice } from '../../lib/utils';
 import { getCategorySampleModels, filterLoadable } from '../../lib/cgtrader';
+import UniversalModelsSection from '../UniversalModelsSection';
+import CGTraderModelsSection from '../CGTraderModelsSection';
 
 const EDGE_FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/design-assistant`;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -143,6 +145,10 @@ function AiBubble({ msg, messages }) {
               <div className="grid grid-cols-4 gap-2">
                 {msg.ideas.map((m) => <IdeaMini key={m.id} model={m} />)}
               </div>
+              <div className="w-[85vw] sm:w-[500px] mt-2">
+                <UniversalModelsSection searchQuery={msg.keywords} embedded />
+                <CGTraderModelsSection searchQuery={msg.keywords} embedded />
+              </div>
             </div>
           )}
 
@@ -243,6 +249,7 @@ export default function AssistantChat({ seed, autoFocus = true }) {
         products,
         ideas: null,
         ideasLoading: Boolean(keywords),
+        keywords,
         custom: data.nextAction === 'chat_whatsapp',
       };
       setMessages((prev) => [...prev, aiMsg]);

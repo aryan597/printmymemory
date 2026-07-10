@@ -5,10 +5,10 @@ import AssistantPanel from './assistant/AssistantPanel';
 import HeroShowcase from './HeroShowcase';
 
 const EXAMPLES = [
-  'a lamp that glows with my photo',
-  'a mini figurine of my dog',
-  'a desk nameplate',
-  'an anniversary gift',
+  'a custom lithophane lightbox',
+  'an articulated flexi toy',
+  'a personalized desk organizer',
+  'a functional planter pot',
 ];
 
 /**
